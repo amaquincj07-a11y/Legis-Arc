@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(source:*)",
+      "Bash(nvm ls:*)",
+      "Bash(command -v:*)",
+      "Bash(fnm list:*)",
+      "Bash(nvm use:*)",
+      "Bash(npx --yes create-vite@latest:*)",
+      "Bash(npm install:*)",
+      "Bash(npx shadcn@latest init:*)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(npx vite build)",
+      "Bash(npx vite:*)"
+    ]
+  }
+}
