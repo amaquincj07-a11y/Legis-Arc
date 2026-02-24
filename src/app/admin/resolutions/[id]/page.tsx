@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft,
   Download,
+  FileText,
   Pencil,
   Globe,
   GlobeLock,
@@ -99,9 +100,17 @@ export default function ResolutionDetailPage({
             Edit
           </Link>
         </Button>
-        <Button variant="outline" onClick={() => toast.info("Download started")}>
-          <Download className="mr-2 size-4" />
-          Download PDF
+        <Button variant="outline" asChild>
+          <a href={doc.pdfUrl} download>
+            <Download className="mr-2 size-4" />
+            Download PDF
+          </a>
+        </Button>
+        <Button variant="outline" asChild>
+          <a href={doc.pdfUrl} target="_blank" rel="noopener noreferrer">
+            <FileText className="mr-2 size-4" />
+            View PDF
+          </a>
         </Button>
         <Button variant="outline" onClick={handleTogglePublish}>
           {doc.status === "published" ? (

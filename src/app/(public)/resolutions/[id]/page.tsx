@@ -178,29 +178,30 @@ export default async function ResolutionDetailPage({
             )}
           </div>
 
-          {/* Sidebar — PDF Placeholder */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-24 overflow-hidden border-2 border-dashed border-muted-foreground/20">
-              <div className="flex flex-col items-center justify-center bg-muted/30 px-6 py-14 text-center">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-teal/10">
-                  <FileText className="h-8 w-8 text-teal" />
-                </div>
+          {/* Sidebar — PDF actions (open in new tab or download) */}
+          <div className="lg:col-span-1 space-y-4">
+            <Card className="sticky top-24 overflow-hidden border border-border">
+              <div className="border-b bg-muted/30 px-4 py-3">
                 <h3 className="text-sm font-semibold text-foreground">
                   Document PDF
                 </h3>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Resolution No. {docNumber} — Series of {doc.seriesYear}
                 </p>
-                <div className="mt-5 flex flex-col gap-2 w-full max-w-[200px]">
-                  <Button className="gap-2 bg-teal text-white hover:bg-teal/90">
+              </div>
+              <div className="flex flex-col gap-2 p-4">
+                <Button className="gap-2 bg-teal text-white hover:bg-teal/90" asChild>
+                  <a href={doc.pdfUrl} download>
                     <Download className="h-4 w-4" />
                     Download PDF
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-2 text-xs">
+                  </a>
+                </Button>
+                <Button variant="outline" size="sm" className="gap-2 text-xs" asChild>
+                  <a href={doc.pdfUrl} target="_blank" rel="noopener noreferrer">
                     <FileText className="h-3.5 w-3.5" />
-                    View Full Screen
-                  </Button>
-                </div>
+                    View PDF
+                  </a>
+                </Button>
               </div>
             </Card>
           </div>

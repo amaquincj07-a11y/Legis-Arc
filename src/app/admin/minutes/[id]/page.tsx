@@ -4,7 +4,7 @@ import { use } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { ArrowLeft, Download, Pencil } from "lucide-react";
+import { ArrowLeft, Download, FileText, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,12 +83,17 @@ export default function MinutesDetailPage({
             Edit
           </Link>
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => toast.info("Download started")}
-        >
-          <Download className="mr-2 size-4" />
-          Download PDF
+        <Button variant="outline" asChild>
+          <a href={doc.pdfUrl} download>
+            <Download className="mr-2 size-4" />
+            Download PDF
+          </a>
+        </Button>
+        <Button variant="outline" asChild>
+          <a href={doc.pdfUrl} target="_blank" rel="noopener noreferrer">
+            <FileText className="mr-2 size-4" />
+            View PDF
+          </a>
         </Button>
       </div>
 
@@ -110,22 +115,6 @@ export default function MinutesDetailPage({
               </div>
             ))}
           </dl>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">PDF Document</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 py-16">
-            <p className="text-sm text-muted-foreground">
-              PDF preview placeholder
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {doc.pdfUrl}
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

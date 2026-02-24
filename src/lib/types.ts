@@ -6,12 +6,24 @@ export type UserRole =
   | "sb_secretary"
   | "sb_member"
   | "digitization_assistant";
-export type RequestStatus = "in_process" | "released" | "completed";
+export type RequestStatus =
+  | "submitted"
+  | "approved"
+  | "released"
+  | "denied";
 
 export interface TrackingEvent {
   status: string;
   date: Date;
   performedBy: string;
+}
+
+export interface RoutingHistoryEntry {
+  office: string;
+  assignedTo: string;
+  stage: string;
+  date: Date;
+  remark?: string;
 }
 
 export interface DocumentVersion {
@@ -42,6 +54,14 @@ export interface LegislativeDocument {
   pdfUrl: string;
   versions: DocumentVersion[];
   timeline: TrackingEvent[];
+  /** Current office/committee holding the document */
+  currentOffice?: string;
+  /** Person responsible at current location */
+  assignedTo?: string;
+  /** Stage (e.g. For Review, For Signature, For Publication) */
+  stage?: string;
+  /** Log of routing movements */
+  routingHistory?: RoutingHistoryEntry[];
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;

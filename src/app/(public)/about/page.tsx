@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
   Landmark,
   User,
@@ -37,7 +38,7 @@ export default function AboutPage() {
             <Landmark className="h-7 w-7 text-gold" />
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
-            Sangguniang Bayan
+            Sangguniang Bayan{" "}
             <span className="mt-1 block text-gold">ng Panglao</span>
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-sm text-white/60 sm:text-base">
@@ -47,7 +48,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* SB Members */}
+      {/* SB Member Chart */}
       <section className="bg-background py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-10 flex items-center gap-3">
@@ -56,7 +57,7 @@ export default function AboutPage() {
             </div>
             <div>
               <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                SB Members
+                SB Member Chart
               </h2>
               <p className="text-sm text-muted-foreground">
                 Elected and appointed members of the Sangguniang Bayan
@@ -68,34 +69,38 @@ export default function AboutPage() {
             {mockSBMembers.map((member) => (
               <Card
                 key={member.id}
-                className="border-2 border-transparent transition-all duration-200 hover:border-teal/15 hover:shadow-md"
+                className="border-2 border-transparent transition-all duration-200 hover:border-teal/15 hover:shadow-md overflow-hidden"
               >
-                <CardContent className="p-5">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-navy/10">
-                      <User className="h-5 w-5 text-navy" />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-foreground">
-                        {member.name}
-                      </h3>
-                      <p className="mt-0.5 text-xs text-teal font-medium">
-                        {member.position}
-                      </p>
-                      {member.committees.length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-1.5">
-                          {member.committees.map((c) => (
-                            <Badge
-                              key={c}
-                              variant="secondary"
-                              className="bg-muted text-[10px] font-normal text-muted-foreground px-2 py-0.5"
-                            >
-                              {c}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                <CardContent className="p-0">
+                  <div className="relative aspect-[3/4] w-full bg-muted/30">
+                    <Image
+                      src={member.imageUrl ?? "/images/sb-member-placeholder.png"}
+                      alt={`Portrait of ${member.name}, ${member.position}`}
+                      fill
+                      className="object-cover object-top"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    />
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-semibold text-foreground">
+                      {member.name}
+                    </h3>
+                    <p className="mt-0.5 text-xs text-teal font-medium">
+                      {member.position}
+                    </p>
+                    {member.committees.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {member.committees.map((c) => (
+                          <Badge
+                            key={c}
+                            variant="secondary"
+                            className="bg-muted text-[10px] font-normal text-muted-foreground px-2 py-0.5"
+                          >
+                            {c}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

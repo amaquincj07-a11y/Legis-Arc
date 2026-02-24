@@ -19,9 +19,10 @@ export const SESSION_TYPES = [
 ] as const;
 
 export const REQUEST_STATUSES = [
-  { value: "in_process", label: "In Process" },
+  { value: "submitted", label: "Submitted" },
+  { value: "approved", label: "Approved" },
   { value: "released", label: "Released" },
-  { value: "completed", label: "Completed" },
+  { value: "denied", label: "Denied" },
 ] as const;
 
 export const DEFAULT_CATEGORIES = [
@@ -127,7 +128,7 @@ export const PUBLIC_NAV_ITEMS = [
   { title: "Ordinances", href: "/ordinances" },
   { title: "Resolutions", href: "/resolutions" },
   { title: "Minutes", href: "/minutes" },
-  { title: "About", href: "/about" },
+  { title: "SB Member Chart", href: "/about" },
 ];
 
 export const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
