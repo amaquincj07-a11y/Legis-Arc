@@ -11,6 +11,27 @@ export type RequestStatus =
   | "approved"
   | "released"
   | "denied";
+export type ReferralType =
+  | "letter"
+  | "brgy_resolution"
+  | "brgy_ordinance"
+  | "subd_application"
+  | "accreditation"
+  | "board_council_resolutions"
+  | "memorandum"
+  | "executive_orders"
+  | "draft_resolutions"
+  | "draft_ordinance"
+  | "others";
+export type TrackingStatus =
+  | "for_referral"
+  | "under_committee"
+  | "for_public_hearing"
+  | "for_committee_report"
+  | "for_signature"
+  | "for_approval"
+  | "for_reporting"
+  | "others";
 
 export interface TrackingEvent {
   status: string;
@@ -24,6 +45,8 @@ export interface RoutingHistoryEntry {
   stage: string;
   date: Date;
   remark?: string;
+  committee?: string;
+  userEmail?: string;
 }
 
 export interface DocumentVersion {
@@ -62,6 +85,18 @@ export interface LegislativeDocument {
   stage?: string;
   /** Log of routing movements */
   routingHistory?: RoutingHistoryEntry[];
+  /** Session Date for tracking (YYYY-MM-DD) */
+  sessionDate?: Date;
+  /** Type of referral (Letter, Brgy Resolution, etc.) */
+  referralType?: ReferralType;
+  /** Subject of the referral aligned to referral type */
+  trackingSubject?: string;
+  /** Committee assigned to handle the document */
+  assignedCommittee?: string;
+  /** Legislative output/result from tracking */
+  legislativeOutput?: string;
+  /** User email who updated the document */
+  lastUpdatedByEmail?: string;
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;

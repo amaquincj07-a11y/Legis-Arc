@@ -29,6 +29,33 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
+// Referral Types
+const REFERRAL_TYPES = [
+  { value: "letter", label: "Letter" },
+  { value: "brgy_resolution", label: "Brgy Resolution" },
+  { value: "brgy_ordinance", label: "Brgy Ordinance" },
+  { value: "subd_application", label: "Subd Application" },
+  { value: "accreditation", label: "Accreditation" },
+  { value: "board_council_resolutions", label: "Board/Council Resolutions" },
+  { value: "memorandum", label: "Memorandum" },
+  { value: "executive_orders", label: "Executive Orders" },
+  { value: "draft_resolutions", label: "Draft Resolutions" },
+  { value: "draft_ordinance", label: "Draft Ordinance" },
+  { value: "others", label: "Others" },
+];
+
+// Tracking Statuses
+const TRACKING_STATUSES = [
+  { value: "for_referral", label: "For referral" },
+  { value: "under_committee", label: "Under committee" },
+  { value: "for_public_hearing", label: "For public hearing" },
+  { value: "for_committee_report", label: "For committee report" },
+  { value: "for_signature", label: "For signature" },
+  { value: "for_approval", label: "For approval" },
+  { value: "for_reporting", label: "For reporting" },
+  { value: "others", label: "Others" },
+];
+
 const allDocuments = [...mockOrdinances, ...mockResolutions, ...mockMinutes];
 const draftCount = allDocuments.filter((d) => d.status === "draft").length;
 const publishedCount = allDocuments.filter(
@@ -89,7 +116,7 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Drafts"
           value={draftCount}
@@ -109,6 +136,90 @@ export default function DashboardPage() {
           href="/admin/audit-logs"
           description="Documents uploaded this month"
         />
+      </div>
+
+      {/* Document by Referral Type & Status Charts */}
+      <div>
+        <h2 className="text-lg font-semibold tracking-tight mb-4">Legislative Tracking</h2>
+        <div className="grid gap-6 md:grid-cols-2">
+        {/* Document by Referral Type */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Document by Referral Type</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {(() => {
+              const referralCounts: Record<string, number> = {};
+              allDocuments.forEach((doc) => {
+                if ('referralType' in doc) {
+                  const refType = doc.referralType || "others";
+                  referralCounts[refType] = (referralCounts[refType] || 0) + 1;
+                }
+              });
+              
+              const maxCount = Math.max(...Object.values(referralCounts), 1);
+              
+              return REFERRAL_TYPES.map((type) => {
+                const count = referralCounts[type.value] || 0;
+                const percentage = (count / maxCount) * 100;
+                return (
+                  <div key={type.value} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">{type.label}</span>
+                      <span className="font-semibold">{count}</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-blue-500 rounded-full transition-all"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+          </CardContent>
+        </Card>
+
+        {/* Document by Tracking Status */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Document Tracking Status</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {(() => {
+              const statusCounts: Record<string, number> = {};
+              allDocuments.forEach((doc) => {
+                if ('stage' in doc) {
+                  const status = doc.stage || "others";
+                  statusCounts[status] = (statusCounts[status] || 0) + 1;
+                }
+              });
+              
+              const maxCount = Math.max(...Object.values(statusCounts), 1);
+              
+              return TRACKING_STATUSES.map((status) => {
+                const count = statusCounts[status.value] || 0;
+                const percentage = (count / maxCount) * 100;
+                return (
+                  <div key={status.value} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">{status.label}</span>
+                      <span className="font-semibold">{count}</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-green-500 rounded-full transition-all"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+          </CardContent>
+        </Card>
+        </div>
       </div>
 
       <Card>
