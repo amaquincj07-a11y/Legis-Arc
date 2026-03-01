@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import {
   ScrollText,
   FileText,
@@ -79,6 +80,31 @@ const actionVariant: Record<string, "default" | "secondary" | "outline"> = {
 };
 
 export default function DashboardPage() {
+  const categoryDistribution = useMemo(() => {
+    const categories = [
+      "Social Services",
+      "Taxation",
+      "Land Use",
+      "Education",
+      "Tourism",
+      "Environment",
+      "Health",
+      "Infrastructure",
+      "Peace and Order",
+      "General",
+    ];
+    const counts = categories.map((cat) => ({
+      name: cat,
+      count: mockOrdinances.filter((d) => d.category === cat).length,
+    }));
+    return counts.sort((a, b) => b.count - a.count);
+  }, []);
+
+  const maxCount = Math.max(
+    ...categoryDistribution.map((c) => c.count),
+    1
+  );
+
   return (
     <div className="space-y-6">
       <div>
@@ -137,6 +163,35 @@ export default function DashboardPage() {
           description="Documents uploaded this month"
         />
       </div>
+
+      <Card>
+        <CardHeader>
+          <h2 className="text-base font-semibold">Ordinances by Category</h2>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {categoryDistribution.map((cat) => {
+              const percentage = (cat.count / maxCount) * 100;
+              return (
+                <div key={cat.name} className="flex items-center gap-4">
+                  <span className="w-32 text-sm font-medium text-muted-foreground">
+                    {cat.name}
+                  </span>
+                  <div className="flex-1 h-6 bg-muted rounded overflow-hidden">
+                    <div
+                      className="h-full bg-blue-500 transition-all duration-300"
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                  <span className="w-8 text-right text-sm font-medium">
+                    {cat.count}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Document by Referral Type & Status Charts */}
       <div>

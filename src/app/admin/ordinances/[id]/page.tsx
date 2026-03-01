@@ -11,7 +11,6 @@ import {
   Pencil,
   Globe,
   GlobeLock,
-  Circle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -54,22 +53,17 @@ export default function OrdinanceDetailPage({
     );
   }
 
+  const ordinanceNumberOnly = (doc.proposedNumber || doc.approvedNumber || "").replace(/^(\d{4}-)?/, "");
   const metadataFields = [
     { label: "Title", value: doc.title, span: true },
     { label: "Author / Sponsor", value: doc.authorSponsor },
     { label: "Category", value: doc.category },
+    { label: "Ordinance No.", value: ordinanceNumberOnly },
     { label: "Series Year", value: doc.seriesYear },
     {
       label: "Date Enacted",
       value: format(doc.dateEnacted, "MMMM d, yyyy"),
     },
-    {
-      label: "Date Approved",
-      value: format(doc.dateApproved, "MMMM d, yyyy"),
-    },
-    { label: "Publication Info", value: doc.publicationInfo || "—" },
-    { label: "Remarks", value: doc.remarks || "—" },
-    { label: "Notes", value: doc.notes || "—", span: true },
   ];
 
   return (
@@ -127,68 +121,26 @@ export default function OrdinanceDetailPage({
         </Button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base">Document Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <dl className="grid gap-4 sm:grid-cols-2">
-              {metadataFields.map((field) => (
-                <div
-                  key={field.label}
-                  className={field.span ? "sm:col-span-2" : ""}
-                >
-                  <dt className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    {field.label}
-                  </dt>
-                  <dd className="mt-1 text-sm">{field.value}</dd>
-                </div>
-              ))}
-            </dl>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Tracking Timeline</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {doc.timeline.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No tracking events recorded.
-              </p>
-            ) : (
-              <div className="relative space-y-0">
-                {doc.timeline.map((event, index) => {
-                  const isLast = index === doc.timeline.length - 1;
-                  return (
-                    <div key={`${event.status}-${event.date.getTime()}`} className="relative flex gap-3 pb-6 last:pb-0">
-                      {!isLast && (
-                        <div className="absolute left-[7px] top-4 h-full w-px bg-border" />
-                      )}
-                      <div className="relative z-10 mt-0.5">
-                        <Circle className="size-[15px] fill-primary text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium leading-tight">
-                          {event.status}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {format(event.date, "MMM d, yyyy")}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {event.performedBy}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Document Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <dl className="grid gap-4 sm:grid-cols-2">
+            {metadataFields.map((field) => (
+              <div
+                key={field.label}
+                className={field.span ? "sm:col-span-2" : ""}
+              >
+                <dt className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  {field.label}
+                </dt>
+                <dd className="mt-1 text-sm">{field.value}</dd>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+            ))}
+          </dl>
+        </CardContent>
+      </Card>
     </div>
   );
 }

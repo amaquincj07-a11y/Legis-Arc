@@ -36,18 +36,12 @@ const currentYear = new Date().getFullYear();
 const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
 const formSchema = z.object({
-  documentType: z.enum(["ordinance", "resolution"]),
-  proposedNumber: z.string().optional(),
-  approvedNumber: z.string().optional(),
+  ordinanceNumber: z.string().min(1, "Ordinance number is required"),
   seriesYear: z.string().min(1, "Series year is required"),
   title: z.string().min(1, "Title is required"),
   authorSponsor: z.string().optional(),
   category: z.string().min(1, "Category is required"),
   dateEnacted: z.string().optional(),
-  dateApproved: z.string().optional(),
-  publicationInfo: z.string().optional(),
-  remarks: z.string().optional(),
-  notes: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -60,18 +54,12 @@ export default function NewOrdinancePage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      documentType: "ordinance",
-      proposedNumber: "",
-      approvedNumber: "",
+      ordinanceNumber: "",
       seriesYear: currentYear.toString(),
       title: "",
       authorSponsor: "",
       category: "",
       dateEnacted: "",
-      dateApproved: "",
-      publicationInfo: "",
-      remarks: "",
-      notes: "",
     },
   });
 
@@ -126,24 +114,15 @@ export default function NewOrdinancePage() {
               <div className="grid gap-6 sm:grid-cols-2">
                 <FormField
                   control={form.control}
-                  name="documentType"
+                  name="ordinanceNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Document Type</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="ordinance">Ordinance</SelectItem>
-                          <SelectItem value="resolution">Resolution</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>
+                        No. <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. 01, 02, 03" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -155,7 +134,7 @@ export default function NewOrdinancePage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Series Year <span className="text-destructive">*</span>
+                        Series <span className="text-destructive">*</span>
                       </FormLabel>
                       <Select
                         onValueChange={field.onChange}
@@ -174,36 +153,6 @@ export default function NewOrdinancePage() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid gap-6 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="proposedNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Proposed No.</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. 2026-05" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="approvedNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Approved No.</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. 2026-05" {...field} />
-                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -278,90 +227,19 @@ export default function NewOrdinancePage() {
                 />
               </div>
 
-              <div className="grid gap-6 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="dateEnacted"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date Enacted</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="dateApproved"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date Approved</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
               <FormField
                 control={form.control}
-                name="publicationInfo"
+                name="dateEnacted"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Publication Info</FormLabel>
+                    <FormLabel>Date Enacted</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="e.g. Published in Panglao Gazette, Vol. 12, Issue 3"
-                        {...field}
-                      />
+                      <Input type="date" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
-              <div className="grid gap-6 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="remarks"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Remarks</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Optional remarks"
-                          className="min-h-[80px] resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notes</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Optional internal notes"
-                          className="min-h-[80px] resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
             </CardContent>
           </Card>
 
