@@ -182,11 +182,11 @@ export default function ResolutionsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="pl-6">Series No.</TableHead>
+                <TableHead className="pl-6">No</TableHead>
+                <TableHead>Series</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Date Approved</TableHead>
-                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -199,27 +199,29 @@ export default function ResolutionsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                paginated.map((doc) => (
-                  <TableRow
-                    key={doc.id}
-                    className="cursor-pointer"
-                    onClick={() => router.push(`/admin/resolutions/${doc.id}`)}
-                  >
-                    <TableCell className="pl-6 font-medium">
-                      {doc.approvedNumber || doc.proposedNumber}
-                    </TableCell>
-                    <TableCell className="max-w-[320px] truncate">
-                      {doc.title}
-                    </TableCell>
-                    <TableCell>{doc.category}</TableCell>
-                    <TableCell>
-                      {format(doc.dateApproved, "MMM d, yyyy")}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={doc.status} />
-                    </TableCell>
-                  </TableRow>
-                ))
+                paginated.map((doc) => {
+                  const fullNumber = doc.approvedNumber || doc.proposedNumber;
+                  const [series, number] = fullNumber.split("-");
+                  return (
+                    <TableRow
+                      key={doc.id}
+                      className="cursor-pointer"
+                      onClick={() => router.push(`/admin/resolutions/${doc.id}`)}
+                    >
+                      <TableCell className="pl-6 font-medium">
+                        {number || fullNumber}
+                      </TableCell>
+                      <TableCell>{series || "—"}</TableCell>
+                      <TableCell className="max-w-[320px] whitespace-normal break-words">
+                        {doc.title}
+                      </TableCell>
+                      <TableCell>{doc.category}</TableCell>
+                      <TableCell>
+                        {format(doc.dateApproved, "MMM d, yyyy")}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
