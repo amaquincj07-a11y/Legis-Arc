@@ -73,7 +73,7 @@ export default function AboutPage() {
                   </div>
                   <div className="p-5">
                     <h3 className="font-semibold text-foreground">
-                      {member.name}
+                      Hon. {member.name}
                     </h3>
                     <p className="mt-0.5 text-xs text-teal font-medium">
                       {member.position}
