@@ -36,12 +36,7 @@ import { MAX_FILE_SIZE } from "@/lib/constants";
 const formSchema = z.object({
   sessionDate: z.string().min(1, "Session date is required"),
   sessionType: z.enum(["regular", "special"]),
-  sessionNumber: z.string().optional(),
-  presidingOfficer: z.string().min(1, "Presiding officer is required"),
-  preparedBy: z.string().min(1, "Prepared by is required"),
   status: z.enum(["draft", "approved"]),
-  remarks: z.string().optional(),
-  notes: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -64,12 +59,7 @@ export default function EditMinutesPage({
       ? {
           sessionDate: format(doc.sessionDate, "yyyy-MM-dd"),
           sessionType: doc.sessionType,
-          sessionNumber: doc.sessionNumber,
-          presidingOfficer: doc.presidingOfficer,
-          preparedBy: doc.preparedBy,
           status: doc.status === "published" ? "approved" : (doc.status as "draft" | "approved"),
-          remarks: doc.remarks,
-          notes: doc.notes,
         }
       : undefined,
   });
@@ -176,123 +166,30 @@ export default function EditMinutesPage({
                 />
               </div>
 
-              <div className="grid gap-6 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="sessionNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Session Number</FormLabel>
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
-                        <Input placeholder="e.g. 5 or 2-S" {...field} />
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="draft">Draft</SelectItem>
-                          <SelectItem value="approved">Approved</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid gap-6 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="presidingOfficer"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Presiding Officer{" "}
-                        <span className="text-destructive">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g. Hon. Vice Mayor Carlos Reyes"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="preparedBy"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Prepared By{" "}
-                        <span className="text-destructive">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid gap-6 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="remarks"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Remarks</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Optional remarks"
-                          className="min-h-[80px] resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notes</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Optional internal notes"
-                          className="min-h-[80px] resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                      <SelectContent>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="approved">Approved</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </CardContent>
           </Card>
 

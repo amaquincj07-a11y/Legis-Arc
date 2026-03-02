@@ -107,11 +107,6 @@ export interface SessionMinutes {
   documentType: "minutes";
   sessionDate: Date;
   sessionType: SessionType;
-  sessionNumber: string;
-  presidingOfficer: string;
-  preparedBy: string;
-  remarks: string;
-  notes: string;
   status: DocumentStatus;
   isPublic: boolean;
   pdfUrl: string;

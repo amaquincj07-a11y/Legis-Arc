@@ -47,11 +47,6 @@ export default function MinutesDetailPage({
         </Badge>
       ),
     },
-    { label: "Session Number", value: doc.sessionNumber || "—" },
-    { label: "Presiding Officer", value: doc.presidingOfficer },
-    { label: "Prepared By", value: doc.preparedBy },
-    { label: "Remarks", value: doc.remarks || "—", span: true },
-    { label: "Notes", value: doc.notes || "—", span: true },
   ];
 
   return (
@@ -70,8 +65,7 @@ export default function MinutesDetailPage({
             <StatusBadge status={doc.status} />
           </div>
           <p className="text-sm text-muted-foreground">
-            {doc.sessionType === "regular" ? "Regular" : "Special"} Session No.{" "}
-            {doc.sessionNumber}
+            {doc.sessionType === "regular" ? "Regular" : "Special"} Session
           </p>
         </div>
       </div>
@@ -104,10 +98,7 @@ export default function MinutesDetailPage({
         <CardContent>
           <dl className="grid gap-4 sm:grid-cols-2">
             {metadataFields.map((field) => (
-              <div
-                key={field.label}
-                className={field.span ? "sm:col-span-2" : ""}
-              >
+              <div key={field.label}>
                 <dt className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   {field.label}
                 </dt>

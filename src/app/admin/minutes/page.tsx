@@ -21,7 +21,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { StatusBadge } from "@/components/admin/status-badge";
 import { mockMinutes } from "@/lib/mock-data";
 import type { SessionMinutes } from "@/lib/types";
 import { toast } from "sonner";
@@ -197,12 +196,12 @@ export default function MinutesPage() {
                                           ? "Regular"
                                           : "Special"}
                                       </Badge>
-                                      <StatusBadge status={session.status} />
                                     </div>
-                                    <p className="text-xs text-muted-foreground mt-0.5">
-                                      Session No. {session.sessionNumber}
-                                      {session.remarks &&
-                                        ` — ${session.remarks}`}
+                                    <p className="text-sm text-muted-foreground mt-0.5">
+                                      {format(
+                                        session.sessionDate,
+                                        "EEEE, MMMM d, yyyy 'at' h:mm a"
+                                      )}
                                     </p>
                                   </div>
 
