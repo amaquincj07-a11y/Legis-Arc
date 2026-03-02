@@ -37,7 +37,7 @@ const actionVariant: Record<string, string> = {
 const uniqueUsers = [...new Set(mockAuditLogs.map((l) => l.userName))];
 const uniqueActions = [...new Set(mockAuditLogs.map((l) => l.action))];
 
-export default function AuditLogsPage() {
+export default function RecentActivityPage() {
   const [userFilter, setUserFilter] = useState<string>("all");
   const [actionFilter, setActionFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState("");
@@ -85,14 +85,14 @@ export default function AuditLogsPage() {
   }
 
   function handleExportCSV() {
-    toast.success("Audit logs exported to CSV");
+    toast.success("Recent activity exported to CSV");
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Audit Logs</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Recent Activity</h1>
           <p className="text-sm text-muted-foreground">
             View system activity history — read-only, immutable records
           </p>
@@ -187,7 +187,7 @@ export default function AuditLogsPage() {
                 <TableRow>
                   <TableCell colSpan={5} className="h-32 text-center">
                     <p className="text-muted-foreground">
-                      No audit logs found.
+                      No recent activity found.
                     </p>
                   </TableCell>
                 </TableRow>
