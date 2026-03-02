@@ -5,10 +5,7 @@ import {
   FileText,
   Download,
   Calendar,
-  User,
-  Hash,
   BookOpen,
-  Info,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -114,11 +111,6 @@ export default async function MinutesDetailPage({
               <h1 className="text-xl font-bold leading-tight tracking-tight text-foreground sm:text-2xl lg:text-3xl">
                 Session Minutes — {formattedDate}
               </h1>
-              {session.sessionNumber && (
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Session #{session.sessionNumber}
-                </p>
-              )}
             </div>
 
             <Separator className="mb-6" />
@@ -139,31 +131,6 @@ export default async function MinutesDetailPage({
                     : "Special Session"
                 }
               />
-              {session.sessionNumber && (
-                <MetaItem
-                  icon={Hash}
-                  label="Session Number"
-                  value={session.sessionNumber}
-                />
-              )}
-              <MetaItem
-                icon={User}
-                label="Presiding Officer"
-                value={session.presidingOfficer}
-              />
-              <MetaItem
-                icon={User}
-                label="Prepared By"
-                value={session.preparedBy}
-              />
-              {session.remarks && (
-                <MetaItem
-                  icon={Info}
-                  label="Remarks"
-                  value={session.remarks}
-                  className="sm:col-span-2"
-                />
-              )}
             </div>
           </div>
 
