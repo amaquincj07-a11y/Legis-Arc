@@ -200,11 +200,6 @@ export default function MinutesPage() {
                                               ? "Regular"
                                               : "Special"}
                                           </Badge>
-                                          {session.sessionNumber && (
-                                            <span className="text-xs text-muted-foreground">
-                                              Session #{session.sessionNumber}
-                                            </span>
-                                          )}
                                         </div>
                                       </div>
                                     </div>

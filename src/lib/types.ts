@@ -164,5 +164,7 @@ export interface SBMember {
 export interface Committee {
   id: string;
   name: string;
+  chairman: string;
+  viceChairman: string;
   members: string[];
 }

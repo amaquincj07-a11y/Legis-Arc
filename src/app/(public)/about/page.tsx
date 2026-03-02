@@ -1,15 +1,5 @@
 import Image from "next/image";
-import {
-  Landmark,
-  User,
-  Users,
-  Building,
-  Phone,
-  Mail,
-  Clock,
-  MapPin,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Landmark, User, Users, Building, Phone, Mail, Clock, MapPin } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { mockSBMembers, mockCommittees } from "@/lib/mock-data";
@@ -72,7 +62,7 @@ export default function AboutPage() {
                 className="border-2 border-transparent transition-all duration-200 hover:border-teal/15 hover:shadow-md overflow-hidden"
               >
                 <CardContent className="p-0">
-                  <div className="relative aspect-[3/4] w-full bg-muted/30">
+                  <div className="relative aspect-3/4 w-full bg-muted/30">
                     <Image
                       src={member.imageUrl ?? "/images/sb-member-placeholder.png"}
                       alt={`Portrait of ${member.name}, ${member.position}`}
@@ -88,19 +78,6 @@ export default function AboutPage() {
                     <p className="mt-0.5 text-xs text-teal font-medium">
                       {member.position}
                     </p>
-                    {member.committees.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {member.committees.map((c) => (
-                          <Badge
-                            key={c}
-                            variant="secondary"
-                            className="bg-muted text-[10px] font-normal text-muted-foreground px-2 py-0.5"
-                          >
-                            {c}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -137,16 +114,29 @@ export default function AboutPage() {
                   <h3 className="font-semibold text-foreground text-sm">
                     {committee.name}
                   </h3>
-                  <div className="mt-3 space-y-1.5">
-                    {committee.members.map((member) => (
-                      <div
-                        key={member}
-                        className="flex items-center gap-2 text-xs text-muted-foreground"
-                      >
-                        <User className="h-3 w-3 shrink-0" />
-                        <span>{member}</span>
+                  <div className="mt-3 space-y-2 text-xs text-muted-foreground">
+                    <div className="flex gap-2">
+                      <span className="font-semibold text-foreground">Chairman:</span>
+                      <span>{committee.chairman}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="font-semibold text-foreground">Vice Chairman:</span>
+                      <span>{committee.viceChairman}</span>
+                    </div>
+                    <div className="pt-1">
+                      <p className="font-semibold text-foreground">Members</p>
+                      <div className="mt-1 space-y-1.5">
+                        {committee.members.map((member) => (
+                          <div
+                            key={member}
+                            className="flex items-center gap-2 text-xs text-muted-foreground"
+                          >
+                            <User className="h-3 w-3 shrink-0" />
+                            <span>{member}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -212,11 +202,11 @@ function ContactCard({
   icon: Icon,
   title,
   lines,
-}: {
+}: Readonly<{
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   lines: string[];
-}) {
+}>) {
   return (
     <Card className="border hover:shadow-sm transition-shadow">
       <CardContent className="p-5">
