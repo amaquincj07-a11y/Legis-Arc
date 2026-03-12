@@ -26,9 +26,14 @@ import {
 } from "@/components/ui/breadcrumb";
 import { mockResolutions } from "@/lib/mock-data";
 import type { DocumentStatus } from "@/lib/types";
+import clsx from "clsx";
 
+// ADD THIS FUNCTION - required for static export
 export async function generateStaticParams() {
-  return mockResolutions.map((d) => ({ id: d.id }));
+  // Return an array of params for all resolutions that should be pre-rendered
+  return mockResolutions.map((doc) => ({
+    id: doc.id,
+  }));
 }
 
 function statusBadgeClass(status: DocumentStatus) {
@@ -36,6 +41,11 @@ function statusBadgeClass(status: DocumentStatus) {
   if (status === "approved") return "bg-blue-500/10 text-blue-700";
   return "bg-gray-500/10 text-gray-600";
 }
+
+const buttonStyles = {
+  downloadButton: "bg-[#3998eb] text-white px-4 py-2 rounded-md shadow-md hover:bg-[#2a7ccc]",
+  viewPdfButton: "bg-white text-[#3998eb] px-4 py-2 rounded-md shadow-md hover:bg-[#3998eb] hover:text-white",
+};
 
 export default async function ResolutionDetailPage({
   params,
@@ -91,10 +101,10 @@ export default async function ResolutionDetailPage({
             {/* Document Header */}
             <div className="mb-6">
               <div className="mb-3 flex flex-wrap items-center gap-2">
-                <Badge variant="secondary" className="bg-teal/10 text-teal">
+                <Badge variant="secondary" className="bg-navy/10 text-navy">
                   Resolution
                 </Badge>
-                <Badge variant="secondary" className="bg-navy/10 text-navy">
+                <Badge variant="secondary" className="bg-teal/10 text-teal">
                   {doc.category}
                 </Badge>
                 <Badge
@@ -105,8 +115,8 @@ export default async function ResolutionDetailPage({
                 </Badge>
               </div>
 
-              <p className="text-sm font-semibold text-teal">
-                Resolution No. {docNumber} — Series of {doc.seriesYear}
+              <p className="text-sm font-semibold text-[#3998eb]">
+                Resolution No. {docNumber} Series of {doc.seriesYear}
               </p>
 
               <h1 className="mt-2 text-xl font-bold leading-tight tracking-tight text-foreground sm:text-2xl lg:text-3xl">
@@ -117,13 +127,17 @@ export default async function ResolutionDetailPage({
             <Separator className="mb-6" />
 
             {/* Metadata Grid */}
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col space-y-4">
               <MetaItem
                 icon={User}
                 label="Author / Sponsor"
                 value={doc.authorSponsor}
               />
-              <MetaItem icon={Tag} label="Category" value={doc.category} />
+              <MetaItem
+                icon={Tag}
+                label="Category"
+                value={doc.category}
+              />
               <MetaItem
                 icon={Calendar}
                 label="Date Enacted"
@@ -186,18 +200,27 @@ export default async function ResolutionDetailPage({
                   Document PDF
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  Resolution No. {docNumber} — Series of {doc.seriesYear}
+                  Resolution No. {docNumber} Series of {doc.seriesYear}
                 </p>
               </div>
               <div className="flex flex-col gap-2 p-4">
-                <Button className="gap-2 bg-teal text-white hover:bg-teal/90" asChild>
+                <Button className={buttonStyles.downloadButton} asChild>
                   <a href={doc.pdfUrl} download>
                     <Download className="h-4 w-4" />
                     Download PDF
                   </a>
                 </Button>
-                <Button variant="outline" size="sm" className="gap-2 text-xs" asChild>
-                  <a href={doc.pdfUrl} target="_blank" rel="noopener noreferrer">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={buttonStyles.viewPdfButton}
+                  asChild
+                >
+                  <a
+                    href={doc.pdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <FileText className="h-3.5 w-3.5" />
                     View PDF
                   </a>
@@ -224,11 +247,11 @@ function MetaItem({
 }) {
   return (
     <div className={className}>
-      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-        <Icon className="h-3.5 w-3.5" />
-        {label}
+      <div className="flex items-center space-x-2">
+        <Icon className="h-5 w-5 text-[#3998eb]" />
+        <span className="font-medium text-[#3998eb]">{label}:</span>
+        <span>{value}</span>
       </div>
-      <p className="mt-1 text-sm font-medium text-foreground">{value}</p>
     </div>
   );
 }

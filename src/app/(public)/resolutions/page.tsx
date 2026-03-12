@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { FileText, Calendar, ArrowRight } from "lucide-react";
+import { FileText, Calendar, ArrowRight, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,7 +28,6 @@ const AUTHORS = [
 export default function ResolutionsPage() {
   const [yearFilter, setYearFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [authorFilter, setAuthorFilter] = useState("all");
 
   const filtered = useMemo(() => {
     let docs = PUBLIC_RESOLUTIONS;
@@ -38,13 +37,10 @@ export default function ResolutionsPage() {
     if (categoryFilter !== "all") {
       docs = docs.filter((d) => d.category === categoryFilter);
     }
-    if (authorFilter !== "all") {
-      docs = docs.filter((d) => d.authorSponsor === authorFilter);
-    }
     return docs.sort(
       (a, b) => b.dateApproved.getTime() - a.dateApproved.getTime()
     );
-  }, [yearFilter, categoryFilter, authorFilter]);
+  }, [yearFilter, categoryFilter]);
 
   return (
     <div className="min-h-[70vh]">
@@ -101,19 +97,6 @@ export default function ResolutionsPage() {
                 ))}
             </SelectContent>
           </Select>
-          <Select value={authorFilter} onValueChange={setAuthorFilter}>
-            <SelectTrigger className="h-8 w-[200px] text-xs">
-              <SelectValue placeholder="Author / Sponsor" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Authors</SelectItem>
-              {AUTHORS.map((a) => (
-                <SelectItem key={a} value={a}>
-                  {a}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
           <Separator orientation="vertical" className="hidden h-5 sm:block" />
           <span className="text-xs text-muted-foreground">
             {filtered.length} document{filtered.length !== 1 ? "s" : ""}
@@ -123,68 +106,45 @@ export default function ResolutionsPage() {
 
       {/* Card Grid */}
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-              <FileText className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold">No resolutions found</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Try adjusting the filters above.
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((doc) => (
-              <ResolutionCard key={doc.id} doc={doc} />
+        <table className="min-w-full table-auto border-collapse border border-gray-300">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border border-gray-300 px-4 py-2">No</th>
+              <th className="border border-gray-300 px-4 py-2">Series</th>
+              <th className="border border-gray-300 px-4 py-2">Title</th>
+              <th className="border border-gray-300 px-4 py-2">Category</th>
+              <th className="border border-gray-300 px-4 py-2">Date Approved</th>
+              <th className="border border-gray-300 px-4 py-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((doc, index) => (
+              <tr key={doc.id} className="odd:bg-white even:bg-gray-50">
+                <td className="border border-gray-300 px-4 py-2 text-center">
+                  {index + 1}
+                </td>
+                <td className="border border-gray-300 px-4 py-2 text-center">
+                  {doc.seriesYear}
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {doc.title}
+                </td>
+                <td className="border border-gray-300 px-4 py-2 text-center">
+                  {doc.category}
+                </td>
+                <td className="border border-gray-300 px-4 py-2 text-center">
+                  {format(doc.dateApproved, "MMMM dd, yyyy")}
+                </td>
+                <td className="border border-gray-300 px-4 py-2 text-center">
+                  <Link href={`/resolutions/${doc.id}`}>
+                    <Eye className="h-5 w-5 text-blue-500 hover:text-blue-700 cursor-pointer" />
+                  </Link>
+                </td>
+              </tr>
             ))}
-          </div>
-        )}
+          </tbody>
+        </table>
       </div>
     </div>
-  );
-}
-
-function ResolutionCard({
-  doc,
-}: {
-  doc: (typeof PUBLIC_RESOLUTIONS)[number];
-}) {
-  const docNumber = doc.approvedNumber || doc.proposedNumber;
-
-  return (
-    <Link href={`/resolutions/${doc.id}`} className="group">
-      <Card className="h-full border-2 border-transparent transition-all duration-200 hover:border-teal/20 hover:shadow-md">
-        <CardContent className="flex h-full flex-col p-5">
-          <div className="mb-3 flex items-center justify-between">
-            <Badge variant="secondary" className="bg-teal/10 text-teal text-xs">
-              {doc.category}
-            </Badge>
-            <span className="text-xs text-muted-foreground">
-              {doc.seriesYear}
-            </span>
-          </div>
-
-          <p className="text-xs font-semibold text-teal">
-            Resolution No. {docNumber}
-          </p>
-
-          <h3 className="mt-1.5 line-clamp-2 flex-1 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-navy">
-            {doc.title}
-          </h3>
-
-          <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              {format(doc.dateApproved, "MMM d, yyyy")}
-            </span>
-            <span className="inline-flex items-center gap-1 text-teal opacity-0 transition-opacity group-hover:opacity-100">
-              View
-              <ArrowRight className="h-3 w-3" />
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
   );
 }
