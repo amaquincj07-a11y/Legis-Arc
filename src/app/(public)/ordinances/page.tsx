@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { ScrollText, Calendar, ArrowRight } from "lucide-react";
+import { ScrollText, Calendar, ArrowRight, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -45,6 +45,11 @@ export default function OrdinancesPage() {
       (a, b) => b.dateApproved.getTime() - a.dateApproved.getTime()
     );
   }, [yearFilter, categoryFilter, authorFilter]);
+
+  const tableHeaderStyle = {
+    backgroundColor: "#101B29",
+    color: "white",
+  };
 
   return (
     <div className="min-h-[70vh]">
@@ -134,57 +139,48 @@ export default function OrdinancesPage() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((doc) => (
-              <OrdinanceCard key={doc.id} doc={doc} />
-            ))}
+          <div className="flex flex-col gap-4">
+            <table className="table-auto w-full border-collapse border border-gray-200">
+              <thead style={tableHeaderStyle}>
+                <tr>
+                  <th>Ordinance No.</th>
+                  <th>Title</th>
+                  <th>Category</th>
+                  <th>Year</th>
+                  <th>Date Approved</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((doc) => (
+                  <tr key={doc.id} className="hover:bg-gray-50">
+                    <td className="border border-gray-300 px-4 py-2 text-center">
+                      {doc.approvedNumber || doc.proposedNumber}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {doc.title}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2 text-center">
+                      {doc.category}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2 text-center">
+                      {doc.seriesYear}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2 text-center">
+                      {format(doc.dateApproved, "MMM d, yyyy")}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2 text-center">
+                      <Link href={`/ordinances/${doc.id}`} className="text-[#3998eb] hover:underline">
+                        <Eye className="h-5 w-5 inline" />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
     </div>
-  );
-}
-
-function OrdinanceCard({
-  doc,
-}: {
-  doc: (typeof PUBLIC_ORDINANCES)[number];
-}) {
-  const docNumber = doc.approvedNumber || doc.proposedNumber;
-
-  return (
-    <Link href={`/ordinances/${doc.id}`} className="group">
-      <Card className="h-full border-2 border-transparent transition-all duration-200 hover:border-teal/20 hover:shadow-md">
-        <CardContent className="flex h-full flex-col p-5">
-          <div className="mb-3 flex items-center justify-between">
-            <Badge variant="secondary" className="bg-navy/10 text-navy text-xs">
-              {doc.category}
-            </Badge>
-            <span className="text-xs text-muted-foreground">
-              {doc.seriesYear}
-            </span>
-          </div>
-
-          <p className="text-xs font-semibold text-teal">
-            Ordinance No. {docNumber}
-          </p>
-
-          <h3 className="mt-1.5 line-clamp-2 flex-1 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-navy">
-            {doc.title}
-          </h3>
-
-          <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              {format(doc.dateApproved, "MMM d, yyyy")}
-            </span>
-            <span className="inline-flex items-center gap-1 text-teal opacity-0 transition-opacity group-hover:opacity-100">
-              View
-              <ArrowRight className="h-3 w-3" />
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
   );
 }

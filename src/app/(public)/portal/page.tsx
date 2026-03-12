@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Search,
   ScrollText,
@@ -72,35 +73,35 @@ export default function PortalPage() {
 
   return (
     <>
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-navy">
-        {/* Background pattern */}
+      {/* Hero Section with Image Background */}
+      <section className="relative overflow-hidden">
+        {/* Background Image */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-linear-to-br from-navy via-navy-light/80 to-navy" />
-          <div
-            className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
-              backgroundSize: "40px 40px",
-            }}
+          <Image
+            src="/images/sb/sb-office.png"
+            alt="Sangguniang Bayan Office"
+            fill
+            className="object-cover"
+            priority
           />
-          <div className="absolute -right-40 -top-40 h-96 w-96 rounded-full bg-teal/10 blur-3xl" />
-          <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-gold/8 blur-3xl" />
+          {/* Layered overlays for depth and readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-navy/80 via-navy/60 to-navy/80" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/40" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-navy/20 to-navy/40" />
         </div>
 
         <div className="relative mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 sm:py-28 lg:py-32">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-medium text-white/70 backdrop-blur-sm">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-medium text-white backdrop-blur-sm shadow-lg">
             <span className="h-1.5 w-1.5 rounded-full bg-teal animate-pulse" />
             {"Public Transparency Portal"}
           </div>
 
-          <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
+          <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)] lg:drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)]">
             {"Sangguniang Bayan"}
-            <span className="mt-1 block text-gold">ng Panglao</span>
+            <span className="mt-1 block text-[#cbab53] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">ng Panglao</span>
           </h1>
 
-          <p className="mx-auto mt-4 max-w-2xl text-base text-white/60 sm:text-lg">
+          <p className="mx-auto mt-4 max-w-2xl text-base text-white/90 sm:text-lg drop-shadow-md">
             Legislative Records &amp; Public Transparency Portal
           </p>
 
@@ -110,24 +111,24 @@ export default function PortalPage() {
             className="mx-auto mt-8 max-w-xl sm:mt-10"
           >
             <div className="relative">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#3998eb]" />
               <Input
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search ordinances, resolutions..."
-                className="h-13 rounded-xl border-0 bg-white pl-12 pr-28 text-sm shadow-2xl shadow-black/20 ring-1 ring-white/20 placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-teal sm:h-14 sm:text-base"
+                className="h-13 rounded-xl border-0 bg-white pl-12 pr-28 text-sm shadow-2xl shadow-black/30 ring-1 ring-white/30 focus-visible:ring-2 focus-visible:ring-[#3998eb] sm:h-14 sm:text-base"
               />
               <Button
                 type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-teal px-5 text-sm font-semibold text-white shadow-lg shadow-teal/25 transition-all hover:bg-teal/90 hover:shadow-teal/40"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-[#3998eb] px-5 text-sm font-semibold text-white shadow-lg shadow-[#3998eb]/25 transition-all hover:bg-[#2a7ccc] hover:shadow-[#3998eb]/40"
               >
                 Search
               </Button>
             </div>
           </form>
 
-          <p className="mt-4 text-xs text-white/30">
+          <p className="mt-4 text-xs text-white/70 drop-shadow-sm">
             Search by title, document number, author, or keyword
           </p>
         </div>
