@@ -1,23 +1,30 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { format, getYear, getMonth } from "date-fns";
 import {
-  BookOpen,
-  Calendar,
+  Plus,
   ChevronRight,
-  Clock,
+  Eye,
+  Pencil,
+  Download,
+  CalendarDays,
+  Calendar,
 } from "lucide-react";
-import { format } from "date-fns";
+
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { mockMinutes } from "@/lib/mock-data";
+import type { SessionMinutes } from "@/lib/types";
+import { toast } from "sonner";
 
 const MONTH_NAMES = [
   "January",
@@ -34,57 +41,73 @@ const MONTH_NAMES = [
   "December",
 ];
 
-interface YearGroup {
-  year: number;
-  months: MonthGroup[];
-}
-
-interface MonthGroup {
-  month: number;
-  monthName: string;
-  sessions: typeof mockMinutes;
-}
+type GroupedMinutes = Record<number, Record<number, SessionMinutes[]>>;
 
 export default function MinutesPage() {
-  const publicMinutes = mockMinutes.filter((m) => m.isPublic);
+  const router = useRouter();
+  const [openYears, setOpenYears] = useState<Set<number>>(new Set());
+  const [openMonths, setOpenMonths] = useState<Set<string>>(new Set());
 
-  const tree = useMemo(() => {
-    const yearMap = new Map<number, Map<number, typeof mockMinutes>>();
+  const grouped = useMemo(() => {
+    const groupedMinutes: GroupedMinutes = {};
+    mockMinutes.forEach((minute) => {
+      const year = getYear(new Date(minute.sessionDate));
+      const month = getMonth(new Date(minute.sessionDate));
 
-    for (const m of publicMinutes) {
-      const y = m.sessionDate.getFullYear();
-      const mo = m.sessionDate.getMonth();
-      if (!yearMap.has(y)) yearMap.set(y, new Map());
-      const monthMap = yearMap.get(y)!;
-      if (!monthMap.has(mo)) monthMap.set(mo, []);
-      monthMap.get(mo)!.push(m);
-    }
-
-    const result: YearGroup[] = [];
-    const sortedYears = [...yearMap.keys()].sort((a, b) => b - a);
-
-    for (const year of sortedYears) {
-      const monthMap = yearMap.get(year)!;
-      const months: MonthGroup[] = [];
-      const sortedMonths = [...monthMap.keys()].sort((a, b) => b - a);
-
-      for (const month of sortedMonths) {
-        const sessions = monthMap.get(month)!;
-        sessions.sort(
-          (a, b) => b.sessionDate.getTime() - a.sessionDate.getTime()
-        );
-        months.push({
-          month,
-          monthName: MONTH_NAMES[month],
-          sessions,
-        });
+      if (!groupedMinutes[year]) {
+        groupedMinutes[year] = {};
       }
-      result.push({ year, months });
-    }
-    return result;
-  }, [publicMinutes]);
 
-  const defaultOpenYears = tree.length > 0 ? [String(tree[0].year)] : [];
+      if (!groupedMinutes[year][month]) {
+        groupedMinutes[year][month] = [];
+      }
+
+      groupedMinutes[year][month].push(minute);
+    });
+
+    // Sort sessions within each month by date (newest first)
+    Object.keys(groupedMinutes).forEach((year) => {
+      const yearNum = Number(year);
+      Object.keys(groupedMinutes[yearNum]).forEach((month) => {
+        const monthNum = Number(month);
+        groupedMinutes[yearNum][monthNum].sort(
+          (a, b) => 
+            new Date(b.sessionDate).getTime() - new Date(a.sessionDate).getTime()
+        );
+      });
+    });
+
+    return groupedMinutes;
+  }, []);
+
+  const toggleYear = (year: number) => {
+    setOpenYears((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(year)) {
+        newSet.delete(year);
+      } else {
+        newSet.add(year);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleMonth = (monthKey: string) => {
+    setOpenMonths((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(monthKey)) {
+        newSet.delete(monthKey);
+      } else {
+        newSet.add(monthKey);
+      }
+      return newSet;
+    });
+  };
+
+  // Sort years in descending order (newest first)
+  const sortedYears = Object.keys(grouped)
+    .map(Number)
+    .sort((a, b) => b - a);
 
   return (
     <div className="min-h-[70vh]">
@@ -92,131 +115,173 @@ export default function MinutesPage() {
       <div className="border-b bg-muted/30">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
           <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold/15">
-              <BookOpen className="h-5 w-5 text-gold" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
+              <CalendarDays className="h-5 w-5 text-amber-600" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               Session Minutes
             </h1>
           </div>
           <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Official records of Sangguniang Bayan sessions. Browse by year and
-            month to find session minutes, including deliberations, motions, and
-            official proceedings.
+            Browse official minutes of the Sangguniang Bayan ng Panglao sessions.
+            Minutes document the proceedings, discussions, and decisions made during
+            regular and special sessions.
           </p>
         </div>
       </div>
 
-      {/* Tree Navigation */}
-      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
-        {publicMinutes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-              <BookOpen className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold">No session minutes available</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Published session minutes will appear here.
+      {/* Minutes List */}
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {sortedYears.length === 0 ? (
+          <div className="text-center py-12">
+            <CalendarDays className="h-12 w-12 mx-auto text-muted-foreground/50" />
+            <h3 className="mt-4 text-lg font-semibold">No minutes found</h3>
+            <p className="text-sm text-muted-foreground">
+              Session minutes will appear here once available.
             </p>
           </div>
         ) : (
-          <Accordion
-            type="multiple"
-            defaultValue={defaultOpenYears}
-            className="space-y-3"
-          >
-            {tree.map((yearGroup) => (
-              <AccordionItem
-                key={yearGroup.year}
-                value={String(yearGroup.year)}
-                className="overflow-hidden rounded-xl border bg-card shadow-sm"
+          sortedYears.map((year) => (
+            <div
+              key={year}
+              className="mb-4 border rounded-lg overflow-hidden"
+            >
+              {/* Year Header */}
+              <div
+                className="flex items-center justify-between p-4 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => toggleYear(year)}
               >
-                <AccordionTrigger className="px-5 py-4 hover:no-underline">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-navy/10 text-navy">
-                      <Calendar className="h-4 w-4" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-base font-bold text-foreground">
-                        {yearGroup.year}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {yearGroup.months.reduce(
-                          (sum, m) => sum + m.sessions.length,
-                          0
-                        )}{" "}
-                        session
-                        {yearGroup.months.reduce(
-                          (sum, m) => sum + m.sessions.length,
-                          0
-                        ) !== 1
-                          ? "s"
-                          : ""}
-                      </p>
-                    </div>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-5 pb-4">
-                  <Accordion type="multiple" defaultValue={yearGroup.months.map((m) => `${yearGroup.year}-${m.month}`)}>
-                    {yearGroup.months.map((monthGroup) => (
-                      <AccordionItem
-                        key={`${yearGroup.year}-${monthGroup.month}`}
-                        value={`${yearGroup.year}-${monthGroup.month}`}
-                        className="border-0 border-b last:border-b-0"
-                      >
-                        <AccordionTrigger className="py-3 hover:no-underline">
-                          <span className="text-sm font-semibold text-foreground/80">
-                            {monthGroup.monthName}
-                          </span>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="space-y-2">
-                            {monthGroup.sessions.map((session) => (
-                              <Link
-                                key={session.id}
-                                href={`/minutes/${session.id}`}
-                                className="group block"
-                              >
-                                <Card className="border transition-all duration-200 hover:border-teal/30 hover:shadow-sm">
-                                  <CardContent className="flex items-center justify-between p-4">
-                                    <div className="flex items-center gap-3">
-                                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
-                                        <Clock className="h-4 w-4 text-muted-foreground" />
-                                      </div>
+                <div className="flex items-center space-x-3">
+                  <Calendar className="h-5 w-5 text-muted-foreground" />
+                  <h2 className="text-lg font-semibold">{year}</h2>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm text-muted-foreground">
+                    {Object.keys(grouped[year] || {}).length} months
+                  </span>
+                  <ChevronRight
+                    className={`h-5 w-5 transition-transform ${
+                      openYears.has(year) ? "rotate-90" : ""
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* Months */}
+              {openYears.has(year) && (
+                <div className="p-4 space-y-3">
+                  {Object.entries(grouped[year])
+                    .sort(([monthA], [monthB]) => Number(monthB) - Number(monthA))
+                    .map(([month, sessions]) => {
+                      const monthKey = `${year}-${month}`;
+                      return (
+                        <div
+                          key={month}
+                          className="border rounded-md overflow-hidden"
+                        >
+                          {/* Month Header */}
+                          <div
+                            className="flex items-center justify-between p-3 bg-white cursor-pointer hover:bg-muted/30 transition-colors"
+                            onClick={() => toggleMonth(monthKey)}
+                          >
+                            <h3 className="font-medium">
+                              {MONTH_NAMES[Number(month)]}
+                            </h3>
+                            <div className="flex items-center space-x-3">
+                              <span className="text-xs text-muted-foreground">
+                                {sessions.length} session{sessions.length !== 1 ? "s" : ""}
+                              </span>
+                              <ChevronRight
+                                className={`h-4 w-4 transition-transform ${
+                                  openMonths.has(monthKey) ? "rotate-90" : ""
+                                }`}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Sessions */}
+                          {openMonths.has(monthKey) && (
+                            <div className="divide-y">
+                              {sessions.map((session) => (
+                                <Card
+                                  key={session.id}
+                                  className="border-0 rounded-none shadow-none hover:bg-muted/30 cursor-pointer transition-colors"
+                                  onClick={() => router.push(`/minutes/${session.id}`)}
+                                >
+                                  <CardContent className="p-4">
+                                    <div className="flex items-center justify-between">
                                       <div>
-                                        <p className="text-sm font-semibold text-foreground group-hover:text-teal">
-                                          {format(session.sessionDate, "MMMM d, yyyy")}
-                                        </p>
-                                        <div className="mt-0.5 flex items-center gap-2">
-                                          <Badge
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <Badge 
                                             variant="secondary"
                                             className={
                                               session.sessionType === "special"
-                                                ? "bg-gold/15 text-gold text-[10px] px-1.5 py-0"
-                                                : "bg-navy/10 text-navy text-[10px] px-1.5 py-0"
+                                                ? "bg-amber-500/10 text-amber-700"
+                                                : "bg-blue-500/10 text-blue-700"
                                             }
                                           >
                                             {session.sessionType === "regular"
-                                              ? "Regular"
-                                              : "Special"}
+                                              ? "Regular Session"
+                                              : "Special Session"}
+                                          </Badge>
+                                          <Badge 
+                                            variant="secondary"
+                                            className={
+                                              session.status === "published"
+                                                ? "bg-emerald-500/10 text-emerald-700"
+                                                : session.status === "approved"
+                                                ? "bg-blue-500/10 text-blue-700"
+                                                : "bg-gray-500/10 text-gray-600"
+                                            }
+                                          >
+                                            {session.status.charAt(0).toUpperCase() + 
+                                              session.status.slice(1)}
                                           </Badge>
                                         </div>
+                                        <h4 className="text-sm font-medium">
+                                          Session Minutes — {format(new Date(session.sessionDate), "MMMM d, yyyy")}
+                                        </h4>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                          Session Date: {format(new Date(session.sessionDate), "MMMM d, yyyy")}
+                                        </p>
+                                      </div>
+                                      <div className="flex items-center space-x-2">
+                                        <Button 
+                                          variant="ghost" 
+                                          size="icon"
+                                          className="h-8 w-8"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            router.push(`/minutes/${session.id}`);
+                                          }}
+                                        >
+                                          <Eye className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-8 w-8"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            window.open(session.pdfUrl, '_blank');
+                                          }}
+                                        >
+                                          <Download className="h-4 w-4" />
+                                        </Button>
                                       </div>
                                     </div>
-                                    <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-teal" />
                                   </CardContent>
                                 </Card>
-                              </Link>
-                            ))}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          ))
         )}
       </div>
     </div>

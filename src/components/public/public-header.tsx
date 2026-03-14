@@ -228,7 +228,7 @@ export function PublicHeader() {
               href={item.href}
               className={[
                 "flex-1 px-6 py-4 text-center text-sm font-semibold uppercase tracking-wide",
-                "text-white hover:text-[#cbab53] transition-colors",
+                "text-white hover:text-white transition-colors",
                 "hover:bg-[#7eb0dc]",
                 isActive(item.href) ? "bg-[#3998eb] border-b-4 border-[#cbab53]" : "bg-[#3998eb]",
               ].join(" ")}

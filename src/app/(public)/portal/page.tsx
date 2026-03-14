@@ -92,7 +92,7 @@ export default function PortalPage() {
 
         <div className="relative mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 sm:py-28 lg:py-32">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-medium text-white backdrop-blur-sm shadow-lg">
-            <span className="h-1.5 w-1.5 rounded-full bg-teal animate-pulse" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[#cbab53] animate-pulse" />
             {"Public Transparency Portal"}
           </div>
 
@@ -151,14 +151,14 @@ export default function PortalPage() {
               const Icon = card.icon;
               return (
                 <Link key={card.href} href={card.href} className="group">
-                  <Card className="h-full border-2 border-transparent transition-all duration-200 group-hover:border-teal/30 group-hover:shadow-lg group-hover:shadow-teal/5">
+                  <Card className="h-full border-2 border-transparent transition-all duration-200 group-hover:border-[#cbab53]/30 group-hover:shadow-lg group-hover:shadow-[#cbab53]/5">
                     <CardHeader className="pb-3">
-                      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-teal/10 text-teal transition-colors group-hover:bg-teal group-hover:text-white">
+                      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-[#cbab53/10 text-[#cbab53] transition-colors group-hover:bg-[#cbab53] group-hover:text-white">
                         <Icon className="h-6 w-6" />
                       </div>
                       <CardTitle className="flex items-center justify-between text-lg">
                         {card.title}
-                        <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-teal" />
+                        <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-[#cbab53]" />
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -166,7 +166,7 @@ export default function PortalPage() {
                         {card.description}
                       </p>
                       {card.count !== null && (
-                        <p className="mt-3 text-xs font-medium text-teal">
+                        <p className="mt-3 text-xs font-medium text-[#3998eb]">
                           {card.count} published documents
                         </p>
                       )}
@@ -193,7 +193,7 @@ export default function PortalPage() {
             </div>
             <Link
               href="/search"
-              className="hidden text-sm font-medium text-teal transition-colors hover:text-teal/80 sm:block"
+              className="hidden text-sm font-medium text-[#cbab53] transition-colors hover:text-[#cbab53]/80 sm:block"
             >
               View all &rarr;
             </Link>
@@ -243,7 +243,7 @@ function DocumentCard({ doc }: { doc: LegislativeDocument }) {
               className={
                 doc.documentType === "ordinance"
                   ? "bg-navy/10 text-navy"
-                  : "bg-teal/10 text-teal"
+                  : "bg-[#cbab53]/10 text-[#cbab53]"
               }
             >
               {typeLabel}
@@ -253,7 +253,7 @@ function DocumentCard({ doc }: { doc: LegislativeDocument }) {
             </span>
           </div>
 
-          <p className="text-xs font-semibold text-teal">{docNumber}</p>
+          <p className="text-xs font-semibold text-[#cbab53]">{docNumber}</p>
 
           <h3 className="mt-1.5 line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-navy">
             {doc.title}

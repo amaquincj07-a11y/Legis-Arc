@@ -28,38 +28,24 @@ export default function AboutPage() {
             <Landmark className="h-7 w-7 text-gold" />
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
-            Sangguniang Bayan{" "}
-            <span className="mt-1 block text-gold">ng Panglao</span>
+            SB Member{" "}
+            <span className="mt-1 block text-[#cbab53]">Chart & Committees</span>
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-sm text-white/60 sm:text-base">
-            The legislative body of the Municipality of Panglao, Bohol —
-            committed to transparent governance and public service.
+            Elected and appointed members of the Sangguniang Bayan
           </p>
         </div>
       </section>
 
       {/* SB Member Chart */}
-      <section className="bg-background py-16 sm:py-20">
+      <section className="bg-[#25395C] py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-10 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-navy/10">
-              <Users className="h-5 w-5 text-navy" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                SB Member Chart
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Elected and appointed members of the Sangguniang Bayan
-              </p>
-            </div>
-          </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {mockSBMembers.map((member) => (
               <Card
                 key={member.id}
-                className="border-2 border-transparent transition-all duration-200 hover:border-teal/15 hover:shadow-md overflow-hidden"
+                className="border-5 border-[#cbab53] transition-all duration-200"
               >
                 <CardContent className="p-0">
                   <div className="relative aspect-3/4 w-full bg-muted/30">
@@ -72,10 +58,10 @@ export default function AboutPage() {
                     />
                   </div>
                   <div className="p-5">
-                    <h3 className="font-semibold text-foreground">
+                    <h3 className="font-semibold text-black hover:text-[#cbab53]">
                       Hon. {member.name}
                     </h3>
-                    <p className="mt-0.5 text-xs text-teal font-medium">
+                    <p className="mt-0.5 text-xs text-[#3998eb] font-medium hover:text-[#cbab53]">
                       {member.position}
                     </p>
                   </div>
@@ -109,7 +95,7 @@ export default function AboutPage() {
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {mockCommittees.map((committee) => (
-              <Card key={committee.id} className="border hover:shadow-sm transition-shadow">
+              <Card key={committee.id} className="border-t-4 border-[#3998eb] hover:shadow-sm transition-shadow">
                 <CardContent className="p-5">
                   <h3 className="font-semibold text-foreground text-sm">
                     {committee.name}
