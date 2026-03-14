@@ -93,27 +93,6 @@ export function PublicHeader() {
           </div>
         </Link>
 
-        {/* Search bar */}
-        <div className="hidden lg:block">
-          <form onSubmit={handleSearch} className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#3998eb] transition-colors" />
-            <Input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search ordinances, news..."
-              className="h-10 w-64 rounded-full border-gray-300 bg-white pl-9 pr-12 text-sm focus-visible:ring-1 focus-visible:ring-[#3998eb]"
-            />
-            <button
-              type="submit"
-              className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-10 rounded-full bg-[#3998eb] text-white flex items-center justify-center hover:bg-[#2a7ccc] transition-colors"
-              aria-label="Search"
-            >
-              <Search className="h-4 w-4" />
-            </button>
-          </form>
-        </div>
-
         {/* Mobile right side */}
         <div className="flex items-center gap-2 lg:hidden">
           {/* Mobile Menu */}

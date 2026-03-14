@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -11,6 +11,8 @@ import {
   Calendar,
   X,
   SearchX,
+  Eye,
+  Download,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -83,6 +85,25 @@ export function SearchContent() {
 
   function handleTypeChange(value: string) {
     setTypeFilter(value);
+    // Redirect to specific document type page when a specific type is selected
+    if (value === "ordinance") {
+      const searchQuery = query.trim();
+      const params = new URLSearchParams();
+      if (searchQuery) params.set("q", searchQuery);
+      if (yearFilter && yearFilter !== "all") params.set("year", yearFilter);
+      if (categoryFilter && categoryFilter !== "all") params.set("category", categoryFilter);
+      router.push(`/ordinances${params.toString() ? `?${params.toString()}` : ""}`);
+      return;
+    }
+    if (value === "resolution") {
+      const searchQuery = query.trim();
+      const params = new URLSearchParams();
+      if (searchQuery) params.set("q", searchQuery);
+      if (yearFilter && yearFilter !== "all") params.set("year", yearFilter);
+      if (categoryFilter && categoryFilter !== "all") params.set("category", categoryFilter);
+      router.push(`/resolutions${params.toString() ? `?${params.toString()}` : ""}`);
+      return;
+    }
     updateUrl({ q: query.trim(), type: value, year: yearFilter, category: categoryFilter });
   }
 
@@ -161,7 +182,7 @@ export function SearchContent() {
                 className="h-10 pl-10 pr-4"
               />
             </div>
-            <Button type="submit" className="bg-teal text-white hover:bg-teal/90">
+            <Button type="submit" className="bg-[#3998eb] text-white hover:bg-[#3998eb]/90">
               Search
             </Button>
             <Button
@@ -324,25 +345,22 @@ export function SearchContent() {
           <>
             {/* Desktop Table */}
             <div className="hidden lg:block">
-              <div className="rounded-xl border bg-card">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="w-[180px]">Document No.</TableHead>
-                      <TableHead>Title</TableHead>
-                      <TableHead className="w-[120px]">Type</TableHead>
-                      <TableHead className="w-[80px]">Year</TableHead>
-                      <TableHead className="w-[140px]">Category</TableHead>
-                      <TableHead className="w-[130px]">Date Approved</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {results.map((doc) => (
-                      <ResultTableRow key={doc.id} doc={doc} />
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+              <table className="table-auto w-full border-collapse border border-gray-200">
+                <thead style={{ backgroundColor: "#101B29", color: "white" }}>
+                  <tr>
+                    <th className="px-4 py-3 text-left font-semibold">Document No.</th>
+                    <th className="px-4 py-3 text-left font-semibold">Title</th>
+                    <th className="px-4 py-3 text-center font-semibold">Category</th>
+                    <th className="px-4 py-3 text-center font-semibold">Author/Sponsor</th>
+                    <th className="px-4 py-3 text-center font-semibold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {results.map((doc) => (
+                    <ResultTableRow key={doc.id} doc={doc} />
+                  ))}
+                </tbody>
+              </table>
             </div>
 
             {/* Mobile Cards */}
@@ -365,43 +383,72 @@ function ResultTableRow({ doc }: { doc: LegislativeDocument }) {
       : `/resolutions/${doc.id}`;
   const typeLabel =
     doc.documentType === "ordinance" ? "Ordinance" : "Resolution";
-  const docNumber = doc.approvedNumber || doc.proposedNumber;
+  const fullNumber = doc.approvedNumber || doc.proposedNumber;
+  const [year, num] = fullNumber.split("-");
+  const formattedNumber = `${num}-${year}`;
 
   return (
-    <TableRow className="group cursor-pointer" onClick={() => {}}>
-      <TableCell>
-        <Link
-          href={href}
-          className="font-medium text-teal hover:underline"
-        >
-          {typeLabel} No. {docNumber}
+    <tr className="hover:bg-gray-50 border-b border-gray-200">
+      <td className="border border-gray-300 px-4 py-2 text-center">
+        <Link href={href} className="font-medium text-[#3998eb] hover:underline">
+          {formattedNumber}
         </Link>
-      </TableCell>
-      <TableCell>
-        <Link href={href} className="block hover:text-navy">
-          <span className="line-clamp-2 text-sm">{doc.title}</span>
-        </Link>
-      </TableCell>
-      <TableCell>
         <Badge
           variant="secondary"
-          className={
+          className={`ml-2 text-[10px] ${
             doc.documentType === "ordinance"
-              ? "bg-navy/10 text-navy"
-              : "bg-teal/10 text-teal"
-          }
+              ? "bg-[#3998eb]/10 text-[#3998eb]"
+              : "bg-[#cbab53]/10 text-[#cbab53]"
+          }`}
         >
           {typeLabel}
         </Badge>
-      </TableCell>
-      <TableCell className="text-muted-foreground">{doc.seriesYear}</TableCell>
-      <TableCell>
-        <span className="text-sm text-muted-foreground">{doc.category}</span>
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground">
-        {format(doc.dateApproved, "MMM d, yyyy")}
-      </TableCell>
-    </TableRow>
+      </td>
+      <td className="border border-gray-300 px-4 py-2">
+        <Link href={href} className="hover:text-[#3998eb]">
+          {doc.title}
+        </Link>
+      </td>
+      <td className="border border-gray-300 px-4 py-2 text-center">
+        {doc.category}
+      </td>
+      <td className="border border-gray-300 px-4 py-2 text-center">
+        {doc.authorSponsor}
+      </td>
+      <td className="border border-gray-300 px-4 py-2">
+        <div className="flex items-center justify-center gap-2">
+          <button
+            type="button"
+            className="group relative flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-[#3998eb]/80 hover:bg-[#3998eb]/5 hover:text-[#3998eb]"
+            onClick={() => {
+              const link = document.createElement("a");
+              link.href = doc.pdfUrl;
+              link.download = `${doc.title}.pdf`;
+              link.click();
+            }}
+            title="Download PDF"
+          >
+            <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-md transition group-hover:opacity-100">
+              Download PDF
+            </span>
+            <Download className="size-4" />
+          </button>
+          <button
+            type="button"
+            className="group relative flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-[#cbab53]/80 hover:bg-[#cbab53]/5 hover:text-[#cbab53]"
+            onClick={() => {
+              window.open(doc.pdfUrl, "_blank");
+            }}
+            title="View PDF"
+          >
+            <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-md transition group-hover:opacity-100">
+              View PDF
+            </span>
+            <Eye className="size-4" />
+          </button>
+        </div>
+      </td>
+    </tr>
   );
 }
 
@@ -424,8 +471,8 @@ function ResultCard({ doc }: { doc: LegislativeDocument }) {
               variant="secondary"
               className={
                 doc.documentType === "ordinance"
-                  ? "bg-navy/10 text-navy"
-                  : "bg-teal/10 text-teal"
+                  ? "bg-[#3998eb]/10 text-[#3998eb]"
+                  : "bg-[#cbab53]/10 text-[#cbab53]"
               }
             >
               <Icon className="mr-1 h-3 w-3" />
@@ -435,7 +482,7 @@ function ResultCard({ doc }: { doc: LegislativeDocument }) {
               {doc.seriesYear}
             </span>
           </div>
-          <p className="text-xs font-semibold text-teal">
+          <p className="text-xs font-semibold text-[#3998eb]">
             {typeLabel} No. {docNumber}
           </p>
           <h3 className="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-foreground">

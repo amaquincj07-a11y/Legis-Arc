@@ -135,10 +135,10 @@ export function TrackingDetailClient({ doc }: TrackingDetailClientProps) {
       <div>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className="text-[26px] font-semibold tracking-tight text-slate-900">
               {docType} Tracking Details
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="mt-1 text-sm text-muted-foreground">
               {docType} {docNumber} — {doc.title}
             </p>
           </div>
@@ -146,18 +146,21 @@ export function TrackingDetailClient({ doc }: TrackingDetailClientProps) {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 flex-wrap">
-        <Button className="gap-2">
+      <div className="flex flex-wrap gap-3">
+        <Button className="gap-2 rounded-full bg-[#cbab53] px-5 py-2.5 text-[13px] font-semibold tracking-wide text-slate-900 shadow-md shadow-[#cbab53]/35 transition hover:bg-[#b89745] hover:shadow-lg hover:shadow-[#cbab53]/40">
           <Pencil className="size-4" />
           Edit
         </Button>
-        <Button variant="outline" className="gap-2">
+        <Button
+          variant="outline"
+          className="gap-2 rounded-full border-slate-200 px-4 py-2 text-[13px] font-medium text-slate-700 hover:border-[#3998eb]/80 hover:bg-white"
+        >
           <Download className="size-4" />
           Download PDF
         </Button>
         <Button 
           variant="outline" 
-          className="gap-2"
+          className="gap-2 rounded-full border-slate-200 px-4 py-2 text-[13px] font-medium text-slate-700 hover:border-[#3998eb]/80 hover:bg-white"
           onClick={() => window.open("/documents/MUN_ORD_02_2017_SNORKELING_ORDINANCE.pdf", "_blank")}
         >
           <Eye className="size-4" />
@@ -213,11 +216,13 @@ export function TrackingDetailClient({ doc }: TrackingDetailClientProps) {
         {/* Right Column - Status & Committee */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Tracking Status</CardTitle>
+            <CardTitle className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">
+              Tracking Status
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
-              <p className="text-sm font-medium text-muted-foreground mb-2">
+              <p className="mb-2 text-sm font-medium text-muted-foreground">
                 Current Status
               </p>
               <button
@@ -230,7 +235,7 @@ export function TrackingDetailClient({ doc }: TrackingDetailClientProps) {
                       ? "default"
                       : "secondary"
                   }
-                  className="capitalize text-base py-2 px-3 cursor-pointer hover:opacity-80 transition-opacity"
+                  className="cursor-pointer rounded-full px-3 py-2 text-[12px] font-medium capitalize hover:opacity-80 transition-opacity"
                 >
                   {TRACKING_STATUSES.find((s) => s.value === currentStatus)?.label ||
                     currentStatus ||
@@ -268,7 +273,9 @@ export function TrackingDetailClient({ doc }: TrackingDetailClientProps) {
       {/* Timeline Section */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Update Information</CardTitle>
+          <CardTitle className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">
+            Update Information
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-6">

@@ -265,7 +265,7 @@ export default function TrackingPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h1 className="text-[26px] font-semibold tracking-tight text-slate-900">
             Legislative Tracking
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -273,7 +273,7 @@ export default function TrackingPage() {
           </p>
         </div>
         <Button 
-          className="gap-2"
+          className="gap-2 rounded-full bg-[#cbab53] px-5 py-2.5 text-[13px] font-semibold tracking-wide text-slate-900 shadow-md shadow-[#cbab53]/35 transition hover:bg-[#b89745] hover:shadow-lg hover:shadow-[#cbab53]/40"
           onClick={openUploadDialog}
         >
           <Upload className="size-4" />
@@ -281,21 +281,21 @@ export default function TrackingPage() {
         </Button>
       </div>
 
-      <Card>
-        <CardHeader className="pb-4">
+      <Card className="border border-slate-200/90 shadow-sm shadow-slate-900/5">
+        <CardHeader className="pb-4 border-b border-slate-200/80 bg-slate-50/80">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#3998eb]" />
               <Input
                 placeholder="Search by subject/title..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
+                className="h-11 rounded-full border border-slate-200 bg-white/90 pl-11 pr-4 text-sm shadow-sm ring-0 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-[#3998eb]"
               />
             </div>
             <div className="flex flex-wrap gap-2">
               <Select value={referralFilter} onValueChange={setReferralFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="h-9 w-[190px] rounded-full border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-sm focus:ring-[#3998eb]">
                   <SelectValue placeholder="Referral Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -309,7 +309,7 @@ export default function TrackingPage() {
               </Select>
 
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="h-9 w-[180px] rounded-full border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-sm focus:ring-[#3998eb]">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -323,7 +323,12 @@ export default function TrackingPage() {
               </Select>
 
               {hasActiveFilters && (
-                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="h-9 rounded-full px-3 text-xs font-medium text-slate-600 hover:bg-slate-100"
+                >
                   <X className="mr-1 size-4" />
                   Clear
                 </Button>
@@ -334,14 +339,28 @@ export default function TrackingPage() {
         <CardContent className="px-0 pb-0 overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="pl-6 whitespace-nowrap">Session Date</TableHead>
-                <TableHead className="whitespace-nowrap">Referral Type</TableHead>
-                <TableHead className="min-w-[240px]">Subject</TableHead>
-                <TableHead className="whitespace-nowrap">Status</TableHead>
-                <TableHead className="min-w-[200px]">Committee (Required to)</TableHead>
-                <TableHead className="whitespace-nowrap">Legislative Output</TableHead>
-                <TableHead className="whitespace-nowrap">Last updated(Timestamp)</TableHead>
+              <TableRow className="border-slate-200 bg-slate-50/60">
+                <TableHead className="pl-6 whitespace-nowrap text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
+                  Session Date
+                </TableHead>
+                <TableHead className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
+                  Referral Type
+                </TableHead>
+                <TableHead className="min-w-[260px] text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
+                  Subject
+                </TableHead>
+                <TableHead className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
+                  Status
+                </TableHead>
+                <TableHead className="min-w-[220px] text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
+                  Committee (Required to)
+                </TableHead>
+                <TableHead className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
+                  Legislative Output
+                </TableHead>
+                <TableHead className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
+                  Last Updated
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -357,20 +376,23 @@ export default function TrackingPage() {
                 filtered.map((doc) => (
                   <TableRow
                     key={`${doc.documentType}-${doc.id}`}
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    className="cursor-pointer border-slate-100/90 transition hover:bg-slate-50"
                     onClick={() => router.push(`/admin/tracking/${doc.id}`)}
                   >
-                    <TableCell className="pl-6 font-medium whitespace-nowrap">
+                    <TableCell className="pl-6 whitespace-nowrap text-[13px] font-semibold text-slate-800">
                       {doc.sessionDate
                         ? format(doc.sessionDate, "yyyy-MM-dd")
                         : format(doc.dateApproved, "yyyy-MM-dd")}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
-                      <Badge variant="outline" className="capitalize">
+                      <Badge
+                        variant="outline"
+                        className="capitalize rounded-full border-[#3998eb]/40 bg-[#3998eb]/5 px-3 py-1 text-[11px] font-medium text-[#3998eb]"
+                      >
                         {REFERRAL_TYPES.find((t) => t.value === doc.referralType)?.label || "—"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="max-w-[240px] break-words whitespace-normal">
+                    <TableCell className="max-w-[260px] whitespace-normal wrap-break-word text-[13px] text-slate-800">
                       {doc.trackingSubject || doc.title}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
@@ -380,18 +402,18 @@ export default function TrackingPage() {
                             ? "default"
                             : "secondary"
                         }
-                        className="capitalize"
+                        className="capitalize rounded-full px-3 py-1 text-[11px] font-medium"
                       >
                         {TRACKING_STATUSES.find((s) => s.value === doc.stage)?.label || doc.stage || "—"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[200px] break-words whitespace-normal">
+                    <TableCell className="max-w-[220px] whitespace-normal wrap-break-word text-[13px] text-slate-700">
                       {doc.assignedCommittee || "—"}
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                    <TableCell className="whitespace-nowrap text-[13px] text-slate-700">
                       {doc.legislativeOutput || "—"}
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="text-[13px] text-slate-600">
                       <div className="flex flex-col gap-1">
                         <span className="whitespace-nowrap">
                           {format(doc.updatedAt, "MMM d, yyyy HH:mm")}

@@ -105,18 +105,23 @@ function AdminSidebar() {
   );
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader className="p-4">
+    <Sidebar
+      collapsible="icon"
+      className="bg-linear-to-b from-sidebar to-black/95 text-sidebar-foreground shadow-[4px_0_24px_rgba(0,0,0,0.55)]"
+    >
+      <SidebarHeader className="p-4 pb-3 border-b border-sidebar-border/60">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/admin/dashboard">
-                <div className="flex size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+                <div className="flex size-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground shadow-[0_0_0_1px_rgba(0,0,0,0.35)]">
                   <Landmark className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Legislative</span>
-                  <span className="truncate text-xs opacity-70">
+                  <span className="truncate text-[13px] font-semibold tracking-wide text-sidebar-foreground">
+                    Legislative
+                  </span>
+                  <span className="truncate text-[11px] text-sidebar-foreground/65">
                     Management System
                   </span>
                 </div>
@@ -130,7 +135,9 @@ function AdminSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[11px] uppercase tracking-[0.14em] text-sidebar-foreground/55">
+            Navigation
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {filteredNav.map((item) => {
@@ -146,10 +153,15 @@ function AdminSidebar() {
                       asChild
                       isActive={isActive}
                       tooltip={item.title}
+                      className="data-[active=true]:bg-linear-to-r data-[active=true]:from-[rgba(203,171,83,0.18)] data-[active=true]:to-[rgba(57,152,235,0.16)] data-[active=true]:text-sidebar-foreground hover:bg-[rgba(31,41,55,0.9)]/90 hover:text-sidebar-foreground"
                     >
                       <Link href={item.href}>
-                        {Icon && <Icon />}
-                        <span>{item.title}</span>
+                        {Icon && (
+                          <Icon className="text-sidebar-foreground/75 group-data-[active=true]/menu-button:text-gold" />
+                        )}
+                        <span className="text-[13px] font-medium tracking-tight">
+                          {item.title}
+                        </span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -166,7 +178,7 @@ function AdminSidebar() {
             <SidebarMenuButton
               onClick={logout}
               tooltip="Logout"
-              className="text-sidebar-foreground/70 hover:text-sidebar-foreground"
+              className="mt-1 rounded-md border border-sidebar-border/60 bg-black/30 text-[13px] text-sidebar-foreground/80 hover:border-(--gold)/70 hover:bg-[rgba(15,23,42,0.9)] hover:text-sidebar-foreground"
             >
               <LogOut />
               <span>Logout</span>

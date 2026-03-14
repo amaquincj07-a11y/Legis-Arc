@@ -56,13 +56,16 @@
 :root {
   --radius: 0.625rem;
 
-  /* Government Navy / Slate primary palette */
-  --navy: oklch(0.28 0.05 260);
-  --navy-light: oklch(0.35 0.045 260);
+  /* Brand palette */
+  /* Gold / accent used across admin UI */
+  --gold: #cbab53;
+  --gold-light: color-mix(in oklab, #cbab53 80%, white);
+  /* Legislative blue accent */
+  --navy: #162133;
+  --navy-light: color-mix(in oklab, #162133 80%, white);
+  /* Supporting teal tones retained for charts/legacy accents */
   --teal: oklch(0.55 0.14 175);
   --teal-light: oklch(0.65 0.12 175);
-  --gold: oklch(0.72 0.15 75);
-  --gold-light: oklch(0.82 0.12 80);
 
   --background: oklch(0.99 0.002 260);
   --foreground: oklch(0.17 0.03 260);
@@ -70,14 +73,14 @@
   --card-foreground: oklch(0.17 0.03 260);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.17 0.03 260);
-  --primary: oklch(0.28 0.05 260);
-  --primary-foreground: oklch(0.98 0.005 260);
+  --primary: #cbab53;
+  --primary-foreground: #111827;
   --secondary: oklch(0.95 0.01 260);
   --secondary-foreground: oklch(0.25 0.04 260);
   --muted: oklch(0.95 0.008 260);
   --muted-foreground: oklch(0.48 0.02 260);
-  --accent: oklch(0.55 0.14 175);
-  --accent-foreground: oklch(0.98 0.005 175);
+  --accent: #3998eb;
+  --accent-foreground: #f9fafb;
   --destructive: oklch(0.55 0.22 27);
   --border: oklch(0.91 0.01 260);
   --input: oklch(0.91 0.01 260);
@@ -88,15 +91,15 @@
   --chart-4: oklch(0.45 0.1 200);
   --chart-5: oklch(0.65 0.08 300);
 
-  /* Admin sidebar - deep navy */
-  --sidebar: oklch(0.22 0.04 260);
-  --sidebar-foreground: oklch(0.88 0.01 260);
-  --sidebar-primary: oklch(0.55 0.14 175);
-  --sidebar-primary-foreground: oklch(0.98 0.005 175);
-  --sidebar-accent: oklch(0.30 0.045 260);
-  --sidebar-accent-foreground: oklch(0.92 0.01 260);
-  --sidebar-border: oklch(0.32 0.04 260);
-  --sidebar-ring: oklch(0.55 0.14 175);
+  /* Admin sidebar */
+  --sidebar: #111827;
+  --sidebar-foreground: #e5e7eb;
+  --sidebar-primary: #cbab53;
+  --sidebar-primary-foreground: #111827;
+  --sidebar-accent: #1f2937;
+  --sidebar-accent-foreground: #f9fafb;
+  --sidebar-border: #1f2937;
+  --sidebar-ring: #3998eb;
 }
 
 .dark {
@@ -106,14 +109,14 @@
   --card-foreground: oklch(0.95 0.005 260);
   --popover: oklch(0.18 0.025 260);
   --popover-foreground: oklch(0.95 0.005 260);
-  --primary: oklch(0.55 0.14 175);
-  --primary-foreground: oklch(0.98 0.005 175);
+  --primary: #cbab53;
+  --primary-foreground: #020617;
   --secondary: oklch(0.22 0.03 260);
   --secondary-foreground: oklch(0.95 0.005 260);
   --muted: oklch(0.22 0.03 260);
   --muted-foreground: oklch(0.62 0.015 260);
-  --accent: oklch(0.22 0.03 260);
-  --accent-foreground: oklch(0.95 0.005 260);
+  --accent: #3998eb;
+  --accent-foreground: #f9fafb;
   --destructive: oklch(0.60 0.20 27);
   --border: oklch(0.28 0.03 260);
   --input: oklch(0.28 0.03 260);
@@ -123,14 +126,14 @@
   --chart-3: oklch(0.45 0.1 200);
   --chart-4: oklch(0.65 0.08 300);
   --chart-5: oklch(0.28 0.05 260);
-  --sidebar: oklch(0.16 0.025 260);
-  --sidebar-foreground: oklch(0.90 0.01 260);
-  --sidebar-primary: oklch(0.55 0.14 175);
-  --sidebar-primary-foreground: oklch(0.98 0.005 175);
-  --sidebar-accent: oklch(0.22 0.03 260);
-  --sidebar-accent-foreground: oklch(0.92 0.01 260);
-  --sidebar-border: oklch(0.28 0.03 260);
-  --sidebar-ring: oklch(0.55 0.14 175);
+  --sidebar: #020617;
+  --sidebar-foreground: #e5e7eb;
+  --sidebar-primary: #cbab53;
+  --sidebar-primary-foreground: #020617;
+  --sidebar-accent: #111827;
+  --sidebar-accent-foreground: #f9fafb;
+  --sidebar-border: #111827;
+  --sidebar-ring: #3998eb;
 }
 
 @layer base {
