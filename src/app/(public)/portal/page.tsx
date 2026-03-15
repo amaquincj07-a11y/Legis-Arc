@@ -90,40 +90,41 @@ export default function PortalPage() {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-navy/20 to-navy/40" />
         </div>
 
-        <div className="relative mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 sm:py-28 lg:py-32">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-medium text-white backdrop-blur-sm shadow-lg">
+        <div className="relative mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 sm:py-28 lg:py-32">
+          <div className="mb-4 sm:mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-medium text-white backdrop-blur-sm shadow-lg sm:px-4 sm:py-1.5 sm:text-xs">
             <span className="h-1.5 w-1.5 rounded-full bg-[#cbab53] animate-pulse" />
             {"Public Transparency Portal"}
           </div>
 
-          <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)] lg:drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)]">
+          <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)] lg:drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)]">
             {"Sangguniang Bayan"}
             <span className="mt-1 block text-[#cbab53] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">ng Panglao</span>
           </h1>
 
-          <p className="mx-auto mt-4 max-w-2xl text-base text-white/90 sm:text-lg drop-shadow-md">
+          <p className="mx-auto mt-3 max-w-2xl text-sm text-white/90 sm:mt-4 sm:text-lg drop-shadow-md">
             Legislative Records &amp; Public Transparency Portal
           </p>
 
           {/* Search Bar */}
           <form
             onSubmit={handleSearch}
-            className="mx-auto mt-8 max-w-xl sm:mt-10"
+            className="mx-auto mt-6 max-w-xl sm:mt-10"
           >
             <div className="relative">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#3998eb]" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#3998eb] sm:left-4 sm:h-5 sm:w-5" />
               <Input
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search ordinances, resolutions..."
-                className="h-13 rounded-xl border-0 bg-white pl-12 pr-28 text-sm shadow-2xl shadow-black/30 ring-1 ring-white/30 focus-visible:ring-2 focus-visible:ring-[#3998eb] sm:h-14 sm:text-base"
+                className="h-12 rounded-xl border-0 bg-white pl-10 pr-20 text-sm shadow-2xl shadow-black/30 ring-1 ring-white/30 focus-visible:ring-2 focus-visible:ring-[#3998eb] sm:h-14 sm:pl-12 sm:pr-28 sm:text-base"
               />
               <Button
                 type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-[#3998eb] px-5 text-sm font-semibold text-white shadow-lg shadow-[#3998eb]/25 transition-all hover:bg-[#2a7ccc] hover:shadow-[#3998eb]/40"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg bg-[#3998eb] px-3 text-xs font-semibold text-white shadow-lg shadow-[#3998eb]/25 transition-all hover:bg-[#2a7ccc] hover:shadow-[#3998eb]/40 sm:right-2 sm:px-5 sm:text-sm"
               >
-                Search
+                <Search className="h-4 w-4 sm:hidden" />
+                <span className="hidden sm:inline">Search</span>
               </Button>
             </div>
           </form>
@@ -135,34 +136,34 @@ export default function PortalPage() {
       </section>
 
       {/* Browse Section */}
-      <section className="border-b bg-background py-16 sm:py-20">
+      <section className="border-b bg-background py-10 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-10 text-center">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <div className="mb-8 text-center sm:mb-10">
+            <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl lg:text-3xl">
               Browse Legislative Records
             </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
               Access public documents by category
             </p>
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5">
             {BROWSE_CARDS.map((card) => {
               const Icon = card.icon;
               return (
                 <Link key={card.href} href={card.href} className="group">
                   <Card className="h-full border-2 border-transparent transition-all duration-200 group-hover:border-[#cbab53]/30 group-hover:shadow-lg group-hover:shadow-[#cbab53]/5">
-                    <CardHeader className="pb-3">
-                      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-[#cbab53/10 text-[#cbab53] transition-colors group-hover:bg-[#cbab53] group-hover:text-white">
-                        <Icon className="h-6 w-6" />
+                    <CardHeader className="pb-2 sm:pb-3">
+                      <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-[#cbab53/10 text-[#cbab53] transition-colors group-hover:bg-[#cbab53] group-hover:text-white sm:mb-3 sm:h-12 sm:w-12">
+                        <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                       </div>
-                      <CardTitle className="flex items-center justify-between text-lg">
+                      <CardTitle className="flex items-center justify-between text-base sm:text-lg">
                         {card.title}
                         <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-[#cbab53]" />
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm leading-relaxed text-muted-foreground">
+                      <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
                         {card.description}
                       </p>
                       {card.count !== null && (
@@ -180,14 +181,14 @@ export default function PortalPage() {
       </section>
 
       {/* Latest Published */}
-      <section className="bg-muted/30 py-16 sm:py-20">
+      <section className="bg-muted/30 py-10 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-10 flex items-end justify-between">
+          <div className="mb-6 flex items-end justify-between sm:mb-10">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl lg:text-3xl">
                 Recently Published
               </h2>
-              <p className="mt-2 text-sm text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground sm:mt-2 sm:text-sm">
                 Latest legislative documents available for public access
               </p>
             </div>
@@ -199,7 +200,7 @@ export default function PortalPage() {
             </Link>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4">
             {latestDocs.map((doc) => (
               <DocumentCard key={doc.id} doc={doc} />
             ))}

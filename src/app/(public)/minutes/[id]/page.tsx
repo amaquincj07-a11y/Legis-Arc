@@ -136,7 +136,7 @@ export default async function MinutesDetailPage({
 
           {/* Sidebar — PDF actions (open in new tab or download) */}
           <div className="lg:col-span-1 space-y-4">
-            <Card className="sticky top-24 overflow-hidden border border-border">
+            <Card className="lg:sticky lg:top-24 overflow-hidden border border-border">
               <div className="border-b bg-muted/30 px-4 py-3">
                 <h3 className="text-sm font-semibold text-foreground">
                   Session Minutes PDF

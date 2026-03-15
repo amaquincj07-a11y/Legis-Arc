@@ -189,7 +189,7 @@ export default async function OrdinanceDetailPage({
           </div>
 
           <div className="lg:col-span-1 space-y-4">
-            <Card className="sticky top-24 overflow-hidden border border-border">
+            <Card className="lg:sticky lg:top-24 overflow-hidden border border-border">
               <div className="border-b bg-muted/30 px-4 py-3">
                 <h3 className="text-sm font-semibold text-foreground">
                   Document PDF
@@ -233,10 +233,12 @@ function MetaItem({
 }) {
   return (
     <div className={className}>
-      <div className="flex items-center space-x-2">
-        <Icon className="h-5 w-5 text-[#3998eb]" />
-        <span className="font-medium text-[#3998eb]">{label}:</span>
-        <span>{value}</span>
+      <div className="flex items-start gap-2 sm:items-center sm:flex-row">
+        <Icon className="h-4 w-4 shrink-0 text-[#3998eb] mt-0.5 sm:mt-0 sm:h-5 sm:w-5" />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-1">
+          <span className="text-xs font-medium text-[#3998eb] sm:text-sm">{label}:</span>
+          <span className="text-sm">{value}</span>
+        </div>
       </div>
     </div>
   );

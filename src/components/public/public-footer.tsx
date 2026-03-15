@@ -9,8 +9,8 @@ export function PublicFooter() {
       <div className="h-1 bg-linear-to-r from-gold via-gold-light to-gold" />
 
       <div className="bg-navy text-white">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+          <div className="grid gap-8 sm:grid-cols-2 sm:gap-10 lg:grid-cols-3">
             {/* Column 1: Branding */}
             <div className="space-y-4">
               <div className="flex items-center gap-3">
@@ -89,12 +89,12 @@ export function PublicFooter() {
 
         {/* Bottom bar */}
         <div className="border-t border-white/10">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-            <p className="text-xs text-white/40">
+          <div className="mx-auto flex max-w-7xl flex-col items-center gap-2 px-4 py-4 sm:flex-row sm:justify-between sm:px-6 lg:px-8">
+            <p className="text-xs text-white/40 text-center">
               &copy; {new Date().getFullYear()} Sangguniang Bayan ng Panglao.
               All rights reserved.
             </p>
-            <p className="hidden text-xs text-white/30 sm:block">
+            <p className="text-xs text-white/30">
               Legislative Records Management System
             </p>
           </div>

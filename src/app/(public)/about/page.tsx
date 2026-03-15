@@ -23,25 +23,25 @@ export default function AboutPage() {
           <div className="absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-gold/8 blur-3xl" />
         </div>
 
-        <div className="relative mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 sm:py-24 lg:px-8">
-          <div className="mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm">
-            <Landmark className="h-7 w-7 text-gold" />
+        <div className="relative mx-auto max-w-4xl px-4 py-10 text-center sm:px-6 sm:py-24 lg:px-8">
+          <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm sm:mb-5 sm:h-14 sm:w-14">
+            <Landmark className="h-6 w-6 text-gold sm:h-7 sm:w-7" />
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
+          <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
             SB Member{" "}
             <span className="mt-1 block text-[#cbab53]">Chart & Committees</span>
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-sm text-white/60 sm:text-base">
+          <p className="mx-auto mt-3 max-w-2xl text-xs text-white/60 sm:mt-4 sm:text-base">
             Elected and appointed members of the Sangguniang Bayan
           </p>
         </div>
       </section>
 
       {/* SB Member Chart */}
-      <section className="bg-[#25395C] py-16 sm:py-20">
+      <section className="bg-[#25395C] py-10 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 grid-cols-2 sm:gap-4 lg:grid-cols-3">
             {mockSBMembers.map((member) => (
               <Card
                 key={member.id}
@@ -93,10 +93,10 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             {mockCommittees.map((committee) => (
               <Card key={committee.id} className="border-t-4 border-[#3998eb] hover:shadow-sm transition-shadow">
-                <CardContent className="p-5">
+                <CardContent className="p-4 sm:p-5">
                   <h3 className="font-semibold text-foreground text-sm">
                     {committee.name}
                   </h3>
@@ -148,7 +148,7 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
             <ContactCard
               icon={MapPin}
               title="Office Address"

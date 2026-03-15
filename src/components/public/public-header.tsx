@@ -70,10 +70,10 @@ export function PublicHeader() {
       </div>
 
       {/* Main header */}
-      <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:h-24 sm:px-6 lg:px-8">
         {/* Logo and title */}
-        <Link href="/portal" className="flex items-center gap-4 shrink-0">
-          <div className="relative h-16 w-16 overflow-hidden">
+        <Link href="/portal" className="flex items-center gap-2 shrink-0 sm:gap-4">
+          <div className="relative h-10 w-10 overflow-hidden sm:h-16 sm:w-16">
             <Image
               src="/images/sb/panglao-logo.png"
               alt="Municipality of Panglao"
@@ -90,6 +90,13 @@ export function PublicHeader() {
               SANGGUNIANG BAYAN
             </p>
             <p className="text-xs font-medium text-gray-700">Province of Bohol</p>
+          </div>
+          {/* Compact mobile title */}
+          <div className="sm:hidden">
+            <p className="text-sm font-bold leading-tight text-[#3998eb]">
+              SANGGUNIANG BAYAN
+            </p>
+            <p className="text-[10px] font-medium text-gray-600">Panglao, Bohol</p>
           </div>
         </Link>
 
@@ -219,14 +226,14 @@ export function PublicHeader() {
       </nav>
 
       {/* Mobile Navigation Bar */}
-      <nav className="flex lg:hidden w-full border-t-4 border-[#cbab53] bg-[#3998eb] px-4 py-2">
-        <div className="flex w-full items-center gap-1 overflow-x-auto">
+      <nav className="flex lg:hidden w-full border-t-4 border-[#cbab53] bg-[#3998eb] px-2 py-1.5 sm:px-4 sm:py-2">
+        <div className="flex w-full items-center gap-1 overflow-x-auto scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {PUBLIC_NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={[
-                "whitespace-nowrap px-3 py-2 text-xs font-semibold uppercase tracking-wide rounded-md",
+                "whitespace-nowrap px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wide rounded-md sm:px-3 sm:py-2 sm:text-xs",
                 "text-white hover:text-[#cbab53] transition-colors",
                 "hover:bg-[#7eb0dc]",
                 isActive(item.href) ? "bg-white/20 border-b-2 border-[#cbab53]" : "bg-[#3998eb]",

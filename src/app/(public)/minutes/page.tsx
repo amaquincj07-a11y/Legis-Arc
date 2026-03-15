@@ -148,19 +148,19 @@ export default function MinutesPage() {
             >
               {/* Year Header */}
               <div
-                className="flex items-center justify-between p-4 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+                className="flex items-center justify-between p-3 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors sm:p-4"
                 onClick={() => toggleYear(year)}
               >
-                <div className="flex items-center space-x-3">
-                  <Calendar className="h-5 w-5 text-muted-foreground" />
-                  <h2 className="text-lg font-semibold">{year}</h2>
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <Calendar className="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
+                  <h2 className="text-base font-semibold sm:text-lg">{year}</h2>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm text-muted-foreground">
+                <div className="flex items-center space-x-2 sm:space-x-4">
+                  <span className="text-xs text-muted-foreground sm:text-sm">
                     {Object.keys(grouped[year] || {}).length} months
                   </span>
                   <ChevronRight
-                    className={`h-5 w-5 transition-transform ${
+                    className={`h-4 w-4 transition-transform sm:h-5 sm:w-5 ${
                       openYears.has(year) ? "rotate-90" : ""
                     }`}
                   />
@@ -169,109 +169,118 @@ export default function MinutesPage() {
 
               {/* Months */}
               {openYears.has(year) && (
-                <div className="p-4 space-y-3">
+                <div className="p-3 space-y-2 sm:p-4 sm:space-y-3">
                   {Object.entries(grouped[year])
                     .sort(([monthA], [monthB]) => Number(monthB) - Number(monthA))
                     .map(([month, sessions]) => {
                       const monthKey = `${year}-${month}`;
+                      const isMonthOpen = openMonths.has(monthKey);
                       return (
                         <div
                           key={month}
-                          className="border rounded-md overflow-hidden"
+                          className="rounded-lg border border-border/60 overflow-hidden transition-shadow hover:shadow-sm"
                         >
                           {/* Month Header */}
                           <div
-                            className="flex items-center justify-between p-3 bg-white cursor-pointer hover:bg-muted/30 transition-colors"
+                            className={`flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors sm:px-4 sm:py-3 ${
+                              isMonthOpen
+                                ? "bg-[#3998eb]/5 border-b border-[#3998eb]/10"
+                                : "bg-white hover:bg-muted/40"
+                            }`}
                             onClick={() => toggleMonth(monthKey)}
                           >
-                            <h3 className="font-medium">
-                              {MONTH_NAMES[Number(month)]}
-                            </h3>
-                            <div className="flex items-center space-x-3">
-                              <span className="text-xs text-muted-foreground">
-                                {sessions.length} session{sessions.length !== 1 ? "s" : ""}
-                              </span>
-                              <ChevronRight
-                                className={`h-4 w-4 transition-transform ${
-                                  openMonths.has(monthKey) ? "rotate-90" : ""
-                                }`}
-                              />
+                            <div className="flex items-center gap-2.5">
+                             
+                              <div>
+                                <h3 className="text-sm font-semibold text-foreground">
+                                  {MONTH_NAMES[Number(month)]}
+                                </h3>
+                                <p className="text-[10px] text-muted-foreground sm:text-xs">
+                                  {sessions.length} session{sessions.length !== 1 ? "s" : ""} recorded
+                                </p>
+                              </div>
                             </div>
+                            <ChevronRight
+                              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
+                                isMonthOpen ? "rotate-90 text-[#3998eb]" : ""
+                              }`}
+                            />
                           </div>
 
                           {/* Sessions */}
-                          {openMonths.has(monthKey) && (
-                            <div className="divide-y">
+                          {isMonthOpen && (
+                            <div className="divide-y divide-border/50 bg-muted/10">
                               {sessions.map((session) => (
-                                <Card
+                                <div
                                   key={session.id}
-                                  className="border-0 rounded-none shadow-none hover:bg-muted/30 cursor-pointer transition-colors"
+                                  className="group flex items-center gap-3 px-3 py-3 cursor-pointer transition-colors hover:bg-[#3998eb]/5 sm:px-4 sm:py-3.5 sm:gap-4"
                                   onClick={() => router.push(`/minutes/${session.id}`)}
                                 >
-                                  <CardContent className="p-4">
-                                    <div className="flex items-center justify-between">
-                                      <div>
-                                        <div className="flex items-center gap-2 mb-1">
-                                          <Badge 
-                                            variant="secondary"
-                                            className={
-                                              session.sessionType === "special"
-                                                ? "bg-amber-500/10 text-amber-700"
-                                                : "bg-blue-500/10 text-blue-700"
-                                            }
-                                          >
-                                            {session.sessionType === "regular"
-                                              ? "Regular Session"
-                                              : "Special Session"}
-                                          </Badge>
-                                          <Badge 
-                                            variant="secondary"
-                                            className={
-                                              session.status === "published"
-                                                ? "bg-emerald-500/10 text-emerald-700"
-                                                : session.status === "approved"
-                                                ? "bg-blue-500/10 text-blue-700"
-                                                : "bg-gray-500/10 text-gray-600"
-                                            }
-                                          >
-                                            {session.status.charAt(0).toUpperCase() + 
-                                              session.status.slice(1)}
-                                          </Badge>
-                                        </div>
-                                        <h4 className="text-sm font-medium">
-                                          Session Minutes — {format(new Date(session.sessionDate), "MMMM d, yyyy")}
-                                        </h4>
-                                        <p className="text-xs text-muted-foreground mt-1">
-                                          Session Date: {format(new Date(session.sessionDate), "MMMM d, yyyy")}
-                                        </p>
-                                      </div>
-                                      <div className="flex items-center space-x-2">
-                                        <Button 
-                                          variant="ghost" 
-                                          size="icon"
-                                          className="h-8 w-8"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            router.push(`/minutes/${session.id}`);
-                                          }}
-                                        >
-                                          <Eye className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          className="h-8 w-8"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            window.open(session.pdfUrl, '_blank');
-                                          }}
-                                        >
-                                          <Download className="h-4 w-4" />
-                                        </Button>
-                                      </div>
+                                  {/* Date indicator */}
+                                  <div className="hidden sm:flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg border border-border/60 bg-white text-center shadow-sm">
+                                    <span className="text-xs font-bold leading-none text-[#3998eb]">
+                                      {format(new Date(session.sessionDate), "dd")}
+                                    </span>
+                                    <span className="mt-0.5 text-[9px] uppercase leading-none text-muted-foreground">
+                                      {format(new Date(session.sessionDate), "MMM")}
+                                    </span>
+                                  </div>
+
+                                  {/* Session info */}
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                                      <Badge 
+                                        variant="secondary"
+                                        className={`text-[10px] px-1.5 py-0 sm:text-xs sm:px-2 ${
+                                          session.sessionType === "special"
+                                            ? "bg-amber-500/10 text-amber-700 border border-amber-200/50"
+                                            : "bg-blue-500/10 text-blue-700 border border-blue-200/50"
+                                        }`}
+                                      >
+                                        {session.sessionType === "regular"
+                                          ? "Regular"
+                                          : "Special"}
+                                      </Badge>
+                                    
                                     </div>
-                                  </CardContent>
-                                </Card>
+                                    <h4 className="text-xs font-medium text-foreground group-hover:text-[#3998eb] transition-colors sm:text-sm">
+                                      Session Minutes — {format(new Date(session.sessionDate), "MMMM d, yyyy")}
+                                    </h4>
+                                    <p className="mt-0.5 text-[10px] text-muted-foreground sm:text-xs">
+                                      {format(new Date(session.sessionDate), "EEEE")}
+                                    </p>
+                                  </div>
+
+                                  {/* Actions */}
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <button
+                                      type="button"
+                                      className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[#3998eb]/10 hover:text-[#3998eb] sm:h-9 sm:w-9"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.open(session.pdfUrl, '_blank');
+                                      }}
+                                      title="View PDF"
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-amber-500/10 hover:text-amber-600 sm:h-9 sm:w-9"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const link = document.createElement("a");
+                                        link.href = session.pdfUrl;
+                                        link.download = `Session Minutes - ${format(new Date(session.sessionDate), "yyyy-MM-dd")}.pdf`;
+                                        link.click();
+                                      }}
+                                      title="Download PDF"
+                                    >
+                                      <Download className="h-4 w-4" />
+                                    </button>
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground/40 hidden sm:block" />
+                                  </div>
+                                </div>
                               ))}
                             </div>
                           )}
