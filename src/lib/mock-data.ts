@@ -1269,6 +1269,26 @@ export const mockSBMembers: SBMember[] = [
   },
   {
     id: "sb-2",
+    name: "Francis Erick D. Delambaca",
+    position: "SB Member",
+    committees: [
+      "Committee of the Whole / En Banc",
+      "Committee on Rules, Privileges, and Accreditation",
+      "Committee on Finance, Budget and Appropriations",
+      "Committee on Cultural Communities",
+      "Committee on Youth and Sports Development",
+      "Committee on Agriculture, Fisheries, Food and Agrarian Reforms",
+      "Committee on Labor and Employment",
+      "Committee on Human Rights",
+      "Committee on Ways and Means",
+      "Committee on Games & Amusement",
+      "Committee on Laws, Resolutions, Ordinances, and Justice",
+      "Committee on Information and Media Affairs",
+    ],
+    imageUrl: "/images/sb/delambaca.webp",
+  },
+  {
+    id: "sb-3",
     name: "Albert G. Bompat",
     position: "SB Member",
     committees: [
@@ -1296,26 +1316,6 @@ export const mockSBMembers: SBMember[] = [
       "Committee on Transportation",
     ],
     imageUrl: "/images/sb/bompat.webp",
-  },
-  {
-    id: "sb-3",
-    name: "Francis Erick D. Delambaca",
-    position: "SB Member",
-    committees: [
-      "Committee of the Whole / En Banc",
-      "Committee on Rules, Privileges, and Accreditation",
-      "Committee on Finance, Budget and Appropriations",
-      "Committee on Cultural Communities",
-      "Committee on Youth and Sports Development",
-      "Committee on Agriculture, Fisheries, Food and Agrarian Reforms",
-      "Committee on Labor and Employment",
-      "Committee on Human Rights",
-      "Committee on Ways and Means",
-      "Committee on Games & Amusement",
-      "Committee on Laws, Resolutions, Ordinances, and Justice",
-      "Committee on Information and Media Affairs",
-    ],
-    imageUrl: "/images/sb/delambaca.webp",
   },
   {
     id: "sb-4",
@@ -1492,6 +1492,26 @@ export const mockSBMembers: SBMember[] = [
     ],
     imageUrl: "/images/sb/mila.webp",
   },
+  {
+    id: "sb-12",
+    name: "Analyn A. Apduhan",
+    position: "SB Secretary",
+    committees: [
+      "Committee of the Whole / En Banc",
+    ],
+    imageUrl: "/images/sb/apduhan.webp",
+  },
+];
+
+export const mockSBStaff: { id: string; name: string; position: string; imageUrl?: string }[] = [
+  { id: "staff-1", name: "Staff Member 1", position: "SB Staff" },
+  { id: "staff-2", name: "Staff Member 2", position: "SB Staff" },
+  { id: "staff-3", name: "Staff Member 3", position: "SB Staff" },
+  { id: "staff-4", name: "Staff Member 4", position: "SB Staff" },
+  { id: "staff-5", name: "Staff Member 5", position: "SB Staff" },
+  { id: "staff-6", name: "Staff Member 6", position: "SB Staff" },
+  { id: "staff-7", name: "Staff Member 7", position: "SB Staff" },
+  { id: "staff-8", name: "Staff Member 8", position: "SB Staff" },
 ];
 
 export const mockCommittees: Committee[] = [

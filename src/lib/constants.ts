@@ -122,7 +122,7 @@ export const PUBLIC_NAV_ITEMS = [
   { title: "Ordinances", href: "/ordinances" },
   { title: "Resolutions", href: "/resolutions" },
   { title: "Minutes", href: "/minutes" },
-  { title: "SB Member Chart", href: "/about" },
+  { title: "SB Chart", href: "/about" },
 ];
 
 export const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB

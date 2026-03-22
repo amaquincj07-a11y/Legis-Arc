@@ -186,7 +186,7 @@ export default function PortalPage() {
           <div className="mb-6 flex items-end justify-between sm:mb-10">
             <div>
               <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl lg:text-3xl">
-                Recently Published
+                Recently
               </h2>
               <p className="mt-1 text-xs text-muted-foreground sm:mt-2 sm:text-sm">
                 Latest legislative documents available for public access

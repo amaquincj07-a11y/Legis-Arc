@@ -1,8 +1,6 @@
-import Image from "next/image";
-import { Landmark, User, Users, Building, Phone, Mail, Clock, MapPin } from "lucide-react";
+import { Landmark, Phone, Mail, Clock, MapPin } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { mockSBMembers, mockCommittees } from "@/lib/mock-data";
+import { AboutTermContent } from "./about-term-content";
 
 export default function AboutPage() {
   return (
@@ -28,8 +26,8 @@ export default function AboutPage() {
             <Landmark className="h-6 w-6 text-gold sm:h-7 sm:w-7" />
           </div>
           <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
-            SB Member{" "}
-            <span className="mt-1 block text-[#cbab53]">Chart & Committees</span>
+            Sangguniang Bayan{" "}
+            <span className="mt-1 block text-[#cbab53]">Organizational Chart</span>
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-xs text-white/60 sm:mt-4 sm:text-base">
             Elected and appointed members of the Sangguniang Bayan
@@ -37,99 +35,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* SB Member Chart */}
-      <section className="bg-[#25395C] py-10 sm:py-16 lg:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-
-          <div className="grid gap-3 grid-cols-2 sm:gap-4 lg:grid-cols-3">
-            {mockSBMembers.map((member) => (
-              <Card
-                key={member.id}
-                className="border-5 border-[#cbab53] transition-all duration-200"
-              >
-                <CardContent className="p-0">
-                  <div className="relative aspect-3/4 w-full bg-muted/30">
-                    <Image
-                      src={member.imageUrl ?? "/images/sb-member-placeholder.png"}
-                      alt={`Portrait of ${member.name}, ${member.position}`}
-                      fill
-                      className="object-cover object-top"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                  </div>
-                  <div className="p-5">
-                    <h3 className="font-semibold text-black hover:text-[#cbab53]">
-                      Hon. {member.name}
-                    </h3>
-                    <p className="mt-0.5 text-xs text-[#3998eb] font-medium hover:text-[#cbab53]">
-                      {member.position}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Separator />
-      </div>
-
-      {/* Committees */}
-      <section className="bg-background py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-10 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal/10">
-              <Building className="h-5 w-5 text-teal" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                Committees
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Standing committees of the Sangguniang Bayan
-              </p>
-            </div>
-          </div>
-
-          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-            {mockCommittees.map((committee) => (
-              <Card key={committee.id} className="border-t-4 border-[#3998eb] hover:shadow-sm transition-shadow">
-                <CardContent className="p-4 sm:p-5">
-                  <h3 className="font-semibold text-foreground text-sm">
-                    {committee.name}
-                  </h3>
-                  <div className="mt-3 space-y-2 text-xs text-muted-foreground">
-                    <div className="flex gap-2">
-                      <span className="font-semibold text-foreground">Chairman:</span>
-                      <span>{committee.chairman}</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <span className="font-semibold text-foreground">Vice Chairman:</span>
-                      <span>{committee.viceChairman}</span>
-                    </div>
-                    <div className="pt-1">
-                      <p className="font-semibold text-foreground">Members</p>
-                      <div className="mt-1 space-y-1.5">
-                        {committee.members.map((member) => (
-                          <div
-                            key={member}
-                            className="flex items-center gap-2 text-xs text-muted-foreground"
-                          >
-                            <User className="h-3 w-3 shrink-0" />
-                            <span>{member}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+      <AboutTermContent />
 
       {/* Contact Section */}
       <section className="bg-muted/30 py-16 sm:py-20">
