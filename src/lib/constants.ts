@@ -121,6 +121,7 @@ export const PUBLIC_NAV_ITEMS = [
   { title: "Home", href: "/portal" },
   { title: "Ordinances", href: "/ordinances" },
   { title: "Resolutions", href: "/resolutions" },
+  { title: "Citizen's Charter", href: "/citizens-charter" },
   { title: "Minutes", href: "/minutes" },
   { title: "SB Chart", href: "/about" },
 ];

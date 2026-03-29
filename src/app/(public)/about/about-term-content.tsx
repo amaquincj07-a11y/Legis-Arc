@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { User, UserCircle, Users, Building, MapPinned, Calendar } from "lucide-react";
+import { User, UserCircle, Users, Building, MapPinned } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { mockSBMembers, mockSBStaff, mockCommittees } from "@/lib/mock-data";
@@ -37,23 +37,56 @@ const districtAssignments = [
   { barangay: "Brgy. Tawala", member: "Hon. Albert G. Bompat" },
 ];
 
-function EmptyState({ message }: { message: string }) {
+// Placeholder positions for past terms (mirrors current term structure)
+const placeholderSBPositions = [
+  { id: "ph-1", position: "Vice Mayor" },
+  { id: "ph-2", position: "SB Member" },
+  { id: "ph-3", position: "SB Member" },
+  { id: "ph-4", position: "SB Member" },
+  { id: "ph-5", position: "SB Member" },
+  { id: "ph-6", position: "SB Member" },
+  { id: "ph-7", position: "SB Member" },
+  { id: "ph-8", position: "SB Member" },
+  { id: "ph-9", position: "SB Member" },
+  { id: "ph-10", position: "ABC President" },
+  { id: "ph-11", position: "SK Federation President" },
+  { id: "ph-12", position: "SB Secretary" },
+];
+
+function PlaceholderMemberCard({ position, className }: { position: string; className?: string }) {
+  const showHon = position !== "SB Secretary";
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <Calendar className="h-12 w-12 text-muted-foreground/30 mb-4" />
-      <p className="text-sm text-muted-foreground">{message}</p>
-      <p className="text-xs text-muted-foreground/60 mt-1">Records for this term will be added soon.</p>
-    </div>
+    <Card className={`border-5 border-[#cbab53]/40 ${className ?? ""}`}>
+      <CardContent className="p-0">
+        <div className="relative aspect-3/4 w-full bg-[#25395C]/20 flex items-center justify-center">
+          <UserCircle className="h-16 w-16 text-white/15 sm:h-20 sm:w-20" />
+        </div>
+        <div className="p-5">
+          <h3 className="font-semibold text-white/40">
+            {showHon ? "Hon. " : ""}[name]
+          </h3>
+          <p className="mt-0.5 text-xs text-[#3998eb]/60 font-medium">
+            {position}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
-function EmptyStateDark({ message }: { message: string }) {
+function PlaceholderStaffCard() {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <Calendar className="h-12 w-12 text-white/15 mb-4" />
-      <p className="text-sm text-white/40">{message}</p>
-      <p className="text-xs text-white/25 mt-1">Records for this term will be added soon.</p>
-    </div>
+    <Card className="border-3 border-white/10 bg-white/5 backdrop-blur-sm">
+      <CardContent className="p-0">
+        <div className="relative aspect-3/4 w-full bg-[#25395C]/50 flex items-center justify-center">
+          <UserCircle className="h-16 w-16 text-white/15 sm:h-20 sm:w-20" />
+        </div>
+        <div className="p-4">
+          <h3 className="text-sm font-semibold text-white/40">[name]</h3>
+          <p className="mt-0.5 text-xs text-[#3998eb]/60 font-medium">SB Staff</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -119,7 +152,25 @@ export function AboutTermContent() {
               );
             })()
           ) : (
-            <EmptyStateDark message={`No SB member records available for term ${selectedTerm}.`} />
+            (() => {
+              const vicePos = placeholderSBPositions.find((p) => p.position === "Vice Mayor")!;
+              const otherPos = placeholderSBPositions.filter((p) => p.position !== "Vice Mayor");
+              return (
+                <>
+                  <div className="mb-6 flex justify-center sm:mb-8">
+                    <PlaceholderMemberCard
+                      position={vicePos.position}
+                      className="w-[calc(50%-6px)] sm:w-[calc(33.333%-11px)]"
+                    />
+                  </div>
+                  <div className="grid gap-3 grid-cols-2 sm:gap-4 lg:grid-cols-3">
+                    {otherPos.map((p) => (
+                      <PlaceholderMemberCard key={p.id} position={p.position} />
+                    ))}
+                  </div>
+                </>
+              );
+            })()
           )}
         </div>
       </section>
@@ -167,7 +218,11 @@ export function AboutTermContent() {
               ))}
             </div>
           ) : (
-            <EmptyStateDark message={`No SB staff records available for term ${selectedTerm}.`} />
+            <div className="grid gap-3 grid-cols-2 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {Array.from({ length: 8 }, (_, i) => (
+                <PlaceholderStaffCard key={`ph-staff-${i}`} />
+              ))}
+            </div>
           )}
         </div>
       </section>
@@ -230,7 +285,41 @@ export function AboutTermContent() {
               ))}
             </div>
           ) : (
-            <EmptyState message={`No committee records available for term ${selectedTerm}.`} />
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+              {mockCommittees.filter((c) => c.name !== "Committee of the Whole / En Banc").map((committee) => (
+                <Card key={committee.id} className="border-t-4 border-[#3998eb]/30">
+                  <CardContent className="p-4 sm:p-5">
+                    <h3 className="font-semibold text-foreground text-sm">
+                      {committee.name}
+                    </h3>
+                    <div className="mt-3 space-y-2 text-xs text-muted-foreground/50">
+                      <div className="flex gap-2">
+                        <span className="font-semibold text-foreground/50">Chairman:</span>
+                        <span>[name]</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="font-semibold text-foreground/50">Vice Chairman:</span>
+                        <span>[name]</span>
+                      </div>
+                      <div className="pt-1">
+                        <p className="font-semibold text-foreground/50">Members</p>
+                        <div className="mt-1 space-y-1.5">
+                          {committee.members.map((_, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center gap-2 text-xs text-muted-foreground/40"
+                            >
+                              <User className="h-3 w-3 shrink-0" />
+                              <span>[name]</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
         </div>
       </section>
@@ -266,7 +355,18 @@ export function AboutTermContent() {
               </CardContent>
             </Card>
           ) : (
-            <EmptyState message={`No district assignment records available for term ${selectedTerm}.`} />
+            <Card className="border">
+              <CardContent className="p-5 sm:p-8">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-x-12 sm:gap-y-3">
+                  {districtAssignments.map((item) => (
+                    <div key={item.barangay} className="flex items-center justify-between gap-3 rounded-lg border px-4 py-3">
+                      <span className="text-sm font-semibold text-foreground">{item.barangay}</span>
+                      <span className="text-sm text-muted-foreground/40">Hon. [name]</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       </section>
