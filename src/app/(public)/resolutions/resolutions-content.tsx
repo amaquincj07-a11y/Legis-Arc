@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { format } from "date-fns";
 import { FileText, Eye, Download, Search, Calendar, SlidersHorizontal, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -79,22 +80,35 @@ export function ResolutionsContent() {
 
   return (
     <div className="min-h-[70vh]">
-      {/* Page Header */}
-      <div className="border-b bg-muted/30">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal/10">
-              <FileText className="h-5 w-5 text-teal" />
+      {/* Page Header with Background Image */}
+      <div className="relative overflow-hidden">
+        <div className="relative w-full">
+          <Image
+            src="/images/sb/Resolution-Background.png"
+            alt="Sangguniang Bayan of Panglao"
+            width={1920}
+            height={1080}
+            className="w-full h-auto object-contain"
+            priority
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center px-4">
+              <h1
+                className="font-[family-name:var(--font-garamond)] text-3xl font-bold uppercase tracking-[0.15em] text-white sm:text-5xl lg:text-7xl"
+                style={{ textShadow: "0 4px 12px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4)" }}
+              >
+                Resolutions
+              </h1>
+              <p
+                className="mx-auto mt-2 max-w-2xl text-xs leading-relaxed text-white/90 sm:mt-4 sm:text-sm lg:text-base"
+                style={{ textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}
+              >
+                Browse published resolutions of the Sangguniang Bayan ng Panglao.
+                Resolutions express the formal will of the legislative body on
+                matters of public interest and governance.
+              </p>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Resolutions
-            </h1>
           </div>
-          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Browse published resolutions of the Sangguniang Bayan ng Panglao.
-            Resolutions express the formal will of the legislative body on
-            matters of public interest and governance.
-          </p>
         </div>
       </div>
 

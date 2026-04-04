@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { format, getYear, getMonth } from "date-fns";
 import {
@@ -111,24 +112,33 @@ export default function MinutesPage() {
 
   return (
     <div className="min-h-[70vh]">
-      {/* Page Header */}
-      <div className="border-b bg-muted/30">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
-              <CalendarDays className="h-5 w-5 text-amber-600" />
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Session Minutes
-            </h1>
-          </div>
-          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+      {/* Hero Section */}
+      <section className="relative">
+        <Image
+          src="/images/sb/Minutes.png"
+          alt="Sangguniang Bayan of Panglao"
+          width={1920}
+          height={1080}
+          priority
+          className="w-full h-auto object-contain"
+        />
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+          <h1
+            className="text-3xl sm:text-5xl lg:text-6xl font-bold text-white uppercase tracking-wide font-[family-name:var(--font-garamond)]"
+            style={{ textShadow: "2px 2px 8px rgba(0,0,0,0.7)" }}
+          >
+            Session Minutes
+          </h1>
+          <p
+            className="mt-4 max-w-2xl text-sm sm:text-lg lg:text-xl text-white font-[family-name:var(--font-garamond)]"
+            style={{ textShadow: "1px 1px 6px rgba(0,0,0,0.7)" }}
+          >
             Browse official minutes of the Sangguniang Bayan ng Panglao sessions.
             Minutes document the proceedings, discussions, and decisions made during
             regular and special sessions.
           </p>
         </div>
-      </div>
+      </section>
 
       {/* Minutes List */}
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

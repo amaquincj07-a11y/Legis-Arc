@@ -8,7 +8,7 @@ export function PublicFooter() {
       {/* Gold accent line */}
       <div className="h-1 bg-linear-to-r from-gold via-gold-light to-gold" />
 
-      <div className="bg-navy text-white">
+      <div className="text-white" style={{ backgroundColor: "#0E132B" }}>
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
           <div className="grid gap-8 sm:grid-cols-2 sm:gap-10 lg:grid-cols-3">
             {/* Column 1: Branding */}

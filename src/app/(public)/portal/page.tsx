@@ -11,6 +11,12 @@ import {
   BookOpen,
   ArrowRight,
   Calendar,
+  ClipboardList,
+  Users,
+  FileBarChart,
+  Network,
+  Star,
+  Phone,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -22,6 +28,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from "@/components/ui/carousel";
 import { mockOrdinances, mockResolutions } from "@/lib/mock-data";
 import type { LegislativeDocument } from "@/lib/types";
 
@@ -50,6 +63,46 @@ const BROWSE_CARDS = [
     icon: BookOpen,
     count: null,
   },
+  {
+    title: "Citizen's Charter",
+    description:
+      "Official document outlining government services, requirements, processing times, and procedures for the public.",
+    href: "/citizens-charter",
+    icon: ClipboardList,
+    count: null,
+  },
+  {
+    title: "CSO",
+    description:
+      "Accredited Civil Society Organizations registered with the Sangguniang Bayan of Panglao.",
+    href: "/cso",
+    icon: Users,
+    count: null,
+  },
+  {
+    title: "Committee Reports",
+    description:
+      "Reports submitted by legislative committees on referred matters, bills, and resolutions.",
+    href: "/committee-reports",
+    icon: FileBarChart,
+    count: null,
+  },
+  {
+    title: "SB Chart",
+    description:
+      "Organizational chart of the Sangguniang Bayan including members, committees, and assignments.",
+    href: "/about",
+    icon: Network,
+    count: null,
+  },
+  {
+    title: "Contacts",
+    description:
+      "Get in touch with the Office of the Sangguniang Bayan for inquiries, requests, and feedback.",
+    href: "/contacts",
+    icon: Phone,
+    count: null,
+  },
 ] as const;
 
 function getLatestPublished(): LegislativeDocument[] {
@@ -73,65 +126,135 @@ export default function PortalPage() {
 
   return (
     <>
-      {/* Hero Section with Image Background */}
+      {/* Hero Section with Full Background Image */}
       <section className="relative overflow-hidden">
-        {/* Background Image */}
-        <div className="absolute inset-0">
+        {/* Full Background Image */}
+        <div className="relative w-full">
           <Image
-            src="/images/sb/sb-office.png"
-            alt="Sangguniang Bayan Office"
-            fill
-            className="object-cover"
+            src="/images/sb/panglao-background.png"
+            alt="Sangguniang Bayan of Panglao"
+            width={1920}
+            height={1080}
+            className="w-full h-auto object-contain"
             priority
           />
-          {/* Layered overlays for depth and readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-navy/80 via-navy/60 to-navy/80" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/40" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-navy/20 to-navy/40" />
+          {/* Centered text overlay */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <h1
+                className="font-[family-name:var(--font-garamond)] text-3xl font-bold uppercase tracking-[0.15em] text-white sm:text-5xl lg:text-7xl"
+                style={{ textShadow: "0 4px 12px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4)" }}
+              >
+                Sangguniang Bayan
+              </h1>
+              <p
+                className="font-[family-name:var(--font-garamond)] mt-1 text-xl font-semibold uppercase tracking-[0.2em] text-white sm:mt-2 sm:text-3xl lg:text-5xl"
+                style={{ textShadow: "0 4px 12px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4)" }}
+              >
+                ng Panglao
+              </p>
+            </div>
+          </div>
         </div>
+      </section>
 
-        <div className="relative mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 sm:py-28 lg:py-32">
-          <div className="mb-4 sm:mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-medium text-white backdrop-blur-sm shadow-lg sm:px-4 sm:py-1.5 sm:text-xs">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#cbab53] animate-pulse" />
-            {"Public Transparency Portal"}
+      {/* Vision, Mission & Goals Section */}
+      <section className="py-14 sm:py-20 lg:py-24" style={{ backgroundColor: "#FFFFFF" }}>
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+          {/* Vision */}
+          <div className="text-center">
+            <h2 className="font-[family-name:var(--font-garamond)] text-2xl font-bold uppercase tracking-[0.25em] sm:text-3xl lg:text-4xl" style={{ color: "#1e3a5f" }}>
+              Vision
+            </h2>
+            <p className="mt-6 font-[family-name:var(--font-garamond)] text-base leading-relaxed text-gray-700 sm:text-lg lg:text-xl">
+              Panglao as a leading eco-cultural tourist destination and agri-industrial town with a God-loving and morally upright community living in a competitive, progressive economy ensuring a balanced, peaceful, and clean environment under a firm and decent leadership.
+            </p>
           </div>
 
-          <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)] lg:drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)]">
-            {"Sangguniang Bayan"}
-            <span className="mt-1 block text-[#cbab53] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">ng Panglao</span>
-          </h1>
+          {/* Divider */}
+          <div className="my-10 flex items-center justify-center gap-3 sm:my-14">
+            <div className="h-px w-16 bg-[#cbab53]/50" />
+            <div className="h-2 w-2 rotate-45 bg-[#cbab53]" />
+            <div className="h-px w-16 bg-[#cbab53]/50" />
+          </div>
 
-          <p className="mx-auto mt-3 max-w-2xl text-sm text-white/90 sm:mt-4 sm:text-lg drop-shadow-md">
-            Legislative Records &amp; Public Transparency Portal
-          </p>
+          {/* Mission */}
+          <div className="text-center">
+            <h2 className="font-[family-name:var(--font-garamond)] text-2xl font-bold uppercase tracking-[0.25em] sm:text-3xl lg:text-4xl" style={{ color: "#1e3a5f" }}>
+              Mission
+            </h2>
+            <p className="mt-6 font-[family-name:var(--font-garamond)] text-base italic leading-relaxed text-gray-600 sm:text-lg">
+              In order to realize our vision, we therefore commit ourselves to:
+            </p>
+          </div>
 
-          {/* Search Bar */}
-          <form
-            onSubmit={handleSearch}
-            className="mx-auto mt-6 max-w-xl sm:mt-10"
-          >
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#3998eb] sm:left-4 sm:h-5 sm:w-5" />
-              <Input
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search ordinances, resolutions..."
-                className="h-12 rounded-xl border-0 bg-white pl-10 pr-20 text-sm shadow-2xl shadow-black/30 ring-1 ring-white/30 focus-visible:ring-2 focus-visible:ring-[#3998eb] sm:h-14 sm:pl-12 sm:pr-28 sm:text-base"
-              />
-              <Button
-                type="submit"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg bg-[#3998eb] px-3 text-xs font-semibold text-white shadow-lg shadow-[#3998eb]/25 transition-all hover:bg-[#2a7ccc] hover:shadow-[#3998eb]/40 sm:right-2 sm:px-5 sm:text-sm"
-              >
-                <Search className="h-4 w-4 sm:hidden" />
-                <span className="hidden sm:inline">Search</span>
-              </Button>
+          <div className="mt-8 space-y-5">
+            <div className="flex items-start gap-3">
+              <Star className="mt-1 h-4 w-4 shrink-0 fill-[#cbab53] text-[#cbab53]" />
+              <p className="font-[family-name:var(--font-garamond)] text-base leading-relaxed text-gray-700 sm:text-lg">
+                Institutionalize good governance by being transparent, accountable, and firm leaders to uphold and protect the interest, rights, and welfare of the people;
+              </p>
             </div>
-          </form>
+            <div className="flex items-start gap-3">
+              <Star className="mt-1 h-4 w-4 shrink-0 fill-[#cbab53] text-[#cbab53]" />
+              <p className="font-[family-name:var(--font-garamond)] text-base leading-relaxed text-gray-700 sm:text-lg">
+                Provide investment opportunities and livelihood to the marginalized people by boosting the local economy through agricultural productivity and tourism-investment opportunities;
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <Star className="mt-1 h-4 w-4 shrink-0 fill-[#cbab53] text-[#cbab53]" />
+              <p className="font-[family-name:var(--font-garamond)] text-base leading-relaxed text-gray-700 sm:text-lg">
+                Promote Panglao&apos;s competitive and environmentally safe eco-cultural tourist destination
+              </p>
+            </div>
+          </div>
 
-          <p className="mt-4 text-xs text-white/70 drop-shadow-sm">
-            Search by title, document number, author, or keyword
-          </p>
+          {/* Divider */}
+          <div className="my-10 flex items-center justify-center gap-3 sm:my-14">
+            <div className="h-px w-16 bg-[#cbab53]/50" />
+            <div className="h-2 w-2 rotate-45 bg-[#cbab53]" />
+            <div className="h-px w-16 bg-[#cbab53]/50" />
+          </div>
+
+          {/* Goals */}
+          <div className="text-center">
+            <h2 className="font-[family-name:var(--font-garamond)] text-2xl font-bold uppercase tracking-[0.25em] sm:text-3xl lg:text-4xl" style={{ color: "#1e3a5f" }}>
+              Goals
+            </h2>
+          </div>
+
+          <div className="mt-8 space-y-5">
+            <div className="flex items-start gap-3">
+              <Star className="mt-1 h-4 w-4 shrink-0 fill-[#cbab53] text-[#cbab53]" />
+              <p className="font-[family-name:var(--font-garamond)] text-base leading-relaxed text-gray-700 sm:text-lg">
+                Better social services, protection and safety for the welfare of the people.
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <Star className="mt-1 h-4 w-4 shrink-0 fill-[#cbab53] text-[#cbab53]" />
+              <p className="font-[family-name:var(--font-garamond)] text-base leading-relaxed text-gray-700 sm:text-lg">
+                Improved environmental protection, climate change adaptation, and disaster resiliency.
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <Star className="mt-1 h-4 w-4 shrink-0 fill-[#cbab53] text-[#cbab53]" />
+              <p className="font-[family-name:var(--font-garamond)] text-base leading-relaxed text-gray-700 sm:text-lg">
+                Competitive, business-enabling climate, and economic progress.
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <Star className="mt-1 h-4 w-4 shrink-0 fill-[#cbab53] text-[#cbab53]" />
+              <p className="font-[family-name:var(--font-garamond)] text-base leading-relaxed text-gray-700 sm:text-lg">
+                Adequate and standard infrastructure support.
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <Star className="mt-1 h-4 w-4 shrink-0 fill-[#cbab53] text-[#cbab53]" />
+              <p className="font-[family-name:var(--font-garamond)] text-base leading-relaxed text-gray-700 sm:text-lg">
+                Transparent, accountable, participatory, and effective governance.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -147,36 +270,48 @@ export default function PortalPage() {
             </p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5">
-            {BROWSE_CARDS.map((card) => {
-              const Icon = card.icon;
-              return (
-                <Link key={card.href} href={card.href} className="group">
-                  <Card className="h-full border-2 border-transparent transition-all duration-200 group-hover:border-[#cbab53]/30 group-hover:shadow-lg group-hover:shadow-[#cbab53]/5">
-                    <CardHeader className="pb-2 sm:pb-3">
-                      <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-[#cbab53/10 text-[#cbab53] transition-colors group-hover:bg-[#cbab53] group-hover:text-white sm:mb-3 sm:h-12 sm:w-12">
-                        <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
-                      </div>
-                      <CardTitle className="flex items-center justify-between text-base sm:text-lg">
-                        {card.title}
-                        <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-[#cbab53]" />
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
-                        {card.description}
-                      </p>
-                      {card.count !== null && (
-                        <p className="mt-3 text-xs font-medium text-[#3998eb]">
-                          {card.count} published documents
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })}
-          </div>
+          <Carousel
+            opts={{ align: "start", loop: true }}
+            className="mx-auto w-full"
+          >
+            <CarouselContent className="-ml-3 sm:-ml-4">
+              {BROWSE_CARDS.map((card) => {
+                const Icon = card.icon;
+                return (
+                  <CarouselItem
+                    key={card.href}
+                    className="pl-3 sm:pl-4 basis-[80%] sm:basis-1/2 lg:basis-1/3"
+                  >
+                    <Link href={card.href} className="group block h-full">
+                      <Card className="h-full border-2 border-transparent transition-all duration-200 group-hover:border-[#cbab53]/30 group-hover:shadow-lg group-hover:shadow-[#cbab53]/5">
+                        <CardHeader className="pb-2 sm:pb-3">
+                          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-[#cbab53]/10 text-[#cbab53] transition-colors group-hover:bg-[#cbab53] group-hover:text-white sm:mb-3 sm:h-12 sm:w-12">
+                            <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                          </div>
+                          <CardTitle className="flex items-center justify-between text-base sm:text-lg">
+                            {card.title}
+                            <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-[#cbab53]" />
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
+                            {card.description}
+                          </p>
+                          {card.count !== null && (
+                            <p className="mt-3 text-xs font-medium text-[#3998eb]">
+                              {card.count} published documents
+                            </p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  </CarouselItem>
+                );
+              })}
+            </CarouselContent>
+            <CarouselPrevious className="hidden sm:flex -left-4 lg:-left-12" />
+            <CarouselNext className="hidden sm:flex -right-4 lg:-right-12" />
+          </Carousel>
         </div>
       </section>
 

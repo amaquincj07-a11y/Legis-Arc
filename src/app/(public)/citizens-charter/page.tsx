@@ -6,6 +6,7 @@ import {
   FileCheck,
   ListChecks,
 } from "lucide-react";
+import Image from "next/image";
 
 interface ServiceStep {
   step: number;
@@ -391,31 +392,28 @@ export default function CitizensCharterPage() {
   return (
     <div className="min-h-[70vh]">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-navy">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-linear-to-br from-navy via-navy-light/80 to-navy" />
-          <div
-            className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
-              backgroundSize: "40px 40px",
-            }}
-          />
-          <div className="absolute -right-32 -top-32 h-80 w-80 rounded-full bg-teal/10 blur-3xl" />
-          <div className="absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-gold/8 blur-3xl" />
-        </div>
-
-        <div className="relative mx-auto max-w-4xl px-4 py-10 text-center sm:px-6 sm:py-24 lg:px-8">
-          <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm sm:mb-5 sm:h-14 sm:w-14">
-            <ScrollText className="h-6 w-6 text-gold sm:h-7 sm:w-7" />
-          </div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
-            SP Citizen&apos;s Charter
-            <span className="mt-1 block text-[#cbab53]">January 2026</span>
+      <section className="relative">
+        <Image
+          src="/images/sb/CitizensCharter-Background.png"
+          alt="Panglao Background"
+          width={1920}
+          height={1080}
+          priority
+          className="w-full h-auto object-contain"
+        />
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+          <h1
+            className="text-3xl sm:text-5xl lg:text-6xl font-bold text-white uppercase tracking-wide font-[family-name:var(--font-garamond)]"
+            style={{ textShadow: "2px 2px 8px rgba(0,0,0,0.7)" }}
+          >
+            SB Citizen&apos;s Charter
+            <span className="block mt-2 text-2xl sm:text-4xl lg:text-5xl">January 2026</span>
           </h1>
-          <p className="mx-auto mt-3 max-w-2xl text-xs text-white/60 sm:mt-4 sm:text-base">
-            Office of the Sangguniang Panlungsod Secretary
+          <p
+            className="mt-4 text-lg sm:text-xl lg:text-2xl text-white font-[family-name:var(--font-garamond)]"
+            style={{ textShadow: "1px 1px 6px rgba(0,0,0,0.7)" }}
+          >
+            Office of the Sangguniang Bayan Secretary
           </p>
         </div>
       </section>

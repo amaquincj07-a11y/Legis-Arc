@@ -26,16 +26,37 @@ export const REQUEST_STATUSES = [
 ] as const;
 
 export const DEFAULT_CATEGORIES = [
-  "Social Services",
-  "Taxation",
-  "Land Use",
-  "Education",
-  "Tourism",
   "Environment",
-  "Health",
   "Infrastructure",
+  "Taxes",
+  "Fees and Charges",
+  "Penal, Criminal and Regulatory",
+  "Agriculture",
+  "Education",
+  "Health",
   "Peace and Order",
-  "General",
+  "Sports / Amusement",
+  "Tourism",
+  "Monetary Aide and other requests",
+  "Land Use / Zoning",
+  "Municipal Lots",
+  "Waterworks",
+  "Administrative Matters",
+  "History and Heritage",
+  "Budget",
+  "Loans and other Fiscal Matters",
+  "Celebrations",
+  "Sisterhood Agreement",
+  "Women and Children / PWD / Senior Citizen",
+  "Information Technology",
+  "MOA / MOU / Usufruct / Contracts & Agreements",
+  "Coastal Management",
+  "Traffic Matters",
+  "NGO / PO Accreditation",
+  "Purok System",
+  "Risk Reduction",
+  "Transportation",
+  "Franchise",
 ] as const;
 
 export const USER_ROLES: { value: UserRole; label: string }[] = [
@@ -123,7 +144,10 @@ export const PUBLIC_NAV_ITEMS = [
   { title: "Resolutions", href: "/resolutions" },
   { title: "Citizen's Charter", href: "/citizens-charter" },
   { title: "Minutes", href: "/minutes" },
+  { title: "CSO", href: "/cso" },
+  { title: "Committee Reports", href: "/committee-reports" },
   { title: "SB Chart", href: "/about" },
+  { title: "Contacts", href: "/contacts" },
 ];
 
 export const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB

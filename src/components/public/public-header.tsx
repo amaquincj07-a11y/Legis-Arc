@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Search, Menu, Globe, Phone, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,6 +26,24 @@ export function PublicHeader() {
     return pathname.startsWith(href);
   }
 
+  // Hide on scroll down, show on scroll up
+  const [hidden, setHidden] = useState(false);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const currentY = window.scrollY;
+      if (currentY > lastScrollY.current && currentY > 80) {
+        setHidden(true);
+      } else {
+        setHidden(false);
+      }
+      lastScrollY.current = currentY;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -35,73 +52,30 @@ export function PublicHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white shadow-sm">
-      {/* Top bar with republic text and contact info */}
-      <div className="hidden border-b border-gray-100 bg-[#1e3a5f] py-2 text-xs text-white md:block">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <span className="font-semibold tracking-wide text-white">REPUBLIC OF THE PHILIPPINES</span>
-            <span className="text-[#cbab53]/30">|</span>
-            <span className="text-white/90">Municipality of Panglao</span>
-            <span className="text-[#cbab53]/30">|</span>
-            <span className="font-medium text-[#cbab53]">SANGGUNIANG BAYAN</span>
-            <span className="text-[#cbab53]/30">|</span>
-            <span className="text-white/90">Province of Bohol</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Globe className="h-3.5 w-3.5 text-[#3998eb] hover:text-[#cbab53] transition-colors cursor-pointer" />
-              <Link href="#" className="text-white/80 hover:text-[#cbab53] transition-colors">Filipino</Link>
-              <span className="text-[#cbab53]/30">|</span>
-              <Link href="#" className="font-medium text-[#cbab53] hover:text-[#cbab53]/80 transition-colors">English</Link>
-            </div>
-            <span className="text-[#cbab53]/30">|</span>
-            <div className="flex items-center gap-1">
-              <Phone className="h-3.5 w-3.5 text-[#3998eb] hover:text-[#cbab53] transition-colors" />
-              <span className="text-white/90">(038) 502-XXXX</span>
-            </div>
-            <span className="text-[#cbab53]/30">|</span>
-            <div className="flex items-center gap-1">
-              <Mail className="h-3.5 w-3.5 text-[#3998eb] hover:text-[#cbab53] transition-colors" />
-              <span className="text-[#cbab53] hover:text-[#cbab53]/80 transition-colors">info@panglao.gov.ph</span>
-            </div>
-          </div>
-        </div>
-      </div>
+    <header
+      className={cn(
+        "sticky top-0 z-50 w-full shadow-sm transition-transform duration-300",
+        hidden && "-translate-y-full"
+      )}
+    >
 
       {/* Main header */}
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:h-24 sm:px-6 lg:px-8">
-        {/* Logo and title */}
-        <Link href="/portal" className="flex items-center gap-2 shrink-0 sm:gap-4">
-          <div className="relative h-10 w-10 overflow-hidden sm:h-16 sm:w-16">
-            <Image
-              src="/images/sb/panglao-logo.png"
-              alt="Municipality of Panglao"
-              fill
-              className="object-contain"
-            />
-          </div>
-          <div className="hidden sm:block">
-            <p className="text-xs font-medium uppercase tracking-wider text-gray-600">
-              REPUBLIC OF THE PHILIPPINES
-            </p>
-            <p className="text-xs font-medium text-gray-700">Municipality of Panglao</p>
-            <p className="text-2xl font-bold leading-tight text-[#3998eb]">
-              SANGGUNIANG BAYAN
-            </p>
-            <p className="text-xs font-medium text-gray-700">Province of Bohol</p>
-          </div>
-          {/* Compact mobile title */}
-          <div className="sm:hidden">
-            <p className="text-sm font-bold leading-tight text-[#3998eb]">
-              SANGGUNIANG BAYAN
-            </p>
-            <p className="text-[10px] font-medium text-gray-600">Panglao, Bohol</p>
-          </div>
+      <div className="bg-white mx-auto flex max-w-full items-center justify-center px-4 py-4 sm:py-5 sm:px-6 lg:px-8">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-center relative">
+        {/* Centered title */}
+        <Link href="/portal" className="flex flex-col items-center text-center" style={{ fontFamily: 'var(--font-garamond), "EB Garamond", "Garamond", "Georgia", serif' }}>
+          <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-gray-600">
+            Republic of the Philippines
+          </p>
+          <p className="text-xs sm:text-sm font-medium text-gray-700">Municipality of Panglao</p>
+          <p className="text-xl sm:text-3xl font-bold leading-tight tracking-wide text-[#000000] uppercase">
+            Sangguniang Bayan
+          </p>
+          <p className="text-xs sm:text-sm font-medium text-gray-700">Province of Bohol</p>
         </Link>
 
-        {/* Mobile right side */}
-        <div className="flex items-center gap-2 lg:hidden">
+        {/* Mobile menu button - positioned absolute right */}
+        <div className="absolute right-0 flex items-center gap-2 lg:hidden">
           {/* Mobile Menu */}
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
@@ -116,19 +90,9 @@ export function PublicHeader() {
             </SheetTrigger>
             <SheetContent side="right" className="w-full max-w-sm">
               <SheetHeader>
-                <SheetTitle className="flex items-center gap-3 text-left">
-                  <div className="relative h-10 w-10">
-                    <Image
-                      src="/images/sb/panglao-logo.png"
-                      alt="Panglao Logo"
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Municipality of Panglao</p>
-                    <p className="text-sm font-bold text-[#1e3a5f]">Bohol</p>
-                  </div>
+                <SheetTitle className="text-center">
+                  <p className="text-xs text-gray-500">Municipality of Panglao</p>
+                  <p className="text-sm font-bold text-[#1e3a5f]">Sangguniang Bayan</p>
                 </SheetTitle>
               </SheetHeader>
 
@@ -194,19 +158,13 @@ export function PublicHeader() {
             </SheetContent>
           </Sheet>
         </div>
-      </div>
-
-      {/* Mobile top bar */}
-      <div className="border-t border-gray-100 bg-[#1e3a5f] py-2 text-xs text-white lg:hidden">
-        <div className="mx-auto flex max-w-7xl items-center justify-center gap-3 px-4">
-          <span className="text-white/90">Panglao, Bohol</span>
-          <span className="text-[#cbab53]/30">|</span>
-          <span className="text-[#cbab53]">SB</span>
         </div>
       </div>
 
+     
+
       {/* Desktop Navigation Bar - Full width below header */}
-      <nav className="hidden lg:flex w-full border-t-4 border-[#cbab53] bg-[#3998eb] px-0 py-0">
+      <nav className="hidden lg:flex w-full border-t-4 border-[#cbab53] bg-white px-0 py-0">
         <div className="mx-auto flex w-full max-w-7xl items-center gap-0">
           {PUBLIC_NAV_ITEMS.map((item) => (
             <Link
@@ -214,9 +172,8 @@ export function PublicHeader() {
               href={item.href}
               className={[
                 "flex-1 px-6 py-4 text-center text-sm font-semibold uppercase tracking-wide",
-                "text-white hover:text-white transition-colors",
-                "hover:bg-[#7eb0dc]",
-                isActive(item.href) ? "bg-[#3998eb] border-b-4 border-[#cbab53]" : "bg-[#3998eb]",
+                "text-[#1e3a5f] hover:text-[#cbab53] transition-colors",
+                isActive(item.href) ? "border-b-4 border-[#cbab53] text-[#cbab53]" : "",
               ].join(" ")}
             >
               {item.title}
@@ -226,7 +183,7 @@ export function PublicHeader() {
       </nav>
 
       {/* Mobile Navigation Bar */}
-      <nav className="flex lg:hidden w-full border-t-4 border-[#cbab53] bg-[#3998eb] px-2 py-1.5 sm:px-4 sm:py-2">
+      <nav className="flex lg:hidden w-full border-t-4 border-[#cbab53] bg-white px-2 py-1.5 sm:px-4 sm:py-2">
         <div className="flex w-full items-center gap-1 overflow-x-auto scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {PUBLIC_NAV_ITEMS.map((item) => (
             <Link
@@ -234,9 +191,8 @@ export function PublicHeader() {
               href={item.href}
               className={[
                 "whitespace-nowrap px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wide rounded-md sm:px-3 sm:py-2 sm:text-xs",
-                "text-white hover:text-[#cbab53] transition-colors",
-                "hover:bg-[#7eb0dc]",
-                isActive(item.href) ? "bg-white/20 border-b-2 border-[#cbab53]" : "bg-[#3998eb]",
+                "text-[#1e3a5f] hover:text-[#cbab53] transition-colors",
+                isActive(item.href) ? "border-b-2 border-[#cbab53] text-[#cbab53]" : "",
               ].join(" ")}
             >
               {item.title}

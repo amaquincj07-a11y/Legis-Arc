@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Geist_Mono, EB_Garamond } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth-context";
@@ -13,6 +13,12 @@ const plusJakarta = Plus_Jakarta_Sans({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const ebGaramond = EB_Garamond({
+  variable: "--font-garamond",
   subsets: ["latin"],
   display: "swap",
 });
@@ -34,7 +40,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${plusJakarta.variable} ${geistMono.variable} font-sans antialiased`}
+        className={`${plusJakarta.variable} ${geistMono.variable} ${ebGaramond.variable} font-sans antialiased`}
       >
         <AuthProvider>
           <TooltipProvider>

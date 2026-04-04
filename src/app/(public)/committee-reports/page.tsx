@@ -1,0 +1,269 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import Image from "next/image";
+import { Search, FileText, SlidersHorizontal, X, Eye } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { mockCommitteeReports } from "@/lib/mock-data";
+
+const COMMITTEES = [
+  ...new Set(mockCommitteeReports.map((r) => r.committee)),
+].sort();
+
+export default function CommitteeReportsPage() {
+  const [search, setSearch] = useState("");
+  const [committeeFilter, setCommitteeFilter] = useState("all");
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+
+  const filtered = useMemo(() => {
+    let reports = [...mockCommitteeReports];
+    if (search) {
+      const q = search.toLowerCase();
+      reports = reports.filter(
+        (r) =>
+          r.reportNo.toLowerCase().includes(q) ||
+          r.subject.toLowerCase().includes(q) ||
+          r.committee.toLowerCase().includes(q)
+      );
+    }
+    if (committeeFilter !== "all") {
+      reports = reports.filter((r) => r.committee === committeeFilter);
+    }
+    return reports;
+  }, [search, committeeFilter]);
+
+  const tableHeaderStyle = {
+    backgroundColor: "#101B29",
+    color: "white",
+  };
+
+  return (
+    <div className="min-h-[70vh]">
+      {/* Hero Section */}
+      <section className="relative">
+        <Image
+          src="/images/sb/CommitteeReports-Background.png"
+          alt="Sangguniang Bayan of Panglao"
+          width={1920}
+          height={1080}
+          priority
+          className="w-full h-auto object-contain"
+        />
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+          <h1
+            className="text-3xl sm:text-5xl lg:text-6xl font-bold text-white uppercase tracking-wide font-[family-name:var(--font-garamond)]"
+            style={{ textShadow: "2px 2px 8px rgba(0,0,0,0.7)" }}
+          >
+            Committee Reports
+          </h1>
+          <p
+            className="mt-4 max-w-2xl text-sm sm:text-lg lg:text-xl text-white font-[family-name:var(--font-garamond)]"
+            style={{ textShadow: "1px 1px 6px rgba(0,0,0,0.7)" }}
+          >
+            Published committee reports from the standing committees of the
+            Sangguniang Bayan ng Panglao.
+          </p>
+        </div>
+      </section>
+
+      {/* Filters */}
+      <div className="border-b bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 min-w-0">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search by report no., subject, or committee..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-9 pl-9 text-xs"
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="shrink-0 lg:hidden h-9 w-9"
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              aria-label="Toggle filters"
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+            </Button>
+            <span className="hidden text-xs text-muted-foreground sm:inline whitespace-nowrap">
+              {filtered.length} report{filtered.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+
+          {/* Desktop Filters */}
+          <div className="mt-2 hidden items-center gap-3 lg:flex">
+            <span className="text-xs font-medium text-muted-foreground">Filter by:</span>
+            <Select value={committeeFilter} onValueChange={setCommitteeFilter}>
+              <SelectTrigger className="h-8 w-[320px] text-xs">
+                <SelectValue placeholder="Committee" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Committees</SelectItem>
+                {COMMITTEES.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="text-xs text-muted-foreground">
+              {filtered.length} report{filtered.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+
+          {/* Mobile Filters */}
+          {showMobileFilters && (
+            <div className="mt-3 flex flex-col gap-2 lg:hidden">
+              <Select value={committeeFilter} onValueChange={setCommitteeFilter}>
+                <SelectTrigger className="h-9 text-xs">
+                  <SelectValue placeholder="Committee" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Committees</SelectItem>
+                  {COMMITTEES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">
+                  {filtered.length} result{filtered.length !== 1 ? "s" : ""}
+                </span>
+                {committeeFilter !== "all" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 text-xs text-muted-foreground"
+                    onClick={() => setCommitteeFilter("all")}
+                  >
+                    <X className="h-3 w-3" /> Clear
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+              <FileText className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold">No committee reports found</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Try adjusting the search or filters above.
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Desktop Table */}
+            <div className="hidden lg:block">
+              <table className="table-auto w-full border-collapse border border-gray-200">
+                <thead style={tableHeaderStyle}>
+                  <tr>
+                    <th className="px-4 py-3 text-center font-semibold w-28">Committee Report No.</th>
+                    <th className="px-4 py-3 text-left font-semibold">Subject</th>
+                    <th className="px-4 py-3 text-center font-semibold">Committee</th>
+                    <th className="px-4 py-3 text-center font-semibold w-24">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((report) => (
+                    <tr key={report.id} className="hover:bg-gray-50">
+                      <td className="border border-gray-300 px-4 py-2 text-center text-sm font-medium">
+                        {report.reportNo}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 text-sm">
+                        {report.subject}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 text-center text-sm">
+                        {report.committee}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2">
+                        <div className="flex items-center justify-center">
+                          <button
+                            type="button"
+                            className="group relative flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-[#cbab53]/80 hover:bg-[#cbab53]/5 hover:text-[#cbab53]"
+                            onClick={() => {
+                              window.open(report.pdfUrl, "_blank");
+                            }}
+                            title="View PDF"
+                          >
+                            <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-md transition group-hover:opacity-100">
+                              View PDF
+                            </span>
+                            <Eye className="size-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="flex flex-col gap-3 lg:hidden">
+              {filtered.map((report) => (
+                <Card
+                  key={report.id}
+                  className="transition-all duration-200 border-[#3998eb] hover:shadow-md"
+                >
+                  <CardContent className="p-4">
+                    <div className="mb-2 flex items-center gap-2">
+                      <Badge
+                        variant="secondary"
+                        className="bg-[#cbab53]/10 text-[#cbab53]"
+                      >
+                        <FileText className="mr-1 h-3 w-3" />
+                        {report.reportNo}
+                      </Badge>
+                    </div>
+                    <h3 className="text-sm font-semibold leading-snug text-foreground">
+                      {report.subject}
+                    </h3>
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground">Committee:</span>{" "}
+                      {report.committee}
+                    </div>
+                    <div className="mt-3 border-t pt-3">
+                      <button
+                        type="button"
+                        className="flex items-center gap-1.5 rounded-md border border-[#3998eb] bg-white px-3 py-1.5 text-xs font-medium text-[#3998eb] shadow-sm transition hover:border-[#cbab53]/80 hover:text-[#cbab53]"
+                        onClick={() => {
+                          window.open(report.pdfUrl, "_blank");
+                        }}
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        View PDF
+                      </button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

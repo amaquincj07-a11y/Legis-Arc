@@ -168,3 +168,20 @@ export interface Committee {
   viceChairman: string;
   members: string[];
 }
+
+export interface CSOOrganization {
+  id: string;
+  name: string;
+  officerName: string;
+  position: string;
+  sbResolution: string;
+  founded: number;
+}
+
+export interface CommitteeReport {
+  id: string;
+  reportNo: string;
+  subject: string;
+  committee: string;
+  pdfUrl: string;
+}
