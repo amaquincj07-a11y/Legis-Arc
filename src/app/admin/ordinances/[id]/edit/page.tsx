@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { mockOrdinances, mockCategories } from "@/lib/mock-data";
+import { formatOrdinanceNumber } from "@/lib/utils";
 import { MAX_FILE_SIZE } from "@/lib/constants";
 
 const currentYear = new Date().getFullYear();
@@ -132,7 +133,7 @@ export default function EditOrdinancePage({
         </Button>
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Edit Ordinance No. {doc.approvedNumber || doc.proposedNumber}
+            Edit {formatOrdinanceNumber(doc)}
           </h1>
           <p className="text-sm text-muted-foreground">
             Update the document details below

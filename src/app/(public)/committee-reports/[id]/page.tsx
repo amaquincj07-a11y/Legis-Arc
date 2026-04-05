@@ -11,25 +11,22 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { mockOrdinances } from "@/lib/mock-data";
-import { formatOrdinanceNumber } from "@/lib/utils";
+import { mockCommitteeReports } from "@/lib/mock-data";
 import { PdfViewerDynamic } from "@/components/public/pdf-viewer-dynamic";
 
 export async function generateStaticParams() {
-  return mockOrdinances.map((d) => ({ id: d.id }));
+  return mockCommitteeReports.map((r) => ({ id: r.id }));
 }
 
-export default async function OrdinanceDetailPage({
+export default async function CommitteeReportDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const doc = mockOrdinances.find((d) => d.id === id);
+  const report = mockCommitteeReports.find((r) => r.id === id);
 
-  if (!doc) notFound();
-
-  const docNumber = formatOrdinanceNumber(doc);
+  if (!report) notFound();
 
   return (
     <div className="min-h-[70vh]">
@@ -46,12 +43,12 @@ export default async function OrdinanceDetailPage({
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/ordinances">Ordinances</Link>
+                  <Link href="/committee-reports">Committee Reports</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>{docNumber}</BreadcrumbPage>
+                <BreadcrumbPage>{report.reportNo}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -60,18 +57,18 @@ export default async function OrdinanceDetailPage({
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Back Button */}
-        <Link href="/ordinances">
+        <Link href="/committee-reports">
           <Button variant="ghost" size="sm" className="mb-6 gap-2 text-muted-foreground">
             <ArrowLeft className="h-4 w-4" />
-            Back to Ordinances
+            Back to Committee Reports
           </Button>
         </Link>
 
         {/* PDF Viewer */}
         <Card className="overflow-hidden border border-border">
           <PdfViewerDynamic
-            pdfUrl={doc.pdfUrl}
-            title={docNumber}
+            pdfUrl={report.pdfUrl}
+            title={`${report.reportNo} — ${report.subject}`}
           />
         </Card>
       </div>

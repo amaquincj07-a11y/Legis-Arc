@@ -6,22 +6,14 @@ import Link from "next/link";
 import {
   Search,
   SlidersHorizontal,
-  FileText,
-  ScrollText,
-  Calendar,
   X,
   SearchX,
   Eye,
   Download,
 } from "lucide-react";
-import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -29,15 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { mockOrdinances, mockResolutions, mockCategories } from "@/lib/mock-data";
+import { formatOrdinanceNumber } from "@/lib/utils";
 import type { LegislativeDocument } from "@/lib/types";
 
 const ALL_PUBLIC_DOCS = [...mockOrdinances, ...mockResolutions].filter(
@@ -343,8 +328,8 @@ export function SearchContent() {
           </div>
         ) : (
           <>
-            {/* Desktop Table */}
-            <div className="hidden lg:block">
+            {/* Table */}
+            <div className="overflow-x-auto">
               <table className="table-auto w-full border-collapse border border-gray-200">
                 <thead style={{ backgroundColor: "#101B29", color: "white" }}>
                   <tr>
@@ -363,12 +348,7 @@ export function SearchContent() {
               </table>
             </div>
 
-            {/* Mobile Cards */}
-            <div className="flex flex-col gap-3 lg:hidden">
-              {results.map((doc) => (
-                <ResultCard key={doc.id} doc={doc} />
-              ))}
-            </div>
+
           </>
         )}
       </div>
@@ -385,7 +365,9 @@ function ResultTableRow({ doc }: { doc: LegislativeDocument }) {
     doc.documentType === "ordinance" ? "Ordinance" : "Resolution";
   const fullNumber = doc.approvedNumber || doc.proposedNumber;
   const [year, num] = fullNumber.split("-");
-  const formattedNumber = `${num}-${year}`;
+  const formattedNumber = doc.documentType === "ordinance"
+    ? formatOrdinanceNumber(doc)
+    : `${num}-${year}`;
 
   return (
     <tr className="hover:bg-gray-50 border-b border-gray-200">
@@ -449,59 +431,5 @@ function ResultTableRow({ doc }: { doc: LegislativeDocument }) {
         </div>
       </td>
     </tr>
-  );
-}
-
-function ResultCard({ doc }: { doc: LegislativeDocument }) {
-  const href =
-    doc.documentType === "ordinance"
-      ? `/ordinances/${doc.id}`
-      : `/resolutions/${doc.id}`;
-  const typeLabel =
-    doc.documentType === "ordinance" ? "Ordinance" : "Resolution";
-  const docNumber = doc.approvedNumber || doc.proposedNumber;
-  const Icon = doc.documentType === "ordinance" ? ScrollText : FileText;
-
-  return (
-    <Link href={href}>
-      <Card className="transition-all duration-200 hover:shadow-md active:scale-[0.99]">
-        <CardContent className="p-4">
-          <div className="mb-2 flex items-center gap-2">
-            <Badge
-              variant="secondary"
-              className={
-                doc.documentType === "ordinance"
-                  ? "bg-[#3998eb]/10 text-[#3998eb]"
-                  : "bg-[#cbab53]/10 text-[#cbab53]"
-              }
-            >
-              <Icon className="mr-1 h-3 w-3" />
-              {typeLabel}
-            </Badge>
-            <span className="text-xs text-muted-foreground">
-              {doc.seriesYear}
-            </span>
-          </div>
-          <p className="text-xs font-semibold text-[#3998eb]">
-            {typeLabel} No. {docNumber}
-          </p>
-          <h3 className="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-foreground">
-            {doc.title}
-          </h3>
-          <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              {format(doc.dateApproved, "MMM d, yyyy")}
-            </span>
-            {doc.category && (
-              <>
-                <span className="text-border">|</span>
-                <span>{doc.category}</span>
-              </>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
   );
 }

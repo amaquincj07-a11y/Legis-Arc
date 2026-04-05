@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Search, FileText, SlidersHorizontal, X, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+
 import {
   Select,
   SelectContent,
@@ -21,6 +21,7 @@ const COMMITTEES = [
 ].sort();
 
 export default function CommitteeReportsPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [committeeFilter, setCommitteeFilter] = useState("all");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -175,8 +176,8 @@ export default function CommitteeReportsPage() {
           </div>
         ) : (
           <>
-            {/* Desktop Table */}
-            <div className="hidden lg:block">
+            {/* Table */}
+            <div className="overflow-x-auto">
               <table className="table-auto w-full border-collapse border border-gray-200">
                 <thead style={tableHeaderStyle}>
                   <tr>
@@ -204,12 +205,12 @@ export default function CommitteeReportsPage() {
                             type="button"
                             className="group relative flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-[#cbab53]/80 hover:bg-[#cbab53]/5 hover:text-[#cbab53]"
                             onClick={() => {
-                              window.open(report.pdfUrl, "_blank");
+                              router.push(`/committee-reports/${report.id}`);
                             }}
-                            title="View PDF"
+                            title="View Document"
                           >
                             <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-md transition group-hover:opacity-100">
-                              View PDF
+                              View Document
                             </span>
                             <Eye className="size-4" />
                           </button>
@@ -221,46 +222,7 @@ export default function CommitteeReportsPage() {
               </table>
             </div>
 
-            {/* Mobile Cards */}
-            <div className="flex flex-col gap-3 lg:hidden">
-              {filtered.map((report) => (
-                <Card
-                  key={report.id}
-                  className="transition-all duration-200 border-[#3998eb] hover:shadow-md"
-                >
-                  <CardContent className="p-4">
-                    <div className="mb-2 flex items-center gap-2">
-                      <Badge
-                        variant="secondary"
-                        className="bg-[#cbab53]/10 text-[#cbab53]"
-                      >
-                        <FileText className="mr-1 h-3 w-3" />
-                        {report.reportNo}
-                      </Badge>
-                    </div>
-                    <h3 className="text-sm font-semibold leading-snug text-foreground">
-                      {report.subject}
-                    </h3>
-                    <div className="mt-2 text-xs text-muted-foreground">
-                      <span className="font-medium text-foreground">Committee:</span>{" "}
-                      {report.committee}
-                    </div>
-                    <div className="mt-3 border-t pt-3">
-                      <button
-                        type="button"
-                        className="flex items-center gap-1.5 rounded-md border border-[#3998eb] bg-white px-3 py-1.5 text-xs font-medium text-[#3998eb] shadow-sm transition hover:border-[#cbab53]/80 hover:text-[#cbab53]"
-                        onClick={() => {
-                          window.open(report.pdfUrl, "_blank");
-                        }}
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                        View PDF
-                      </button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+
           </>
         )}
       </div>

@@ -10,7 +10,6 @@ import {
   FileText,
   BookOpen,
   ArrowRight,
-  Calendar,
   ClipboardList,
   Users,
   FileBarChart,
@@ -18,10 +17,8 @@ import {
   Star,
   Phone,
 } from "lucide-react";
-import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -35,8 +32,12 @@ import {
   CarouselPrevious,
   CarouselNext,
 } from "@/components/ui/carousel";
-import { mockOrdinances, mockResolutions } from "@/lib/mock-data";
-import type { LegislativeDocument } from "@/lib/types";
+import { mockOrdinances, mockResolutions, mockCategories } from "@/lib/mock-data";
+
+const allCategoryNames = mockCategories.filter((c) => c.isActive).map((c) => c.name);
+const halfIndex = Math.ceil(allCategoryNames.length / 2);
+const ROW1_CATEGORIES = allCategoryNames.slice(0, halfIndex);
+const ROW2_CATEGORIES = allCategoryNames.slice(halfIndex);
 
 const BROWSE_CARDS = [
   {
@@ -105,17 +106,9 @@ const BROWSE_CARDS = [
   },
 ] as const;
 
-function getLatestPublished(): LegislativeDocument[] {
-  return [...mockOrdinances, ...mockResolutions]
-    .filter((doc) => doc.isPublic)
-    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
-    .slice(0, 6);
-}
-
 export default function PortalPage() {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const latestDocs = getLatestPublished();
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -315,100 +308,47 @@ export default function PortalPage() {
         </div>
       </section>
 
-      {/* Latest Published */}
-      <section className="bg-muted/30 py-10 sm:py-16 lg:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-6 flex items-end justify-between sm:mb-10">
-            <div>
-              <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl lg:text-3xl">
-                Recently
-              </h2>
-              <p className="mt-1 text-xs text-muted-foreground sm:mt-2 sm:text-sm">
-                Latest legislative documents available for public access
-              </p>
-            </div>
-            <Link
-              href="/search"
-              className="hidden text-sm font-medium text-[#cbab53] transition-colors hover:text-[#cbab53]/80 sm:block"
-            >
-              View all &rarr;
-            </Link>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4">
-            {latestDocs.map((doc) => (
-              <DocumentCard key={doc.id} doc={doc} />
+      {/* Tagline + Scrolling Categories */}
+      <section className="overflow-hidden py-10 sm:py-14 lg:py-16" style={{ backgroundColor: "#0E132B" }}>
+        {/* Row 1 — scrolls right to left (above tagline) */}
+        <div className="relative mb-8 sm:mb-10">
+          <div className="animate-marquee flex w-max gap-6 sm:gap-8">
+            {[...ROW1_CATEGORIES, ...ROW1_CATEGORIES].map((cat, i) => (
+              <span
+                key={`r1-${i}`}
+                className="font-[family-name:var(--font-garamond)] shrink-0 whitespace-nowrap text-lg italic text-white/70 sm:text-xl lg:text-2xl"
+              >
+                {cat}
+                <span className="ml-6 sm:ml-8 text-white/30">&bull;</span>
+              </span>
             ))}
           </div>
+        </div>
 
-          <div className="mt-8 text-center sm:hidden">
-            <Link href="/search">
-              <Button variant="outline" className="gap-2">
-                View all documents
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
+        <div className="mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
+          <h2
+            className="font-[family-name:var(--font-garamond)] text-2xl italic tracking-wide text-white sm:text-3xl lg:text-4xl"
+          >
+            Accessible Local Legislation and Public Service Information
+          </h2>
+        </div>
+
+        {/* Row 2 — scrolls left to right (below tagline) */}
+        <div className="relative mt-8 sm:mt-10">
+          <div className="animate-marquee-reverse flex w-max gap-6 sm:gap-8">
+            {[...ROW2_CATEGORIES, ...ROW2_CATEGORIES].map((cat, i) => (
+              <span
+                key={`r2-${i}`}
+                className="font-[family-name:var(--font-garamond)] shrink-0 whitespace-nowrap text-lg italic text-white/70 sm:text-xl lg:text-2xl"
+              >
+                {cat}
+                <span className="ml-6 sm:ml-8 text-white/30">&bull;</span>
+              </span>
+            ))}
           </div>
         </div>
       </section>
+
     </>
-  );
-}
-
-function DocumentCard({ doc }: { doc: LegislativeDocument }) {
-  const href =
-    doc.documentType === "ordinance"
-      ? `/ordinances/${doc.id}`
-      : `/resolutions/${doc.id}`;
-
-  const typeLabel =
-    doc.documentType === "ordinance" ? "Ordinance" : "Resolution";
-
-  const docNumber =
-    doc.approvedNumber || doc.proposedNumber
-      ? `${typeLabel} No. ${doc.approvedNumber || doc.proposedNumber}`
-      : typeLabel;
-
-  return (
-    <Link href={href} className="group">
-      <Card className="h-full transition-all duration-200 hover:shadow-md">
-        <CardContent className="p-5">
-          <div className="mb-3 flex items-center gap-2">
-            <Badge
-              variant="secondary"
-              className={
-                doc.documentType === "ordinance"
-                  ? "bg-navy/10 text-navy"
-                  : "bg-[#cbab53]/10 text-[#cbab53]"
-              }
-            >
-              {typeLabel}
-            </Badge>
-            <span className="text-xs text-muted-foreground">
-              Series of {doc.seriesYear}
-            </span>
-          </div>
-
-          <p className="text-xs font-semibold text-[#cbab53]">{docNumber}</p>
-
-          <h3 className="mt-1.5 line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-navy">
-            {doc.title}
-          </h3>
-
-          <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              {format(doc.dateApproved, "MMM d, yyyy")}
-            </span>
-            {doc.category && (
-              <>
-                <span className="text-border">|</span>
-                <span>{doc.category}</span>
-              </>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
   );
 }

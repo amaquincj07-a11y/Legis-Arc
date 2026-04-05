@@ -2,11 +2,10 @@
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
-import { Search, Users, SlidersHorizontal, X } from "lucide-react";
+import { Search, Users, SlidersHorizontal, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+
 import {
   Select,
   SelectContent,
@@ -16,14 +15,14 @@ import {
 } from "@/components/ui/select";
 import { mockCSOOrganizations } from "@/lib/mock-data";
 
-const YEARS = [
-  ...new Set(mockCSOOrganizations.map((o) => o.founded)),
-].sort((a, b) => b - a);
+const TERMS = ["2022-2025", "2019-2022", "2016-2019", "2013-2016", "2010-2013"];
+const ITEMS_PER_PAGE = 10;
 
 export default function CSOPage() {
   const [search, setSearch] = useState("");
-  const [yearFilter, setYearFilter] = useState("all");
+  const [termFilter, setTermFilter] = useState("all");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const filtered = useMemo(() => {
     let orgs = [...mockCSOOrganizations];
@@ -32,15 +31,50 @@ export default function CSOPage() {
       orgs = orgs.filter(
         (o) =>
           o.name.toLowerCase().includes(q) ||
-          o.officerName.toLowerCase().includes(q) ||
-          o.sbResolution.toLowerCase().includes(q)
+          o.officerName.toLowerCase().includes(q)
       );
     }
-    if (yearFilter !== "all") {
-      orgs = orgs.filter((o) => o.founded.toString() === yearFilter);
+    if (termFilter !== "all") {
+      orgs = orgs.filter((o) => o.term === termFilter);
     }
     return orgs.sort((a, b) => a.name.localeCompare(b.name));
-  }, [search, yearFilter]);
+  }, [search, termFilter]);
+
+  // Reset to page 1 when filters change
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const safePage = Math.min(currentPage, totalPages || 1);
+  const paginatedOrgs = filtered.slice(
+    (safePage - 1) * ITEMS_PER_PAGE,
+    safePage * ITEMS_PER_PAGE
+  );
+  const startIndex = (safePage - 1) * ITEMS_PER_PAGE;
+
+  const handleFilterChange = (value: string, setter: (v: string) => void) => {
+    setter(value);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
+
+  // Generate page numbers with ellipsis
+  const getPageNumbers = () => {
+    const pages: (number | "ellipsis")[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (safePage > 3) pages.push("ellipsis");
+      const start = Math.max(2, safePage - 1);
+      const end = Math.min(totalPages - 1, safePage + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (safePage < totalPages - 2) pages.push("ellipsis");
+      pages.push(totalPages);
+    }
+    return pages;
+  };
 
   const tableHeaderStyle = {
     backgroundColor: "#101B29",
@@ -83,9 +117,9 @@ export default function CSOPage() {
             <div className="relative flex-1 min-w-0">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search organizations, officers, resolutions..."
+                placeholder="Search organizations or officers..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="h-9 pl-9 text-xs"
               />
             </div>
@@ -107,15 +141,15 @@ export default function CSOPage() {
           {/* Desktop Filters */}
           <div className="mt-2 hidden items-center gap-3 lg:flex">
             <span className="text-xs font-medium text-muted-foreground">Filter by:</span>
-            <Select value={yearFilter} onValueChange={setYearFilter}>
-              <SelectTrigger className="h-8 w-[140px] text-xs">
-                <SelectValue placeholder="Year Founded" />
+            <Select value={termFilter} onValueChange={(v) => handleFilterChange(v, setTermFilter)}>
+              <SelectTrigger className="h-8 w-[160px] text-xs">
+                <SelectValue placeholder="Term" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Years</SelectItem>
-                {YEARS.map((y) => (
-                  <SelectItem key={y} value={String(y)}>
-                    {y}
+                <SelectItem value="all">All Terms</SelectItem>
+                {TERMS.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -128,15 +162,15 @@ export default function CSOPage() {
           {/* Mobile Filters */}
           {showMobileFilters && (
             <div className="mt-3 flex flex-col gap-2 lg:hidden">
-              <Select value={yearFilter} onValueChange={setYearFilter}>
+              <Select value={termFilter} onValueChange={(v) => handleFilterChange(v, setTermFilter)}>
                 <SelectTrigger className="h-9 text-xs">
-                  <SelectValue placeholder="Year Founded" />
+                  <SelectValue placeholder="Term" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Years</SelectItem>
-                  {YEARS.map((y) => (
-                    <SelectItem key={y} value={String(y)}>
-                      {y}
+                  <SelectItem value="all">All Terms</SelectItem>
+                  {TERMS.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {t}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -145,12 +179,12 @@ export default function CSOPage() {
                 <span className="text-xs text-muted-foreground">
                   {filtered.length} result{filtered.length !== 1 ? "s" : ""}
                 </span>
-                {yearFilter !== "all" && (
+                {termFilter !== "all" && (
                   <Button
                     variant="ghost"
                     size="sm"
                     className="h-7 gap-1 text-xs text-muted-foreground"
-                    onClick={() => setYearFilter("all")}
+                    onClick={() => handleFilterChange("all", setTermFilter)}
                   >
                     <X className="h-3 w-3" /> Clear
                   </Button>
@@ -175,8 +209,8 @@ export default function CSOPage() {
           </div>
         ) : (
           <>
-            {/* Desktop Table */}
-            <div className="hidden lg:block">
+            {/* Table */}
+            <div className="overflow-x-auto">
               <table className="table-auto w-full border-collapse border border-gray-200">
                 <thead style={tableHeaderStyle}>
                   <tr>
@@ -184,15 +218,13 @@ export default function CSOPage() {
                     <th className="px-4 py-3 text-left font-semibold">Name of Organization</th>
                     <th className="px-4 py-3 text-left font-semibold">Name of Officer(s)</th>
                     <th className="px-4 py-3 text-center font-semibold">Position</th>
-                    <th className="px-4 py-3 text-center font-semibold">SB Resolution</th>
-                    <th className="px-4 py-3 text-center font-semibold">Founded</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((org, index) => (
+                  {paginatedOrgs.map((org, index) => (
                     <tr key={org.id} className="hover:bg-gray-50">
                       <td className="border border-gray-300 px-4 py-2 text-center text-sm">
-                        {index + 1}
+                        {startIndex + index + 1}
                       </td>
                       <td className="border border-gray-300 px-4 py-2 text-sm font-medium">
                         {org.name}
@@ -203,59 +235,67 @@ export default function CSOPage() {
                       <td className="border border-gray-300 px-4 py-2 text-center text-sm">
                         {org.position}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center text-sm">
-                        {org.sbResolution}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center text-sm">
-                        {org.founded}
-                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
-            {/* Mobile Cards */}
-            <div className="flex flex-col gap-3 lg:hidden">
-              {filtered.map((org, index) => (
-                <Card
-                  key={org.id}
-                  className="transition-all duration-200 border-[#3998eb] hover:shadow-md"
-                >
-                  <CardContent className="p-4">
-                    <div className="mb-2 flex items-center gap-2">
-                      <Badge
-                        variant="secondary"
-                        className="bg-[#cbab53]/10 text-[#cbab53]"
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-6 flex flex-col items-center gap-3">
+                <p className="text-sm text-muted-foreground">
+                  Showing {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, filtered.length)} of {filtered.length} organizations
+                </p>
+                <nav className="flex items-center gap-1" aria-label="Pagination">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    disabled={safePage <= 1}
+                    onClick={() => setCurrentPage(safePage - 1)}
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+
+                  {getPageNumbers().map((page, i) =>
+                    page === "ellipsis" ? (
+                      <span key={`ellipsis-${i}`} className="px-2 text-sm text-muted-foreground">
+                        …
+                      </span>
+                    ) : (
+                      <Button
+                        key={page}
+                        variant={page === safePage ? "default" : "outline"}
+                        size="icon"
+                        className={`h-8 w-8 text-xs font-medium ${
+                          page === safePage
+                            ? "bg-[#101B29] text-white hover:bg-[#101B29]/90"
+                            : ""
+                        }`}
+                        onClick={() => setCurrentPage(page)}
+                        aria-label={`Page ${page}`}
+                        aria-current={page === safePage ? "page" : undefined}
                       >
-                        <Users className="mr-1 h-3 w-3" />
-                        CSO #{index + 1}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        Est. {org.founded}
-                      </Badge>
-                    </div>
-                    <h3 className="text-sm font-semibold leading-snug text-foreground">
-                      {org.name}
-                    </h3>
-                    <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                      <p>
-                        <span className="font-medium text-foreground">Officer:</span>{" "}
-                        {org.officerName}
-                      </p>
-                      <p>
-                        <span className="font-medium text-foreground">Position:</span>{" "}
-                        {org.position}
-                      </p>
-                      <p>
-                        <span className="font-medium text-foreground">Resolution:</span>{" "}
-                        {org.sbResolution}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                        {page}
+                      </Button>
+                    )
+                  )}
+
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    disabled={safePage >= totalPages}
+                    onClick={() => setCurrentPage(safePage + 1)}
+                    aria-label="Next page"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </nav>
+              </div>
+            )}
           </>
         )}
       </div>

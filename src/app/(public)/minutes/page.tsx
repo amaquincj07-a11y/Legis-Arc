@@ -10,7 +10,6 @@ import {
   ChevronRight,
   Eye,
   Pencil,
-  Download,
   CalendarDays,
   Calendar,
 } from "lucide-react";
@@ -48,6 +47,8 @@ export default function MinutesPage() {
   const router = useRouter();
   const [openYears, setOpenYears] = useState<Set<number>>(new Set());
   const [openMonths, setOpenMonths] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const YEARS_PER_PAGE = 10;
 
   const grouped = useMemo(() => {
     const groupedMinutes: GroupedMinutes = {};
@@ -110,6 +111,12 @@ export default function MinutesPage() {
     .map(Number)
     .sort((a, b) => b - a);
 
+  const totalPages = Math.ceil(sortedYears.length / YEARS_PER_PAGE);
+  const paginatedYears = sortedYears.slice(
+    (currentPage - 1) * YEARS_PER_PAGE,
+    currentPage * YEARS_PER_PAGE
+  );
+
   return (
     <div className="min-h-[70vh]">
       {/* Hero Section */}
@@ -151,7 +158,8 @@ export default function MinutesPage() {
             </p>
           </div>
         ) : (
-          sortedYears.map((year) => (
+          <>
+          {paginatedYears.map((year) => (
             <div
               key={year}
               className="mb-4 border rounded-lg overflow-hidden"
@@ -268,25 +276,11 @@ export default function MinutesPage() {
                                       className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[#3998eb]/10 hover:text-[#3998eb] sm:h-9 sm:w-9"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        window.open(session.pdfUrl, '_blank');
+                                        router.push(`/minutes/${session.id}`);
                                       }}
-                                      title="View PDF"
+                                      title="View Document"
                                     >
                                       <Eye className="h-4 w-4" />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-amber-500/10 hover:text-amber-600 sm:h-9 sm:w-9"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        const link = document.createElement("a");
-                                        link.href = session.pdfUrl;
-                                        link.download = `Session Minutes - ${format(new Date(session.sessionDate), "yyyy-MM-dd")}.pdf`;
-                                        link.click();
-                                      }}
-                                      title="Download PDF"
-                                    >
-                                      <Download className="h-4 w-4" />
                                     </button>
                                     <ChevronRight className="h-4 w-4 text-muted-foreground/40 hidden sm:block" />
                                   </div>
@@ -300,7 +294,46 @@ export default function MinutesPage() {
                 </div>
               )}
             </div>
-          ))
+          ))}
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="mt-8 flex flex-col items-center gap-3">
+              <p className="text-sm text-muted-foreground">
+                Showing years {paginatedYears[0]}–{paginatedYears[paginatedYears.length - 1]} ({sortedYears.length} total years)
+              </p>
+              <div className="flex items-center gap-1 flex-wrap justify-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => p - 1)}
+                >
+                  Previous
+                </Button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <Button
+                    key={page}
+                    variant={page === currentPage ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(page)}
+                    className={page === currentPage ? "bg-[#1e3a5f] text-white hover:bg-[#1e3a5f]/90" : ""}
+                  >
+                    {page}
+                  </Button>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </div>
     </div>

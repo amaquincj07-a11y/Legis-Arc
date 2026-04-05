@@ -1,4 +1,5 @@
 export type DocumentType = "ordinance" | "resolution" | "minutes";
+export type OrdinanceKind = "municipal" | "appropriation";
 export type DocumentStatus = "draft" | "approved" | "published" | "archived";
 export type SessionType = "regular" | "special";
 export type UserRole =
@@ -60,6 +61,7 @@ export interface DocumentVersion {
 export interface LegislativeDocument {
   id: string;
   documentType: "ordinance" | "resolution";
+  ordinanceKind?: OrdinanceKind;
   proposedNumber: string;
   approvedNumber: string;
   seriesYear: number;
@@ -174,8 +176,7 @@ export interface CSOOrganization {
   name: string;
   officerName: string;
   position: string;
-  sbResolution: string;
-  founded: number;
+  term: string;
 }
 
 export interface CommitteeReport {

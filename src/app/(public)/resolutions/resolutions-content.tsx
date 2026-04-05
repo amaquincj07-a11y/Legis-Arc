@@ -1,15 +1,11 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { format } from "date-fns";
-import { FileText, Eye, Download, Search, Calendar, SlidersHorizontal, X } from "lucide-react";
+import { FileText, Eye, Search, SlidersHorizontal, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -31,6 +27,7 @@ const AUTHORS = [
 
 export function ResolutionsContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   
   // Initialize state from URL params
   const initialQ = searchParams.get("q") ?? "";
@@ -41,6 +38,8 @@ export function ResolutionsContent() {
   const [yearFilter, setYearFilter] = useState(initialYear);
   const [categoryFilter, setCategoryFilter] = useState(initialCategory);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
   
   // Update state when URL params change
   useEffect(() => {
@@ -72,6 +71,17 @@ export function ResolutionsContent() {
       (a, b) => b.dateApproved.getTime() - a.dateApproved.getTime()
     );
   }, [search, yearFilter, categoryFilter]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, yearFilter, categoryFilter]);
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginated = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const tableHeaderStyle = {
     backgroundColor: "#101B29",
@@ -231,8 +241,8 @@ export function ResolutionsContent() {
           </div>
         ) : (
           <>
-            {/* Desktop Table */}
-            <div className="hidden lg:block">
+            {/* Table */}
+            <div className="overflow-x-auto">
               <table className="table-auto w-full border-collapse border border-gray-200">
                 <thead style={tableHeaderStyle}>
                   <tr>
@@ -244,7 +254,7 @@ export function ResolutionsContent() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((doc) => {
+                  {paginated.map((doc) => {
                     const fullNumber = doc.approvedNumber || doc.proposedNumber;
                     const [year, num] = fullNumber.split("-");
                     const formattedNumber = `${num}-${year}`;
@@ -266,30 +276,14 @@ export function ResolutionsContent() {
                           <div className="flex items-center justify-center gap-2">
                             <button
                               type="button"
-                              className="group relative flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-shadow-sm transition hover:border-[#3998eb]/80 hover:bg-[#3998eb]/5 hover:text-[#3998eb]"
-                              onClick={() => {
-                                const link = document.createElement("a");
-                                link.href = doc.pdfUrl;
-                                link.download = `${doc.title}.pdf`;
-                                link.click();
-                              }}
-                              title="Download PDF"
-                            >
-                              <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-md transition group-hover:opacity-100">
-                                Download PDF
-                              </span>
-                              <Download className="size-4" />
-                            </button>
-                            <button
-                              type="button"
                               className="group relative flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-[#cbab53]/80 hover:bg-[#cbab53]/5 hover:text-[#cbab53]"
                               onClick={() => {
-                                window.open(doc.pdfUrl, "_blank");
+                                router.push(`/resolutions/${doc.id}`);
                               }}
-                              title="View PDF"
+                              title="View Document"
                             >
                               <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-md transition group-hover:opacity-100">
-                                View PDF
+                                View Document
                               </span>
                               <Eye className="size-4" />
                             </button>
@@ -302,70 +296,47 @@ export function ResolutionsContent() {
               </table>
             </div>
 
-            {/* Mobile Cards */}
-            <div className="flex flex-col gap-3 lg:hidden">
-              {filtered.map((doc) => {
-                const fullNumber = doc.approvedNumber || doc.proposedNumber;
-                const [year, num] = fullNumber.split("-");
-                const formattedNumber = `${num}-${year}`;
-                return (
-                  <Card key={doc.id} className="transition-all duration-200 border-[#3998eb] hover:shadow-md active:scale-[0.99]">
-                    <CardContent className="p-4">
-                      <div className="mb-2 flex items-center gap-2">
-                        <Badge variant="secondary" className="bg-[#cbab53]/10 text-[#cbab53]">
-                          <FileText className="mr-1 h-3 w-3" />
-                          Resolution
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {doc.seriesYear}
-                        </span>
-                      </div>
-                      <p className="text-xs font-semibold text-[#3998eb]">
-                        Resolution No. {formattedNumber}
-                      </p>
-                      <h3 className="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-foreground">
-                        {doc.title}
-                      </h3>
-                      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <span className="inline-flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {format(doc.dateApproved, "MMM d, yyyy")}
-                        </span>
-                        {doc.category && (
-                          <>
-                            <span className="text-border">|</span>
-                            <span>{doc.category}</span>
-                          </>
-                        )}
-                      </div>
-                      <div className="mt-3 flex items-center gap-2 border-t pt-3">
-                        <button
-                          type="button"
-                          className="flex items-center gap-1.5 rounded-md border border-[#3998eb] bg-white px-3 py-1.5 text-xs font-medium text-[#3998eb] shadow-sm transition hover:border-[#cbab53]/80 hover:text-[#cbab53]"
-                          onClick={() => {
-                            const link = document.createElement("a");
-                            link.href = doc.pdfUrl;
-                            link.download = `${doc.title}.pdf`;
-                            link.click();
-                          }}
-                        >
-                          <Download className="h-3.5 w-3.5" />
-                          Download
-                        </button>
-                        <button
-                          type="button"
-                          className="flex items-center gap-1.5 rounded-md border border-[#3998eb] bg-white px-3 py-1.5 text-xs font-medium text-[#3998eb] shadow-sm transition hover:border-[#cbab53]/80 hover:text-[#cbab53]"
-                          onClick={() => { window.open(doc.pdfUrl, "_blank"); }}
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                          View PDF
-                        </button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length} resolutions
+                </p>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-3 text-xs"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((p) => p - 1)}
+                  >
+                    Previous
+                  </Button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <Button
+                      key={page}
+                      variant={page === currentPage ? "default" : "outline"}
+                      size="sm"
+                      className={`h-8 w-8 p-0 text-xs ${page === currentPage ? "bg-[#1e3a5f] text-white hover:bg-[#1e3a5f]/90" : ""}`}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-3 text-xs"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage((p) => p + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+
+
           </>
         )}
       </div>

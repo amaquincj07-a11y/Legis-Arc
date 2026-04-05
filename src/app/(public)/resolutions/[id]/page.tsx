@@ -1,21 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  FileText,
-  Download,
-  Calendar,
-  User,
-  Tag,
-  BookOpen,
-  Info,
-  ExternalLink,
-} from "lucide-react";
-import { format } from "date-fns";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Card } from "@/components/ui/card";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -25,8 +12,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { mockResolutions } from "@/lib/mock-data";
-import type { DocumentStatus } from "@/lib/types";
-import clsx from "clsx";
+import { PdfViewerDynamic } from "@/components/public/pdf-viewer-dynamic";
 
 // ADD THIS FUNCTION - required for static export
 export async function generateStaticParams() {
@@ -35,17 +21,6 @@ export async function generateStaticParams() {
     id: doc.id,
   }));
 }
-
-function statusBadgeClass(status: DocumentStatus) {
-  if (status === "published") return "bg-emerald-500/10 text-emerald-700";
-  if (status === "approved") return "bg-blue-500/10 text-blue-700";
-  return "bg-gray-500/10 text-gray-600";
-}
-
-const buttonStyles = {
-  downloadButton: "bg-[#3998eb] text-white px-4 py-2 rounded-md shadow-md hover:bg-[#2a7ccc]",
-  viewPdfButton: "bg-white text-[#3998eb] px-4 py-2 rounded-md shadow-md hover:bg-[#3998eb] hover:text-white",
-};
 
 export default async function ResolutionDetailPage({
   params,
@@ -95,164 +70,13 @@ export default async function ResolutionDetailPage({
           </Button>
         </Link>
 
-        <div className="grid gap-8 lg:grid-cols-3">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            {/* Document Header */}
-            <div className="mb-6">
-              <div className="mb-3 flex flex-wrap items-center gap-2">
-                <Badge variant="secondary" className="bg-navy/10 text-navy">
-                  Resolution
-                </Badge>
-                <Badge variant="secondary" className="bg-teal/10 text-teal">
-                  {doc.category}
-                </Badge>
-                <Badge
-                  variant="secondary"
-                  className={statusBadgeClass(doc.status)}
-                >
-                  {doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
-                </Badge>
-              </div>
-
-              <p className="text-sm font-semibold text-[#3998eb]">
-                Resolution No. {docNumber} Series of {doc.seriesYear}
-              </p>
-
-              <h1 className="mt-2 text-xl font-bold leading-tight tracking-tight text-foreground sm:text-2xl lg:text-3xl">
-                {doc.title}
-              </h1>
-            </div>
-
-            <Separator className="mb-6" />
-
-            {/* Metadata Grid */}
-            <div className="flex flex-col space-y-4">
-              <MetaItem
-                icon={User}
-                label="Author / Sponsor"
-                value={doc.authorSponsor}
-              />
-              <MetaItem
-                icon={Tag}
-                label="Category"
-                value={doc.category}
-              />
-              <MetaItem
-                icon={Calendar}
-                label="Date Enacted"
-                value={format(doc.dateEnacted, "MMMM d, yyyy")}
-              />
-              <MetaItem
-                icon={Calendar}
-                label="Date Approved"
-                value={format(doc.dateApproved, "MMMM d, yyyy")}
-              />
-              {doc.publicationInfo && (
-                <MetaItem
-                  icon={BookOpen}
-                  label="Publication Info"
-                  value={doc.publicationInfo}
-                  className="sm:col-span-2"
-                />
-              )}
-              {doc.remarks && (
-                <MetaItem
-                  icon={Info}
-                  label="Remarks"
-                  value={doc.remarks}
-                  className="sm:col-span-2"
-                />
-              )}
-            </div>
-
-            {/* Related Documents */}
-            {doc.repealsAmendments && (
-              <>
-                <Separator className="my-6" />
-                <div>
-                  <h2 className="mb-3 text-sm font-semibold text-foreground">
-                    Related Documents
-                  </h2>
-                  <Card className="border-amber-200 bg-amber-50/50">
-                    <CardContent className="flex items-start gap-3 p-4">
-                      <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-                      <div>
-                        <p className="text-sm font-medium text-amber-900">
-                          Repeals / Amendments
-                        </p>
-                        <p className="mt-0.5 text-sm text-amber-800/80">
-                          {doc.repealsAmendments}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Sidebar — PDF actions (open in new tab or download) */}
-          <div className="lg:col-span-1 space-y-4">
-            <Card className="lg:sticky lg:top-24 overflow-hidden border border-border">
-              <div className="border-b bg-muted/30 px-4 py-3">
-                <h3 className="text-sm font-semibold text-foreground">
-                  Document PDF
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  Resolution No. {docNumber} Series of {doc.seriesYear}
-                </p>
-              </div>
-              <div className="flex flex-col gap-2 p-4">
-                <Button className={buttonStyles.downloadButton} asChild>
-                  <a href={doc.pdfUrl} download>
-                    <Download className="h-4 w-4" />
-                    Download PDF
-                  </a>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={buttonStyles.viewPdfButton}
-                  asChild
-                >
-                  <a
-                    href={doc.pdfUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <FileText className="h-3.5 w-3.5" />
-                    View PDF
-                  </a>
-                </Button>
-              </div>
-            </Card>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MetaItem({
-  icon: Icon,
-  label,
-  value,
-  className,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-  className?: string;
-}) {
-  return (
-    <div className={className}>
-      <div className="flex items-start gap-2 sm:items-center sm:flex-row">
-        <Icon className="h-4 w-4 shrink-0 text-[#3998eb] mt-0.5 sm:mt-0 sm:h-5 sm:w-5" />
-        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-1">
-          <span className="text-xs font-medium text-[#3998eb] sm:text-sm">{label}:</span>
-          <span className="text-sm">{value}</span>
-        </div>
+        {/* PDF Viewer */}
+        <Card className="overflow-hidden border border-border">
+          <PdfViewerDynamic
+            pdfUrl={doc.pdfUrl}
+            title={`Resolution No. ${docNumber} — Series of ${doc.seriesYear}`}
+          />
+        </Card>
       </div>
     </div>
   );

@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/card";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { mockOrdinances } from "@/lib/mock-data";
+import { formatOrdinanceNumber } from "@/lib/utils";
 
 export default function OrdinanceDetailPage({
   params,
@@ -54,11 +55,12 @@ export default function OrdinanceDetailPage({
   }
 
   const ordinanceNumberOnly = (doc.proposedNumber || doc.approvedNumber || "").replace(/^(\d{4}-)?/, "");
+  const formattedOrdNumber = formatOrdinanceNumber(doc);
   const metadataFields = [
     { label: "Title", value: doc.title, span: true },
     { label: "Author / Sponsor", value: doc.authorSponsor },
     { label: "Category", value: doc.category },
-    { label: "Ordinance No.", value: ordinanceNumberOnly },
+    { label: "Ordinance No.", value: formattedOrdNumber },
     { label: "Series Year", value: doc.seriesYear },
     {
       label: "Date Enacted",
@@ -77,7 +79,7 @@ export default function OrdinanceDetailPage({
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-semibold tracking-tight">
-              Ordinance No. {doc.approvedNumber || doc.proposedNumber}
+              {formattedOrdNumber}
             </h1>
             <StatusBadge status={doc.status} />
           </div>

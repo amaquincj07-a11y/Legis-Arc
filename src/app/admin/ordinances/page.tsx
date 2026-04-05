@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { mockOrdinances, mockCategories } from "@/lib/mock-data";
+import { formatOrdinanceNumber } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -219,8 +220,7 @@ export default function OrdinancesPage() {
                 </TableRow>
               ) : (
                 paginated.map((doc) => {
-                  const fullNumber = doc.approvedNumber || doc.proposedNumber;
-                  const [series, number] = fullNumber.split("-");
+                  const formattedNumber = formatOrdinanceNumber(doc);
                   return (
                     <TableRow
                       key={doc.id}
@@ -228,7 +228,7 @@ export default function OrdinancesPage() {
                       onClick={() => router.push(`/admin/ordinances/${doc.id}`)}
                     >
                       <TableCell className="text-[13px] font-semibold text-slate-800">
-                        {`${number}-${series}`}
+                        {formattedNumber}
                       </TableCell>
                       <TableCell className="max-w-[360px] whitespace-normal wrap-break-word text-[13px] text-slate-800">
                         {doc.title}
