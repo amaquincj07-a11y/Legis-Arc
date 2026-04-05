@@ -152,8 +152,8 @@ export default function MinutesPage() {
         {sortedYears.length === 0 ? (
           <div className="text-center py-12">
             <CalendarDays className="h-12 w-12 mx-auto text-muted-foreground/50" />
-            <h3 className="mt-4 text-lg font-semibold">No minutes found</h3>
-            <p className="text-sm text-muted-foreground">
+            <h3 className="font-[family-name:var(--font-garamond)] mt-4 text-xl font-semibold">No minutes found</h3>
+            <p className="font-[family-name:var(--font-garamond)] text-base text-muted-foreground">
               Session minutes will appear here once available.
             </p>
           </div>
@@ -171,10 +171,10 @@ export default function MinutesPage() {
               >
                 <div className="flex items-center space-x-2 sm:space-x-3">
                   <Calendar className="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
-                  <h2 className="text-base font-semibold sm:text-lg">{year}</h2>
+                  <h2 className="font-[family-name:var(--font-garamond)] text-lg font-semibold sm:text-xl">{year}</h2>
                 </div>
                 <div className="flex items-center space-x-2 sm:space-x-4">
-                  <span className="text-xs text-muted-foreground sm:text-sm">
+                  <span className="font-[family-name:var(--font-garamond)] text-sm text-muted-foreground sm:text-base">
                     {Object.keys(grouped[year] || {}).length} months
                   </span>
                   <ChevronRight
@@ -210,10 +210,10 @@ export default function MinutesPage() {
                             <div className="flex items-center gap-2.5">
                              
                               <div>
-                                <h3 className="text-sm font-semibold text-foreground">
+                                <h3 className="font-[family-name:var(--font-garamond)] text-base font-semibold text-foreground">
                                   {MONTH_NAMES[Number(month)]}
                                 </h3>
-                                <p className="text-[10px] text-muted-foreground sm:text-xs">
+                                <p className="font-[family-name:var(--font-garamond)] text-xs text-muted-foreground sm:text-sm">
                                   {sessions.length} session{sessions.length !== 1 ? "s" : ""} recorded
                                 </p>
                               </div>
@@ -236,10 +236,10 @@ export default function MinutesPage() {
                                 >
                                   {/* Date indicator */}
                                   <div className="hidden sm:flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg border border-border/60 bg-white text-center shadow-sm">
-                                    <span className="text-xs font-bold leading-none text-[#3998eb]">
+                                    <span className="font-[family-name:var(--font-garamond)] text-sm font-bold leading-none text-[#3998eb]">
                                       {format(new Date(session.sessionDate), "dd")}
                                     </span>
-                                    <span className="mt-0.5 text-[9px] uppercase leading-none text-muted-foreground">
+                                    <span className="font-[family-name:var(--font-garamond)] mt-0.5 text-[10px] uppercase leading-none text-muted-foreground">
                                       {format(new Date(session.sessionDate), "MMM")}
                                     </span>
                                   </div>
@@ -249,7 +249,7 @@ export default function MinutesPage() {
                                     <div className="flex flex-wrap items-center gap-1.5 mb-1">
                                       <Badge 
                                         variant="secondary"
-                                        className={`text-[10px] px-1.5 py-0 sm:text-xs sm:px-2 ${
+                                        className={`font-[family-name:var(--font-garamond)] text-xs px-1.5 py-0 sm:text-sm sm:px-2 ${
                                           session.sessionType === "special"
                                             ? "bg-amber-500/10 text-amber-700 border border-amber-200/50"
                                             : "bg-blue-500/10 text-blue-700 border border-blue-200/50"
@@ -261,10 +261,10 @@ export default function MinutesPage() {
                                       </Badge>
                                     
                                     </div>
-                                    <h4 className="text-xs font-medium text-foreground group-hover:text-[#3998eb] transition-colors sm:text-sm">
+                                    <h4 className="font-[family-name:var(--font-garamond)] text-sm font-medium text-foreground group-hover:text-[#3998eb] transition-colors sm:text-base">
                                       Session Minutes — {format(new Date(session.sessionDate), "MMMM d, yyyy")}
                                     </h4>
-                                    <p className="mt-0.5 text-[10px] text-muted-foreground sm:text-xs">
+                                    <p className="font-[family-name:var(--font-garamond)] mt-0.5 text-xs text-muted-foreground sm:text-sm">
                                       {format(new Date(session.sessionDate), "EEEE")}
                                     </p>
                                   </div>
@@ -299,7 +299,7 @@ export default function MinutesPage() {
           {/* Pagination Controls */}
           {totalPages > 1 && (
             <div className="mt-8 flex flex-col items-center gap-3">
-              <p className="text-sm text-muted-foreground">
+              <p className="font-[family-name:var(--font-garamond)] text-base text-muted-foreground">
                 Showing years {paginatedYears[0]}–{paginatedYears[paginatedYears.length - 1]} ({sortedYears.length} total years)
               </p>
               <div className="flex items-center gap-1 flex-wrap justify-center">

@@ -32,10 +32,10 @@ function ContactCard({
         <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-navy/10">
           <Icon className="h-5 w-5 text-navy" />
         </div>
-        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+        <h3 className="font-[family-name:var(--font-garamond)] text-base font-semibold text-foreground">{title}</h3>
         <div className="mt-2 space-y-0.5">
           {lines.map((line) => (
-            <p key={line} className="text-sm text-muted-foreground">
+            <p key={line} className="font-[family-name:var(--font-garamond)] text-base text-muted-foreground">
               {line}
             </p>
           ))}
@@ -108,10 +108,10 @@ export default function ContactsPage() {
               <Phone className="h-5 w-5 text-gold" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              <h2 className="font-[family-name:var(--font-garamond)] text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
                 Contact Information
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="font-[family-name:var(--font-garamond)] text-base text-muted-foreground">
                 Get in touch with the Office of the Sangguniang Bayan
               </p>
             </div>
@@ -154,10 +154,10 @@ export default function ContactsPage() {
       <section className="py-16 sm:py-20">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <div className="mb-10 text-center">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            <h2 className="font-[family-name:var(--font-garamond)] text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
               Send Us a Message
             </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="font-[family-name:var(--font-garamond)] mt-2 text-base text-muted-foreground">
               Have a question, concern, or document request? Fill out the form below and we&apos;ll respond as soon as possible.
             </p>
           </div>

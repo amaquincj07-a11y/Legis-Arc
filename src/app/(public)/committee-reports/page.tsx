@@ -87,7 +87,7 @@ export default function CommitteeReportsPage() {
                 placeholder="Search by report no., subject, or committee..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-9 pl-9 text-xs"
+                className="font-[family-name:var(--font-garamond)] h-9 pl-9 text-sm"
               />
             </div>
             <Button
@@ -100,16 +100,16 @@ export default function CommitteeReportsPage() {
             >
               <SlidersHorizontal className="h-4 w-4" />
             </Button>
-            <span className="hidden text-xs text-muted-foreground sm:inline whitespace-nowrap">
+            <span className="font-[family-name:var(--font-garamond)] hidden text-sm text-muted-foreground sm:inline whitespace-nowrap">
               {filtered.length} report{filtered.length !== 1 ? "s" : ""}
             </span>
           </div>
 
           {/* Desktop Filters */}
           <div className="mt-2 hidden items-center gap-3 lg:flex">
-            <span className="text-xs font-medium text-muted-foreground">Filter by:</span>
+            <span className="font-[family-name:var(--font-garamond)] text-sm font-medium text-muted-foreground">Filter by:</span>
             <Select value={committeeFilter} onValueChange={setCommitteeFilter}>
-              <SelectTrigger className="h-8 w-[320px] text-xs">
+              <SelectTrigger className="font-[family-name:var(--font-garamond)] h-8 w-[320px] text-sm">
                 <SelectValue placeholder="Committee" />
               </SelectTrigger>
               <SelectContent>
@@ -121,7 +121,7 @@ export default function CommitteeReportsPage() {
                 ))}
               </SelectContent>
             </Select>
-            <span className="text-xs text-muted-foreground">
+            <span className="font-[family-name:var(--font-garamond)] text-sm text-muted-foreground">
               {filtered.length} report{filtered.length !== 1 ? "s" : ""}
             </span>
           </div>
@@ -130,7 +130,7 @@ export default function CommitteeReportsPage() {
           {showMobileFilters && (
             <div className="mt-3 flex flex-col gap-2 lg:hidden">
               <Select value={committeeFilter} onValueChange={setCommitteeFilter}>
-                <SelectTrigger className="h-9 text-xs">
+                <SelectTrigger className="font-[family-name:var(--font-garamond)] h-9 text-sm">
                   <SelectValue placeholder="Committee" />
                 </SelectTrigger>
                 <SelectContent>
@@ -143,7 +143,7 @@ export default function CommitteeReportsPage() {
                 </SelectContent>
               </Select>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">
+                <span className="font-[family-name:var(--font-garamond)] text-sm text-muted-foreground">
                   {filtered.length} result{filtered.length !== 1 ? "s" : ""}
                 </span>
                 {committeeFilter !== "all" && (
@@ -169,8 +169,8 @@ export default function CommitteeReportsPage() {
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
               <FileText className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold">No committee reports found</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <h3 className="font-[family-name:var(--font-garamond)] text-xl font-semibold">No committee reports found</h3>
+            <p className="font-[family-name:var(--font-garamond)] mt-1 text-base text-muted-foreground">
               Try adjusting the search or filters above.
             </p>
           </div>
@@ -181,22 +181,22 @@ export default function CommitteeReportsPage() {
               <table className="table-auto w-full border-collapse border border-gray-200">
                 <thead style={tableHeaderStyle}>
                   <tr>
-                    <th className="px-4 py-3 text-center font-semibold w-28">Committee Report No.</th>
-                    <th className="px-4 py-3 text-left font-semibold">Subject</th>
-                    <th className="px-4 py-3 text-center font-semibold">Committee</th>
-                    <th className="px-4 py-3 text-center font-semibold w-24">Action</th>
+                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-center text-sm font-semibold w-28 sm:text-base">Committee Report No.</th>
+                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-left text-sm font-semibold sm:text-base">Subject</th>
+                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-center text-sm font-semibold sm:text-base">Committee</th>
+                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-center text-sm font-semibold w-24 sm:text-base">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((report) => (
                     <tr key={report.id} className="hover:bg-gray-50">
-                      <td className="border border-gray-300 px-4 py-2 text-center text-sm font-medium">
+                      <td className="font-[family-name:var(--font-garamond)] border border-gray-300 px-4 py-2 text-center text-sm font-medium sm:text-base">
                         {report.reportNo}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 text-sm">
+                      <td className="font-[family-name:var(--font-garamond)] border border-gray-300 px-4 py-2 text-sm sm:text-base">
                         {report.subject}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center text-sm">
+                      <td className="font-[family-name:var(--font-garamond)] border border-gray-300 px-4 py-2 text-center text-sm sm:text-base">
                         {report.committee}
                       </td>
                       <td className="border border-gray-300 px-4 py-2">

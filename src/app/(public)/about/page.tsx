@@ -25,7 +25,7 @@ export default function AboutPage() {
               <span className="block mt-2">Organizational Chart</span>
             </h1>
             <p
-              className="mt-4 max-w-2xl text-sm sm:text-lg lg:text-xl text-white font-[family-name:var(--font-garamond)]"
+              className="mt-4 max-w-2xl text-base sm:text-xl lg:text-2xl text-white font-[family-name:var(--font-garamond)]"
               style={{ textShadow: "1px 1px 6px rgba(0,0,0,0.7)" }}
             >
               Elected and appointed members of the Sangguniang Bayan

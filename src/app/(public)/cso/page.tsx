@@ -120,7 +120,7 @@ export default function CSOPage() {
                 placeholder="Search organizations or officers..."
                 value={search}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="h-9 pl-9 text-xs"
+                className="font-[family-name:var(--font-garamond)] h-9 pl-9 text-sm"
               />
             </div>
             <Button
@@ -133,16 +133,16 @@ export default function CSOPage() {
             >
               <SlidersHorizontal className="h-4 w-4" />
             </Button>
-            <span className="hidden text-xs text-muted-foreground sm:inline whitespace-nowrap">
+            <span className="font-[family-name:var(--font-garamond)] hidden text-sm text-muted-foreground sm:inline whitespace-nowrap">
               {filtered.length} organization{filtered.length !== 1 ? "s" : ""}
             </span>
           </div>
 
           {/* Desktop Filters */}
           <div className="mt-2 hidden items-center gap-3 lg:flex">
-            <span className="text-xs font-medium text-muted-foreground">Filter by:</span>
+            <span className="font-[family-name:var(--font-garamond)] text-sm font-medium text-muted-foreground">Filter by:</span>
             <Select value={termFilter} onValueChange={(v) => handleFilterChange(v, setTermFilter)}>
-              <SelectTrigger className="h-8 w-[160px] text-xs">
+              <SelectTrigger className="font-[family-name:var(--font-garamond)] h-8 w-[160px] text-sm">
                 <SelectValue placeholder="Term" />
               </SelectTrigger>
               <SelectContent>
@@ -154,7 +154,7 @@ export default function CSOPage() {
                 ))}
               </SelectContent>
             </Select>
-            <span className="text-xs text-muted-foreground">
+            <span className="font-[family-name:var(--font-garamond)] text-sm text-muted-foreground">
               {filtered.length} organization{filtered.length !== 1 ? "s" : ""}
             </span>
           </div>
@@ -163,7 +163,7 @@ export default function CSOPage() {
           {showMobileFilters && (
             <div className="mt-3 flex flex-col gap-2 lg:hidden">
               <Select value={termFilter} onValueChange={(v) => handleFilterChange(v, setTermFilter)}>
-                <SelectTrigger className="h-9 text-xs">
+                <SelectTrigger className="font-[family-name:var(--font-garamond)] h-9 text-sm">
                   <SelectValue placeholder="Term" />
                 </SelectTrigger>
                 <SelectContent>
@@ -176,7 +176,7 @@ export default function CSOPage() {
                 </SelectContent>
               </Select>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">
+                <span className="font-[family-name:var(--font-garamond)] text-sm text-muted-foreground">
                   {filtered.length} result{filtered.length !== 1 ? "s" : ""}
                 </span>
                 {termFilter !== "all" && (
@@ -202,8 +202,8 @@ export default function CSOPage() {
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
               <Users className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold">No organizations found</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <h3 className="font-[family-name:var(--font-garamond)] text-xl font-semibold">No organizations found</h3>
+            <p className="font-[family-name:var(--font-garamond)] mt-1 text-base text-muted-foreground">
               Try adjusting the search or filters above.
             </p>
           </div>
@@ -214,25 +214,25 @@ export default function CSOPage() {
               <table className="table-auto w-full border-collapse border border-gray-200">
                 <thead style={tableHeaderStyle}>
                   <tr>
-                    <th className="px-4 py-3 text-center font-semibold w-12">#</th>
-                    <th className="px-4 py-3 text-left font-semibold">Name of Organization</th>
-                    <th className="px-4 py-3 text-left font-semibold">Name of Officer(s)</th>
-                    <th className="px-4 py-3 text-center font-semibold">Position</th>
+                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-center text-sm font-semibold w-12 sm:text-base">#</th>
+                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-left text-sm font-semibold sm:text-base">Name of Organization</th>
+                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-left text-sm font-semibold sm:text-base">Name of Officer(s)</th>
+                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-center text-sm font-semibold sm:text-base">Position</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedOrgs.map((org, index) => (
                     <tr key={org.id} className="hover:bg-gray-50">
-                      <td className="border border-gray-300 px-4 py-2 text-center text-sm">
+                      <td className="font-[family-name:var(--font-garamond)] border border-gray-300 px-4 py-2 text-center text-sm sm:text-base">
                         {startIndex + index + 1}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 text-sm font-medium">
+                      <td className="font-[family-name:var(--font-garamond)] border border-gray-300 px-4 py-2 text-sm font-medium sm:text-base">
                         {org.name}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 text-sm">
+                      <td className="font-[family-name:var(--font-garamond)] border border-gray-300 px-4 py-2 text-sm sm:text-base">
                         {org.officerName}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center text-sm">
+                      <td className="font-[family-name:var(--font-garamond)] border border-gray-300 px-4 py-2 text-center text-sm sm:text-base">
                         {org.position}
                       </td>
                     </tr>
@@ -244,7 +244,7 @@ export default function CSOPage() {
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="mt-6 flex flex-col items-center gap-3">
-                <p className="text-sm text-muted-foreground">
+                <p className="font-[family-name:var(--font-garamond)] text-base text-muted-foreground">
                   Showing {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, filtered.length)} of {filtered.length} organizations
                 </p>
                 <nav className="flex items-center gap-1" aria-label="Pagination">
@@ -261,7 +261,7 @@ export default function CSOPage() {
 
                   {getPageNumbers().map((page, i) =>
                     page === "ellipsis" ? (
-                      <span key={`ellipsis-${i}`} className="px-2 text-sm text-muted-foreground">
+                      <span key={`ellipsis-${i}`} className="font-[family-name:var(--font-garamond)] px-2 text-sm text-muted-foreground">
                         …
                       </span>
                     ) : (
@@ -269,7 +269,7 @@ export default function CSOPage() {
                         key={page}
                         variant={page === safePage ? "default" : "outline"}
                         size="icon"
-                        className={`h-8 w-8 text-xs font-medium ${
+                        className={`font-[family-name:var(--font-garamond)] h-8 w-8 text-sm font-medium ${
                           page === safePage
                             ? "bg-[#101B29] text-white hover:bg-[#101B29]/90"
                             : ""

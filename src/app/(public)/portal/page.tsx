@@ -255,10 +255,10 @@ export default function PortalPage() {
       <section className="border-b bg-background py-10 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-8 text-center sm:mb-10">
-            <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl lg:text-3xl">
+            <h2 className="font-[family-name:var(--font-garamond)] text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
               Browse Legislative Records
             </h2>
-            <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
+            <p className="font-[family-name:var(--font-garamond)] mt-2 text-sm text-muted-foreground sm:text-base">
               Access public documents by category
             </p>
           </div>
@@ -281,17 +281,17 @@ export default function PortalPage() {
                           <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-[#cbab53]/10 text-[#cbab53] transition-colors group-hover:bg-[#cbab53] group-hover:text-white sm:mb-3 sm:h-12 sm:w-12">
                             <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                           </div>
-                          <CardTitle className="flex items-center justify-between text-base sm:text-lg">
+                          <CardTitle className="font-[family-name:var(--font-garamond)] flex items-center justify-between text-lg sm:text-xl">
                             {card.title}
                             <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-[#cbab53]" />
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
+                          <p className="font-[family-name:var(--font-garamond)] text-sm leading-relaxed text-muted-foreground sm:text-base">
                             {card.description}
                           </p>
                           {card.count !== null && (
-                            <p className="mt-3 text-xs font-medium text-[#3998eb]">
+                            <p className="font-[family-name:var(--font-garamond)] mt-3 text-sm font-medium text-[#3998eb]">
                               {card.count} published documents
                             </p>
                           )}

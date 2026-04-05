@@ -86,16 +86,16 @@ export function SBMemberCard({
             />
           </div>
           <div className="p-5">
-            <h3 className="font-semibold text-black hover:text-[#cbab53]">
+            <h3 className="font-[family-name:var(--font-garamond)] font-semibold text-black hover:text-[#cbab53]">
               {member.position === "SB Secretary" ? "" : "Hon. "}{member.name}
             </h3>
-            <p className="mt-0.5 text-xs text-[#3998eb] font-medium hover:text-[#cbab53]">
+            <p className="font-[family-name:var(--font-garamond)] mt-0.5 text-sm text-[#3998eb] font-medium hover:text-[#cbab53]">
               {member.position}
             </p>
             {roles.length > 0 && (
               <div className="mt-3 flex items-center gap-1.5 rounded-full bg-[#25395C]/8 px-2.5 py-1 w-fit group-hover:bg-[#25395C]/12 transition-colors">
                 <Building className="h-3 w-3 text-[#25395C]/60" />
-                <span className="text-[10px] font-medium text-[#25395C]/70">
+                <span className="font-[family-name:var(--font-garamond)] text-xs font-medium text-[#25395C]/70">
                   {roles.length} Committee{roles.length !== 1 ? "s" : ""}
                 </span>
                 <ChevronRight className="h-2.5 w-2.5 text-[#25395C]/40" />
@@ -120,13 +120,13 @@ export function SBMemberCard({
                   />
                 </div>
                 <div>
-                  <DialogTitle className="text-white text-base sm:text-lg">
+                  <DialogTitle className="font-[family-name:var(--font-garamond)] text-white text-lg sm:text-xl">
                     {member.position === "SB Secretary" ? "" : "Hon. "}{member.name}
                   </DialogTitle>
-                  <p className="mt-1 text-xs text-[#cbab53] font-medium sm:text-sm">
+                  <p className="font-[family-name:var(--font-garamond)] mt-1 text-sm text-[#cbab53] font-medium sm:text-base">
                     {member.position}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-white/50">
+                  <p className="font-[family-name:var(--font-garamond)] mt-0.5 text-xs text-white/50">
                     {roles.length} Committee Assignment{roles.length !== 1 ? "s" : ""}
                   </p>
                 </div>
@@ -143,13 +143,13 @@ export function SBMemberCard({
                     <MapPinned className="h-3.5 w-3.5 text-[#9a7f2e]" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">District Assignment</p>
-                    <p className="text-sm font-semibold text-foreground">{districtAssignment}</p>
+                    <p className="font-[family-name:var(--font-garamond)] text-xs font-medium text-muted-foreground uppercase tracking-wider">District Assignment</p>
+                    <p className="font-[family-name:var(--font-garamond)] text-base font-semibold text-foreground">{districtAssignment}</p>
                   </div>
                 </div>
               )}
               {roles.length === 0 && !districtAssignment ? (
-                <p className="text-sm text-muted-foreground text-center py-6">
+                <p className="font-[family-name:var(--font-garamond)] text-base text-muted-foreground text-center py-6">
                   No committee assignments found.
                 </p>
               ) : (
@@ -164,12 +164,12 @@ export function SBMemberCard({
                         <RoleIcon className="h-3.5 w-3.5 text-[#25395C]" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground leading-snug">
+                        <p className="font-[family-name:var(--font-garamond)] text-base font-medium text-foreground leading-snug">
                           {r.committee}
                         </p>
                         <Badge
                           variant="outline"
-                          className={`mt-1.5 text-[10px] px-2 py-0 h-5 ${roleBadgeStyles[r.role]}`}
+                          className={`mt-1.5 text-xs px-2 py-0 h-5 font-[family-name:var(--font-garamond)] ${roleBadgeStyles[r.role]}`}
                         >
                           {r.role}
                         </Badge>

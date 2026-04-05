@@ -115,7 +115,7 @@ export function OrdinancesContent() {
                 Ordinances
               </h1>
               <p
-                className="mx-auto mt-2 max-w-2xl text-xs leading-relaxed text-white/90 sm:mt-4 sm:text-sm lg:text-base"
+                className="font-[family-name:var(--font-garamond)] mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-white/90 sm:mt-4 sm:text-base lg:text-lg"
                 style={{ textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}
               >
                 Browse published ordinances enacted by the Sangguniang Bayan ng
@@ -138,7 +138,7 @@ export function OrdinancesContent() {
                 placeholder="Search ordinances..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-9 pl-9 text-xs"
+                className="font-[family-name:var(--font-garamond)] h-9 pl-9 text-sm"
               />
             </div>
             <Button
@@ -151,16 +151,16 @@ export function OrdinancesContent() {
             >
               <SlidersHorizontal className="h-4 w-4" />
             </Button>
-            <span className="hidden text-xs text-muted-foreground sm:inline whitespace-nowrap">
+            <span className="font-[family-name:var(--font-garamond)] hidden text-sm text-muted-foreground sm:inline whitespace-nowrap">
               {filtered.length} result{filtered.length !== 1 ? "s" : ""}
             </span>
           </div>
 
           {/* Desktop Filters */}
           <div className="mt-2 hidden items-center gap-3 lg:flex">
-            <span className="text-xs font-medium text-muted-foreground">Filter by:</span>
+            <span className="font-[family-name:var(--font-garamond)] text-sm font-medium text-muted-foreground">Filter by:</span>
             <Select value={yearFilter} onValueChange={setYearFilter}>
-              <SelectTrigger className="h-8 w-[120px] text-xs">
+              <SelectTrigger className="font-[family-name:var(--font-garamond)] h-8 w-[120px] text-sm">
                 <SelectValue placeholder="Year" />
               </SelectTrigger>
               <SelectContent>
@@ -171,7 +171,7 @@ export function OrdinancesContent() {
               </SelectContent>
             </Select>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="h-8 w-[160px] text-xs">
+              <SelectTrigger className="font-[family-name:var(--font-garamond)] h-8 w-[160px] text-sm">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
@@ -182,7 +182,7 @@ export function OrdinancesContent() {
               </SelectContent>
             </Select>
             <Select value={authorFilter} onValueChange={setAuthorFilter}>
-              <SelectTrigger className="h-8 w-[200px] text-xs">
+              <SelectTrigger className="font-[family-name:var(--font-garamond)] h-8 w-[200px] text-sm">
                 <SelectValue placeholder="Author / Sponsor" />
               </SelectTrigger>
               <SelectContent>
@@ -193,7 +193,7 @@ export function OrdinancesContent() {
               </SelectContent>
             </Select>
             <Separator orientation="vertical" className="h-5" />
-            <span className="text-xs text-muted-foreground">
+            <span className="font-[family-name:var(--font-garamond)] text-sm text-muted-foreground">
               {filtered.length} document{filtered.length !== 1 ? "s" : ""}
             </span>
           </div>
@@ -202,7 +202,7 @@ export function OrdinancesContent() {
           {showMobileFilters && (
             <div className="mt-3 flex flex-col gap-2 lg:hidden">
               <Select value={yearFilter} onValueChange={setYearFilter}>
-                <SelectTrigger className="h-9 text-xs">
+                <SelectTrigger className="font-[family-name:var(--font-garamond)] h-9 text-sm">
                   <SelectValue placeholder="Year" />
                 </SelectTrigger>
                 <SelectContent>
@@ -213,7 +213,7 @@ export function OrdinancesContent() {
                 </SelectContent>
               </Select>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="h-9 text-xs">
+                <SelectTrigger className="font-[family-name:var(--font-garamond)] h-9 text-sm">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -224,7 +224,7 @@ export function OrdinancesContent() {
                 </SelectContent>
               </Select>
               <Select value={authorFilter} onValueChange={setAuthorFilter}>
-                <SelectTrigger className="h-9 text-xs">
+                <SelectTrigger className="font-[family-name:var(--font-garamond)] h-9 text-sm">
                   <SelectValue placeholder="Author / Sponsor" />
                 </SelectTrigger>
                 <SelectContent>
@@ -235,7 +235,7 @@ export function OrdinancesContent() {
                 </SelectContent>
               </Select>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">
+                <span className="font-[family-name:var(--font-garamond)] text-sm text-muted-foreground">
                   {filtered.length} result{filtered.length !== 1 ? "s" : ""}
                 </span>
                 {(yearFilter !== "all" || categoryFilter !== "all" || authorFilter !== "all") && (
@@ -261,8 +261,8 @@ export function OrdinancesContent() {
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
               <ScrollText className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold">No ordinances found</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <h3 className="font-[family-name:var(--font-garamond)] text-xl font-semibold">No ordinances found</h3>
+            <p className="font-[family-name:var(--font-garamond)] mt-1 text-base text-muted-foreground">
               Try adjusting the filters above.
             </p>
           </div>
@@ -273,11 +273,11 @@ export function OrdinancesContent() {
               <table className="table-auto w-full border-collapse border border-gray-200">
                 <thead style={tableHeaderStyle}>
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold">Ordinance No.</th>
-                    <th className="px-4 py-3 text-left font-semibold">Title</th>
-                    <th className="px-4 py-3 text-center font-semibold">Category</th>
-                    <th className="px-4 py-3 text-center font-semibold">Author/Sponsor</th>
-                    <th className="px-4 py-3 text-center font-semibold">Actions</th>
+                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-left text-sm font-semibold sm:text-base">Ordinance No.</th>
+                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-left text-sm font-semibold sm:text-base">Title</th>
+                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-center text-sm font-semibold sm:text-base">Category</th>
+                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-center text-sm font-semibold sm:text-base">Author/Sponsor</th>
+                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-center text-sm font-semibold sm:text-base">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -285,16 +285,16 @@ export function OrdinancesContent() {
                     const formattedNumber = formatOrdinanceNumber(doc);
                     return (
                     <tr key={doc.id} className="hover:bg-gray-50">
-                      <td className="border border-gray-300 px-4 py-2 text-center">
+                      <td className="font-[family-name:var(--font-garamond)] border border-gray-300 px-4 py-2 text-center text-sm sm:text-base">
                         {formattedNumber}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2">
+                      <td className="font-[family-name:var(--font-garamond)] border border-gray-300 px-4 py-2 text-sm sm:text-base">
                         {doc.title}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center">
+                      <td className="font-[family-name:var(--font-garamond)] border border-gray-300 px-4 py-2 text-center text-sm sm:text-base">
                         {doc.category}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center">
+                      <td className="font-[family-name:var(--font-garamond)] border border-gray-300 px-4 py-2 text-center text-sm sm:text-base">
                         {doc.authorSponsor}
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
@@ -324,14 +324,14 @@ export function OrdinancesContent() {
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
-                <p className="text-sm text-muted-foreground">
+                <p className="font-[family-name:var(--font-garamond)] text-base text-muted-foreground">
                   Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length} ordinances
                 </p>
                 <div className="flex items-center gap-1">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 px-3 text-xs"
+                    className="font-[family-name:var(--font-garamond)] h-8 px-3 text-sm"
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage((p) => p - 1)}
                   >
@@ -342,7 +342,7 @@ export function OrdinancesContent() {
                       key={page}
                       variant={page === currentPage ? "default" : "outline"}
                       size="sm"
-                      className={`h-8 w-8 p-0 text-xs ${page === currentPage ? "bg-[#1e3a5f] text-white hover:bg-[#1e3a5f]/90" : ""}`}
+                      className={`font-[family-name:var(--font-garamond)] h-8 w-8 p-0 text-sm ${page === currentPage ? "bg-[#1e3a5f] text-white hover:bg-[#1e3a5f]/90" : ""}`}
                       onClick={() => setCurrentPage(page)}
                     >
                       {page}
@@ -351,7 +351,7 @@ export function OrdinancesContent() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 px-3 text-xs"
+                    className="font-[family-name:var(--font-garamond)] h-8 px-3 text-sm"
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage((p) => p + 1)}
                   >

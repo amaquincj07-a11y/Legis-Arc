@@ -62,10 +62,10 @@ function PlaceholderMemberCard({ position, className }: { position: string; clas
           <UserCircle className="h-16 w-16 text-white/15 sm:h-20 sm:w-20" />
         </div>
         <div className="p-5">
-          <h3 className="font-semibold text-white/40">
+          <h3 className="font-[family-name:var(--font-garamond)] font-semibold text-white/40">
             {showHon ? "Hon. " : ""}[name]
           </h3>
-          <p className="mt-0.5 text-xs text-[#3998eb]/60 font-medium">
+          <p className="font-[family-name:var(--font-garamond)] mt-0.5 text-sm text-[#3998eb]/60 font-medium">
             {position}
           </p>
         </div>
@@ -82,8 +82,8 @@ function PlaceholderStaffCard() {
           <UserCircle className="h-16 w-16 text-white/15 sm:h-20 sm:w-20" />
         </div>
         <div className="p-4">
-          <h3 className="text-sm font-semibold text-white/40">[name]</h3>
-          <p className="mt-0.5 text-xs text-[#3998eb]/60 font-medium">SB Staff</p>
+          <h3 className="font-[family-name:var(--font-garamond)] text-base font-semibold text-white/40">[name]</h3>
+          <p className="font-[family-name:var(--font-garamond)] mt-0.5 text-sm text-[#3998eb]/60 font-medium">SB Staff</p>
         </div>
       </CardContent>
     </Card>
@@ -104,7 +104,7 @@ export function AboutTermContent() {
               <button
                 key={term}
                 onClick={() => setSelectedTerm(term)}
-                className={`rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 sm:px-6 sm:text-sm ${
+                className={`font-[family-name:var(--font-garamond)] rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 sm:px-6 sm:text-base ${
                   selectedTerm === term
                     ? "bg-[#cbab53] text-[#1e3148] shadow-lg"
                     : "bg-white/8 text-white/60 hover:bg-white/15 hover:text-white/80"
@@ -182,7 +182,7 @@ export function AboutTermContent() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
               <Users className="h-5 w-5 text-[#cbab53]" />
             </div>
-            <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
+            <h2 className="font-[family-name:var(--font-garamond)] text-2xl font-bold tracking-tight text-white sm:text-3xl">
               SB Staff
             </h2>
           </div>
@@ -206,10 +206,10 @@ export function AboutTermContent() {
                       )}
                     </div>
                     <div className="p-4">
-                      <h3 className="text-sm font-semibold text-white/90">
+                      <h3 className="font-[family-name:var(--font-garamond)] text-base font-semibold text-white/90">
                         {staff.name}
                       </h3>
-                      <p className="mt-0.5 text-xs text-[#3998eb] font-medium">
+                      <p className="font-[family-name:var(--font-garamond)] mt-0.5 text-sm text-[#3998eb] font-medium">
                         {staff.position}
                       </p>
                     </div>
@@ -239,10 +239,10 @@ export function AboutTermContent() {
               <Building className="h-5 w-5 text-teal" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              <h2 className="font-[family-name:var(--font-garamond)] text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                 Committees
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="font-[family-name:var(--font-garamond)] text-base text-muted-foreground">
                 Standing committees of the Sangguniang Bayan
               </p>
             </div>
@@ -253,10 +253,10 @@ export function AboutTermContent() {
               {mockCommittees.filter((c) => c.name !== "Committee of the Whole / En Banc").map((committee) => (
                 <Card key={committee.id} className="border-t-4 border-[#3998eb] hover:shadow-sm transition-shadow">
                   <CardContent className="p-4 sm:p-5">
-                    <h3 className="font-semibold text-foreground text-sm">
+                    <h3 className="font-[family-name:var(--font-garamond)] font-semibold text-foreground text-base">
                       {committee.name}
                     </h3>
-                    <div className="mt-3 space-y-2 text-xs text-muted-foreground">
+                    <div className="mt-3 space-y-2 text-sm text-muted-foreground font-[family-name:var(--font-garamond)]">
                       <div className="flex gap-2">
                         <span className="font-semibold text-foreground">Chairman:</span>
                         <span>{committee.chairman}</span>
@@ -307,7 +307,7 @@ export function AboutTermContent() {
                           {committee.members.map((_, idx) => (
                             <div
                               key={idx}
-                              className="flex items-center gap-2 text-xs text-muted-foreground/40"
+                            className="flex items-center gap-2 text-sm text-muted-foreground/40 font-[family-name:var(--font-garamond)]"
                             >
                               <User className="h-3 w-3 shrink-0" />
                               <span>[name]</span>
@@ -332,10 +332,10 @@ export function AboutTermContent() {
               <MapPinned className="h-5 w-5 text-navy" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              <h2 className="font-[family-name:var(--font-garamond)] text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                 District Assignments
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="font-[family-name:var(--font-garamond)] text-base text-muted-foreground">
                 Barangay assignments of SB Members
               </p>
             </div>
@@ -347,8 +347,8 @@ export function AboutTermContent() {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-x-12 sm:gap-y-3">
                   {districtAssignments.map((item) => (
                     <div key={item.barangay} className="flex items-center justify-between gap-3 rounded-lg border px-4 py-3">
-                      <span className="text-sm font-semibold text-foreground">{item.barangay}</span>
-                      <span className="text-sm text-muted-foreground">{item.member}</span>
+                      <span className="font-[family-name:var(--font-garamond)] text-base font-semibold text-foreground">{item.barangay}</span>
+                      <span className="font-[family-name:var(--font-garamond)] text-base text-muted-foreground">{item.member}</span>
                     </div>
                   ))}
                 </div>
@@ -360,8 +360,8 @@ export function AboutTermContent() {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-x-12 sm:gap-y-3">
                   {districtAssignments.map((item) => (
                     <div key={item.barangay} className="flex items-center justify-between gap-3 rounded-lg border px-4 py-3">
-                      <span className="text-sm font-semibold text-foreground">{item.barangay}</span>
-                      <span className="text-sm text-muted-foreground/40">Hon. [name]</span>
+                      <span className="font-[family-name:var(--font-garamond)] text-base font-semibold text-foreground">{item.barangay}</span>
+                      <span className="font-[family-name:var(--font-garamond)] text-base text-muted-foreground/40">Hon. [name]</span>
                     </div>
                   ))}
                 </div>

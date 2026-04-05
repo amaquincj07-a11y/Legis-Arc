@@ -426,10 +426,10 @@ export default function CitizensCharterPage() {
               <Users className="h-5 w-5 text-teal" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              <h2 className="font-[family-name:var(--font-garamond)] text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                 External Services
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="font-[family-name:var(--font-garamond)] text-base text-muted-foreground">
                 Services available to the general public
               </p>
             </div>
@@ -451,10 +451,10 @@ export default function CitizensCharterPage() {
               <Building2 className="h-5 w-5 text-gold" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              <h2 className="font-[family-name:var(--font-garamond)] text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                 Internal Services
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="font-[family-name:var(--font-garamond)] text-base text-muted-foreground">
                 Services for SP Members and City Hall staff
               </p>
             </div>
@@ -507,14 +507,14 @@ function ServiceTable({
       {/* Service Title Header */}
       <div className={`px-5 py-4 sm:px-6 ${headerBg}`}>
         <div className="flex items-start gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/15 text-sm font-bold">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/15 text-sm font-bold font-[family-name:var(--font-garamond)]">
             {service.number}
           </div>
           <div>
-            <h3 className="text-base font-semibold sm:text-lg leading-snug">
+            <h3 className="font-[family-name:var(--font-garamond)] text-lg font-semibold sm:text-xl leading-snug">
               {service.title}
             </h3>
-            <p className="mt-1 text-sm opacity-75">{service.description}</p>
+            <p className="font-[family-name:var(--font-garamond)] mt-1 text-base opacity-75">{service.description}</p>
           </div>
         </div>
       </div>
@@ -522,34 +522,34 @@ function ServiceTable({
       {/* Service Info Grid */}
       <div className={`grid grid-cols-2 gap-px border-b sm:grid-cols-4 ${metaBg}`}>
         <div className="bg-white px-4 py-3 sm:px-5">
-          <p className={`text-[11px] font-semibold uppercase tracking-wider ${metaLabelColor}`}>
+          <p className={`font-[family-name:var(--font-garamond)] text-xs font-semibold uppercase tracking-wider ${metaLabelColor}`}>
             Classification
           </p>
-          <p className={`mt-0.5 text-sm font-medium ${metaValueColor}`}>
+          <p className={`font-[family-name:var(--font-garamond)] mt-0.5 text-base font-medium ${metaValueColor}`}>
             {service.classification}
           </p>
         </div>
         <div className="bg-white px-4 py-3 sm:px-5">
-          <p className={`text-[11px] font-semibold uppercase tracking-wider ${metaLabelColor}`}>
+          <p className={`font-[family-name:var(--font-garamond)] text-xs font-semibold uppercase tracking-wider ${metaLabelColor}`}>
             Type of Transaction
           </p>
-          <p className={`mt-0.5 text-sm font-medium ${metaValueColor}`}>
+          <p className={`font-[family-name:var(--font-garamond)] mt-0.5 text-base font-medium ${metaValueColor}`}>
             {service.transactionType}
           </p>
         </div>
         <div className="bg-white px-4 py-3 sm:px-5">
-          <p className={`text-[11px] font-semibold uppercase tracking-wider ${metaLabelColor}`}>
+          <p className={`font-[family-name:var(--font-garamond)] text-xs font-semibold uppercase tracking-wider ${metaLabelColor}`}>
             Who May Avail
           </p>
-          <p className={`mt-0.5 text-sm font-medium ${metaValueColor}`}>
+          <p className={`font-[family-name:var(--font-garamond)] mt-0.5 text-base font-medium ${metaValueColor}`}>
             {service.whoMayAvail}
           </p>
         </div>
         <div className="bg-white px-4 py-3 sm:px-5">
-          <p className={`text-[11px] font-semibold uppercase tracking-wider ${metaLabelColor}`}>
+          <p className={`font-[family-name:var(--font-garamond)] text-xs font-semibold uppercase tracking-wider ${metaLabelColor}`}>
             Total Processing Time
           </p>
-          <div className={`mt-0.5 flex items-center gap-1 text-sm font-medium ${metaValueColor}`}>
+          <div className={`font-[family-name:var(--font-garamond)] mt-0.5 flex items-center gap-1 text-base font-medium ${metaValueColor}`}>
             <Clock className="h-3.5 w-3.5" />
             {service.totalTime}
           </div>
@@ -561,13 +561,13 @@ function ServiceTable({
         <div className="bg-white px-4 py-3 sm:px-5">
           <div className="flex items-center gap-1.5 mb-1.5">
             <FileCheck className="h-3.5 w-3.5 text-slate-500" />
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            <p className="font-[family-name:var(--font-garamond)] text-xs font-semibold uppercase tracking-wider text-slate-500">
               Requirements
             </p>
           </div>
           <ul className="space-y-0.5">
             {service.requirements.map((req) => (
-              <li key={req} className="flex items-start gap-1.5 text-sm text-slate-700">
+              <li key={req} className="font-[family-name:var(--font-garamond)] flex items-start gap-1.5 text-base text-slate-700">
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
                 {req}
               </li>
@@ -577,35 +577,35 @@ function ServiceTable({
         <div className="bg-white px-4 py-3 sm:px-5">
           <div className="flex items-center gap-1.5 mb-1.5">
             <ListChecks className="h-3.5 w-3.5 text-slate-500" />
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            <p className="font-[family-name:var(--font-garamond)] text-xs font-semibold uppercase tracking-wider text-slate-500">
               Total Fees
             </p>
           </div>
-          <p className="text-sm text-slate-700">{service.totalFees}</p>
+          <p className="font-[family-name:var(--font-garamond)] text-base text-slate-700">{service.totalFees}</p>
         </div>
       </div>
 
       {/* Steps Table */}
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-base font-[family-name:var(--font-garamond)]">
           <thead>
             <tr className={stepHeaderBg}>
-              <th className="w-14 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider">
+              <th className="w-14 px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wider">
                 Step
               </th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider">
+              <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wider">
                 Client Action
               </th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider">
+              <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wider">
                 Agency Action
               </th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider">
+              <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wider">
                 Fees
               </th>
-              <th className="w-16 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider">
+              <th className="w-16 px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wider">
                 Time
               </th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider">
+              <th className="px-4 py-2.5 text-left text-sm font-semibold uppercase tracking-wider">
                 Responsible Person
               </th>
             </tr>
@@ -618,11 +618,11 @@ function ServiceTable({
                 </td>
                 <td className="px-4 py-3 text-slate-700">{step.clientAction}</td>
                 <td className="px-4 py-3 text-slate-600">{step.agencyAction}</td>
-                <td className="px-4 py-3 text-slate-600 text-xs">{step.fees}</td>
+                <td className="px-4 py-3 text-slate-600 text-sm">{step.fees}</td>
                 <td className="px-4 py-3 text-slate-600 font-medium whitespace-nowrap">
                   {step.time}
                 </td>
-                <td className="px-4 py-3 text-slate-600 text-xs">{step.responsible}</td>
+                <td className="px-4 py-3 text-slate-600 text-sm">{step.responsible}</td>
               </tr>
             ))}
           </tbody>
