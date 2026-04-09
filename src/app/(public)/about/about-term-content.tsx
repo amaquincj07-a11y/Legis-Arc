@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { User, UserCircle, Users, Building, MapPinned } from "lucide-react";
+import { User, UserCircle, MapPinned } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { mockSBMembers, mockSBStaff, mockCommittees } from "@/lib/mock-data";
@@ -178,10 +178,7 @@ export function AboutTermContent() {
       {/* SB Staff Section */}
       <section className="bg-[#1e3148] py-10 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 flex items-center justify-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
-              <Users className="h-5 w-5 text-[#cbab53]" />
-            </div>
+          <div className="mb-8 flex items-center justify-center">
             <h2 className="font-[family-name:var(--font-garamond)] text-2xl font-bold tracking-tight text-white sm:text-3xl">
               SB Staff
             </h2>
@@ -234,18 +231,13 @@ export function AboutTermContent() {
       {/* Committees */}
       <section className="bg-background py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-10 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal/10">
-              <Building className="h-5 w-5 text-teal" />
-            </div>
-            <div>
+          <div className="mb-10 text-center">
               <h2 className="font-[family-name:var(--font-garamond)] text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                 Committees
               </h2>
-              <p className="font-[family-name:var(--font-garamond)] text-base text-muted-foreground">
+              <p className="font-[family-name:var(--font-garamond)] text-base text-muted-foreground mt-1">
                 Standing committees of the Sangguniang Bayan
               </p>
-            </div>
           </div>
 
           {isCurrentTerm ? (

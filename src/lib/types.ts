@@ -117,6 +117,14 @@ export interface SessionMinutes {
   updatedAt: Date;
 }
 
+export type ModuleKey =
+  | "ordinances"
+  | "resolutions"
+  | "minutes"
+  | "tracking"
+  | "committee_reports"
+  | "categories";
+
 export interface User {
   id: string;
   name: string;
@@ -125,6 +133,9 @@ export interface User {
   isActive: boolean;
   lastLogin: Date;
   createdAt: Date;
+  moduleAccess?: ModuleKey[];
+  allowedCategories?: string[];
+  allowedCommittees?: string[];
 }
 
 export interface AuditLogEntry {

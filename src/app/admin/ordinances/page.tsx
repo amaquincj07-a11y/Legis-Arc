@@ -224,8 +224,7 @@ export default function OrdinancesPage() {
                   return (
                     <TableRow
                       key={doc.id}
-                      className="cursor-pointer border-slate-100/90 transition hover:bg-slate-50"
-                      onClick={() => router.push(`/admin/ordinances/${doc.id}`)}
+                      className="border-slate-100/90 transition hover:bg-slate-50"
                     >
                       <TableCell className="text-[13px] font-semibold text-slate-800">
                         {formattedNumber}
@@ -246,8 +245,7 @@ export default function OrdinancesPage() {
                           <button
                             type="button"
                             className="group relative flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-[#cbab53]/80 hover:text-[#cbab53]"
-                            onClick={(e) => {
-                              e.stopPropagation();
+                            onClick={() => {
                               router.push(`/admin/ordinances/${doc.id}/edit`);
                             }}
                           >
@@ -259,8 +257,7 @@ export default function OrdinancesPage() {
                           <button
                             type="button"
                             className="group relative flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-[#3998eb]/80 hover:text-[#3998eb]"
-                            onClick={(e) => {
-                              e.stopPropagation();
+                            onClick={() => {
                               const link = document.createElement("a");
                               link.href = doc.pdfUrl;
                               link.download = `${doc.title}.pdf`;
@@ -275,8 +272,7 @@ export default function OrdinancesPage() {
                           <button
                             type="button"
                             className="group relative flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-[#3998eb]/80 hover:text-[#3998eb]"
-                            onClick={(e) => {
-                              e.stopPropagation();
+                            onClick={() => {
                               window.open(doc.pdfUrl, "_blank");
                             }}
                           >
@@ -288,8 +284,7 @@ export default function OrdinancesPage() {
                           <button
                             type="button"
                             className="group relative flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-rose-300/90 hover:text-rose-500"
-                            onClick={(e) => {
-                              e.stopPropagation();
+                            onClick={() => {
                               console.log(`Unpublish ${doc.id}`);
                             }}
                           >

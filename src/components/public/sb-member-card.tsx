@@ -85,7 +85,7 @@ export function SBMemberCard({
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
             />
           </div>
-          <div className="p-5">
+          <div className="p-5 text-center">
             <h3 className="font-[family-name:var(--font-garamond)] font-semibold text-black hover:text-[#cbab53]">
               {member.position === "SB Secretary" ? "" : "Hon. "}{member.name}
             </h3>
@@ -93,7 +93,7 @@ export function SBMemberCard({
               {member.position}
             </p>
             {roles.length > 0 && (
-              <div className="mt-3 flex items-center gap-1.5 rounded-full bg-[#25395C]/8 px-2.5 py-1 w-fit group-hover:bg-[#25395C]/12 transition-colors">
+              <div className="mt-3 flex items-center justify-center gap-1.5 rounded-full bg-[#25395C]/8 px-2.5 py-1 w-fit mx-auto group-hover:bg-[#25395C]/12 transition-colors">
                 <Building className="h-3 w-3 text-[#25395C]/60" />
                 <span className="font-[family-name:var(--font-garamond)] text-xs font-medium text-[#25395C]/70">
                   {roles.length} Committee{roles.length !== 1 ? "s" : ""}

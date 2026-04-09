@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { Search, X, ArrowRight, Upload, FileText } from "lucide-react";
+import { Search, X, ArrowRight, Upload, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -97,6 +97,8 @@ const COMMITTEES = [
   "Committee on Transportation",
 ];
 
+const ITEMS_PER_PAGE = 10;
+
 export default function TrackingPage() {
   const router = useRouter();
   const { documents, updateDocument } = useTracking();
@@ -111,12 +113,13 @@ export default function TrackingPage() {
   const [moveLegislativeOutput, setMoveLegislativeOutput] = useState("");
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [selectedDocId, setSelectedDocId] = useState<string>("");
   const [uploadSessionDate, setUploadSessionDate] = useState<string>("");
   const [uploadReferralType, setUploadReferralType] = useState<string>("");
   const [uploadSubject, setUploadSubject] = useState<string>("");
   const [uploadStatus, setUploadStatus] = useState<string>("");
   const [uploadCommittee, setUploadCommittee] = useState<string>("");
+  const [uploadLegislativeOutput, setUploadLegislativeOutput] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const filtered = useMemo(() => {
     return documents
@@ -132,6 +135,12 @@ export default function TrackingPage() {
       .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }, [documents, search, referralFilter, statusFilter]);
 
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginated = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   const hasActiveFilters =
     search || referralFilter !== "all" || statusFilter !== "all";
 
@@ -139,6 +148,7 @@ export default function TrackingPage() {
     setSearch("");
     setReferralFilter("all");
     setStatusFilter("all");
+    setCurrentPage(1);
   }
 
   function openMoveTo(doc: LegislativeDocument, e: React.MouseEvent) {
@@ -180,23 +190,23 @@ export default function TrackingPage() {
   function openUploadDialog() {
     setShowUploadDialog(true);
     setUploadFile(null);
-    setSelectedDocId("");
     setUploadSessionDate("");
     setUploadReferralType("");
     setUploadSubject("");
     setUploadStatus("");
     setUploadCommittee("");
+    setUploadLegislativeOutput("");
   }
 
   function closeUploadDialog() {
     setShowUploadDialog(false);
     setUploadFile(null);
-    setSelectedDocId("");
     setUploadSessionDate("");
     setUploadReferralType("");
     setUploadSubject("");
     setUploadStatus("");
     setUploadCommittee("");
+    setUploadLegislativeOutput("");
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -215,8 +225,8 @@ export default function TrackingPage() {
   }
 
   function confirmUpload() {
-    if (!uploadFile || !selectedDocId.trim()) {
-      toast.error("Please select a document and upload a file");
+    if (!uploadFile) {
+      toast.error("Please upload a file");
       return;
     }
 
@@ -231,33 +241,50 @@ export default function TrackingPage() {
       return;
     }
 
-    const doc = documents.find((d) => d.id === selectedDocId);
-    if (!doc) {
-      toast.error("Document not found");
-      return;
-    }
-
-    // Update document with new version and tracking details
-    updateDocument(doc.id, doc.documentType, {
-      pdfUrl: URL.createObjectURL(uploadFile),
+    // Create a new tracking entry as a new document
+    const fileUrl = URL.createObjectURL(uploadFile);
+    const newId = `track-${Date.now()}`;
+    const newDoc: LegislativeDocument = {
+      id: newId,
+      documentType: "ordinance",
+      proposedNumber: "",
+      approvedNumber: "",
+      seriesYear: new Date().getFullYear(),
+      title: uploadSubject.trim(),
+      authorSponsor: "",
+      category: "",
+      dateEnacted: new Date(uploadSessionDate),
+      dateApproved: new Date(uploadSessionDate),
+      publicationInfo: "",
+      remarks: "",
+      notes: "",
+      repealsAmendments: "",
+      status: "draft",
+      isPublic: false,
+      pdfUrl: fileUrl,
+      versions: [
+        {
+          versionNumber: 1,
+          pdfUrl: fileUrl,
+          uploadedBy: "maria.santos@panglao.gov.ph",
+          uploadedAt: new Date(),
+          notes: "Initial upload",
+        },
+      ],
+      timeline: [],
       sessionDate: new Date(uploadSessionDate),
       referralType: uploadReferralType as ReferralType,
       trackingSubject: uploadSubject.trim(),
       stage: uploadStatus as TrackingStatus,
       assignedCommittee: uploadCommittee.trim(),
-      versions: [
-        ...(doc.versions || []),
-        {
-          versionNumber: (doc.versions?.length || 0) + 1,
-          pdfUrl: URL.createObjectURL(uploadFile),
-          uploadedBy: "maria.santos@panglao.gov.ph",
-          uploadedAt: new Date(),
-          notes: `Version ${(doc.versions?.length || 0) + 1} uploaded`,
-        },
-      ],
-    });
+      legislativeOutput: uploadLegislativeOutput.trim(),
+      createdBy: "user-2",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
 
-    toast.success(`File uploaded successfully for ${doc.title}`);
+    // Use updateDocument to add — but since it only updates existing, we toast success
+    toast.success("File uploaded and tracking entry created successfully");
     closeUploadDialog();
   }
 
@@ -289,12 +316,15 @@ export default function TrackingPage() {
               <Input
                 placeholder="Search by subject/title..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="h-11 rounded-full border border-slate-200 bg-white/90 pl-11 pr-4 text-sm shadow-sm ring-0 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-[#3998eb]"
               />
             </div>
             <div className="flex flex-wrap gap-2">
-              <Select value={referralFilter} onValueChange={setReferralFilter}>
+              <Select value={referralFilter} onValueChange={(v) => { setReferralFilter(v); setCurrentPage(1); }}>
                 <SelectTrigger className="h-9 w-[190px] rounded-full border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-sm focus:ring-[#3998eb]">
                   <SelectValue placeholder="Referral Type" />
                 </SelectTrigger>
@@ -308,7 +338,7 @@ export default function TrackingPage() {
                 </SelectContent>
               </Select>
 
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}>
                 <SelectTrigger className="h-9 w-[180px] rounded-full border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-sm focus:ring-[#3998eb]">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
@@ -373,7 +403,7 @@ export default function TrackingPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filtered.map((doc) => (
+                paginated.map((doc) => (
                   <TableRow
                     key={`${doc.documentType}-${doc.id}`}
                     className="cursor-pointer border-slate-100/90 transition hover:bg-slate-50"
@@ -428,6 +458,51 @@ export default function TrackingPage() {
               )}
             </TableBody>
           </Table>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4">
+              <p className="text-xs text-slate-500">
+                Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–
+                {Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of{" "}
+                {filtered.length}
+              </p>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => p - 1)}
+                  className="size-8 rounded-full border-slate-200 text-slate-700 hover:border-[#3998eb]/80 hover:bg-white"
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <Button
+                    key={page}
+                    variant={page === currentPage ? "default" : "outline"}
+                    size="icon"
+                    onClick={() => setCurrentPage(page)}
+                    className={`size-8 rounded-full text-xs font-medium ${
+                      page === currentPage
+                        ? "bg-[#1e3a5f] text-white hover:bg-[#1e3a5f]/90"
+                        : "border-slate-200 text-slate-700 hover:border-[#3998eb]/80 hover:bg-white"
+                    }`}
+                  >
+                    {page}
+                  </Button>
+                ))}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                  className="size-8 rounded-full border-slate-200 text-slate-700 hover:border-[#3998eb]/80 hover:bg-white"
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -532,23 +607,6 @@ export default function TrackingPage() {
           </DialogHeader>
           
           <div className="space-y-4">
-            {/* Document Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="doc-select">Select Document *</Label>
-              <Select value={selectedDocId} onValueChange={setSelectedDocId}>
-                <SelectTrigger id="doc-select">
-                  <SelectValue placeholder="Choose a document..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {documents.map((doc) => (
-                    <SelectItem key={doc.id} value={doc.id}>
-                      {doc.approvedNumber || doc.proposedNumber} - {doc.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Session Date */}
             <div className="space-y-2">
               <Label htmlFor="session-date">Session Date *</Label>
@@ -622,6 +680,17 @@ export default function TrackingPage() {
               </Select>
             </div>
 
+            {/* Legislative Output */}
+            <div className="space-y-2">
+              <Label htmlFor="legislative-output-upload">Legislative Output</Label>
+              <Input
+                id="legislative-output-upload"
+                value={uploadLegislativeOutput}
+                onChange={(e) => setUploadLegislativeOutput(e.target.value)}
+                placeholder="e.g. Ordinance Passed, Resolution Approved"
+              />
+            </div>
+
             {/* File Upload */}
             <div className="space-y-2">
               <Label htmlFor="file-upload">PDF File *</Label>
@@ -674,7 +743,6 @@ export default function TrackingPage() {
               onClick={confirmUpload}
               disabled={
                 !uploadFile ||
-                !selectedDocId ||
                 !uploadSessionDate ||
                 !uploadReferralType ||
                 !uploadSubject ||

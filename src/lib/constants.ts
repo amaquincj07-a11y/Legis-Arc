@@ -107,9 +107,21 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     roles: ["sb_secretary"],
   },
   {
+    title: "Committee Reports",
+    href: "/admin/committee-reports",
+    icon: "ClipboardList",
+    roles: ["sb_secretary", "sb_member"],
+  },
+  {
     title: "Categories",
     href: "/admin/categories",
     icon: "Tags",
+    roles: ["sys_admin", "sb_secretary"],
+  },
+  {
+    title: "Users",
+    href: "/admin/users",
+    icon: "Users",
     roles: ["sys_admin", "sb_secretary"],
   },
   {
@@ -117,12 +129,6 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     href: "/admin/tracking",
     icon: "GitBranch",
     roles: ["sb_secretary", "sb_member"],
-  },
-  {
-    title: "Users",
-    href: "/admin/users",
-    icon: "Users",
-    roles: ["sys_admin"],
   },
   {
     title: "Recent Activity",

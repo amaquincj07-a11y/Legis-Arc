@@ -125,7 +125,7 @@ export default function OrdinanceDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Document Details</CardTitle>
+          <CardTitle className="text-base">Document Information</CardTitle>
         </CardHeader>
         <CardContent>
           <dl className="grid gap-4 sm:grid-cols-2">

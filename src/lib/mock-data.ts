@@ -63,6 +63,9 @@ export const mockUsers: User[] = [
     isActive: true,
     lastLogin: new Date("2026-02-17T08:00:00"),
     createdAt: new Date("2024-01-01"),
+    moduleAccess: ["ordinances", "resolutions", "minutes", "tracking", "committee_reports", "categories"],
+    allowedCategories: [],
+    allowedCommittees: [],
   },
   {
     id: "user-2",
@@ -72,6 +75,9 @@ export const mockUsers: User[] = [
     isActive: true,
     lastLogin: new Date("2026-02-18T09:30:00"),
     createdAt: new Date("2024-01-15"),
+    moduleAccess: ["ordinances", "resolutions", "minutes", "tracking", "committee_reports", "categories"],
+    allowedCategories: [],
+    allowedCommittees: [],
   },
   {
     id: "user-3",
@@ -81,6 +87,9 @@ export const mockUsers: User[] = [
     isActive: true,
     lastLogin: new Date("2026-02-16T14:00:00"),
     createdAt: new Date("2024-02-01"),
+    moduleAccess: ["ordinances", "resolutions", "tracking", "committee_reports"],
+    allowedCategories: ["Environment", "Tourism", "Infrastructure"],
+    allowedCommittees: ["Committee on Environment", "Committee on Tourism and Cultural Heritage"],
   },
   {
     id: "user-4",
@@ -90,7 +99,44 @@ export const mockUsers: User[] = [
     isActive: true,
     lastLogin: new Date("2026-02-18T07:45:00"),
     createdAt: new Date("2024-03-01"),
+    moduleAccess: ["ordinances", "resolutions"],
+    allowedCategories: ["Taxes", "Fees and Charges", "Budget"],
+    allowedCommittees: [],
   },
+];
+
+// Sample tracking data for cycling
+const _referralTypes: ("letter" | "brgy_resolution" | "brgy_ordinance" | "subd_application" | "accreditation" | "board_council_resolutions" | "memorandum" | "executive_orders" | "draft_resolutions" | "draft_ordinance" | "others")[] = [
+  "letter", "brgy_resolution", "draft_ordinance", "memorandum", "executive_orders",
+  "brgy_ordinance", "accreditation", "board_council_resolutions", "subd_application", "draft_resolutions", "others",
+];
+const _trackingStatuses: ("for_referral" | "under_committee" | "for_public_hearing" | "for_committee_report" | "for_signature" | "for_approval" | "for_reporting" | "others")[] = [
+  "for_referral", "under_committee", "for_public_hearing", "for_committee_report",
+  "for_signature", "for_approval", "for_reporting", "others",
+];
+const _committees = [
+  "Committee of the Whole / En Banc",
+  "Committee on Laws, Rules & Internal Affairs",
+  "Committee on Finance, Budget and Appropriations",
+  "Committee on Education",
+  "Committee on Health and Social Services",
+  "Committee on Barangay Affairs and Tourism",
+  "Committee on Public Works, Infrastructure & Public Utilities",
+  "Committee on Peace & Order and Public Safety",
+  "Committee on Agriculture, Fisheries, Food and Agrarian Reform",
+  "Committee on Human Settlement, Land Use & Development",
+  "Committee on Trade, Commerce & Enterprises",
+];
+const _legislativeOutputs = [
+  "Ordinance Passed", "Resolution Approved", "Pending Committee Action", "For Further Study",
+  "Endorsed to Mayor", "Returned to Author", "Approved on Third Reading", "Deferred",
+  "Adopted", "Filed", "",
+];
+const _updaterEmails = [
+  "maria.santos@panglao.gov.ph",
+  "juan.delacruz@panglao.gov.ph",
+  "ana.reyes@panglao.gov.ph",
+  "admin@panglao.gov.ph",
 ];
 
 // Helper to build a simple published ordinance
@@ -135,9 +181,15 @@ function _ord(
       { status: "Scanned", date: new Date(year, month - 1, day - 5 > 0 ? day - 5 : 1), performedBy: "Ana Reyes" },
       { status: "Published", date: approved, performedBy: "Maria Santos" },
     ],
+    sessionDate: enacted,
+    referralType: _referralTypes[id % _referralTypes.length],
+    stage: _trackingStatuses[id % _trackingStatuses.length],
+    assignedCommittee: _committees[id % _committees.length],
+    legislativeOutput: _legislativeOutputs[id % _legislativeOutputs.length],
+    lastUpdatedByEmail: _updaterEmails[id % _updaterEmails.length],
     createdBy: "user-2",
     createdAt: enacted,
-    updatedAt: approved,
+    updatedAt: new Date(2026, 2 + (id % 2), 1 + (id % 28), 8 + (id % 10), (id * 7) % 60),
   };
 }
 
@@ -316,9 +368,15 @@ function _res(
       { status: "Scanned", date: new Date(year, month - 1, day - 5 > 0 ? day - 5 : 1), performedBy: "Ana Reyes" },
       { status: "Published", date: approved, performedBy: "Maria Santos" },
     ],
+    sessionDate: enacted,
+    referralType: _referralTypes[(id + 3) % _referralTypes.length],
+    stage: _trackingStatuses[(id + 2) % _trackingStatuses.length],
+    assignedCommittee: _committees[(id + 5) % _committees.length],
+    legislativeOutput: _legislativeOutputs[(id + 4) % _legislativeOutputs.length],
+    lastUpdatedByEmail: _updaterEmails[(id + 1) % _updaterEmails.length],
     createdBy: "user-2",
     createdAt: enacted,
-    updatedAt: approved,
+    updatedAt: new Date(2026, 1 + (id % 3), 2 + (id % 26), 9 + (id % 9), (id * 11) % 60),
   };
 }
 
@@ -749,6 +807,30 @@ export const mockSBMembers: SBMember[] = [
   },
   {
     id: "sb-3",
+    name: "Alfonso C. Alcala",
+    position: "SB Member",
+    committees: [
+      "Committee of the Whole / En Banc",
+      "Committee on Rules, Privileges, and Accreditation",
+      "Committee on Finance, Budget and Appropriations",
+      "Committee on Education",
+      "Committee on Tourism and Cultural Heritage",
+      "Committee on Health and Social Services",
+      "Committee on Public Works, Infrastructure & Public Utilities",
+      "Committee on Natural Resources & Environmental Protection",
+      "Committee on Agriculture, Fisheries, Food and Agrarian Reforms",
+      "Committee on Labor and Employment",
+      "Committee on Trade, Commerce, and Industry",
+      "Committee on Science and Technology",
+      "Committee on Games & Amusement",
+      "Committee on Laws, Resolutions, Ordinances, and Justice",
+      "Committee on Government Organizations and Non-Government Organizations",
+      "Committee on Beautification, Streets, Parks & Playgrounds",
+    ],
+    imageUrl: "/images/sb/alcala.webp",
+  },
+  {
+    id: "sb-4",
     name: "Amira Alia M. Caindec",
     position: "SB Member",
     committees: [
@@ -773,7 +855,7 @@ export const mockSBMembers: SBMember[] = [
     imageUrl: "/images/sb/caindec.webp",
   },
   {
-    id: "sb-4",
+    id: "sb-5",
     name: "Analyn H. Casane",
     position: "SB Member",
     committees: [
@@ -800,7 +882,29 @@ export const mockSBMembers: SBMember[] = [
     imageUrl: "/images/sb/casane.webp",
   },
   {
-    id: "sb-5",
+    id: "sb-6",
+    name: "Zinon G. Labaya",
+    position: "SB Member",
+    committees: [
+      "Committee of the Whole / En Banc",
+      "Committee on Rules, Privileges, and Accreditation",
+      "Committee on Finance, Budget and Appropriations",
+      "Committee on Barangay Affairs, Good Government, Public Ethics & Accountability",
+      "Committee on Cultural Communities",
+      "Committee on Agriculture, Fisheries, Food and Agrarian Reforms",
+      "Committee on Ways and Means",
+      "Committee on Games & Amusement",
+      "Committee on Human Settlement, Planning & Development",
+      "Committee on Peace & Order, and Public Safety",
+      "Committee on Information and Media Affairs",
+      "Committee on Government Enterprises and Market",
+      "Committee on Cooperative and Livelihood",
+      "Committee on Transportation",
+    ],
+    imageUrl: "/images/sb/labaya.webp",
+  },
+  {
+    id: "sb-7",
     name: "Albert G. Bompat",
     position: "SB Member",
     committees: [
@@ -828,52 +932,6 @@ export const mockSBMembers: SBMember[] = [
       "Committee on Transportation",
     ],
     imageUrl: "/images/sb/bompat.webp",
-  },
-  {
-    id: "sb-6",
-    name: "Alfonso C. Alcala",
-    position: "SB Member",
-    committees: [
-      "Committee of the Whole / En Banc",
-      "Committee on Rules, Privileges, and Accreditation",
-      "Committee on Finance, Budget and Appropriations",
-      "Committee on Education",
-      "Committee on Tourism and Cultural Heritage",
-      "Committee on Health and Social Services",
-      "Committee on Public Works, Infrastructure & Public Utilities",
-      "Committee on Natural Resources & Environmental Protection",
-      "Committee on Agriculture, Fisheries, Food and Agrarian Reforms",
-      "Committee on Labor and Employment",
-      "Committee on Trade, Commerce, and Industry",
-      "Committee on Science and Technology",
-      "Committee on Games & Amusement",
-      "Committee on Laws, Resolutions, Ordinances, and Justice",
-      "Committee on Government Organizations and Non-Government Organizations",
-      "Committee on Beautification, Streets, Parks & Playgrounds",
-    ],
-    imageUrl: "/images/sb/alcala.webp",
-  },
-  {
-    id: "sb-7",
-    name: "Zinon G. Labaya",
-    position: "SB Member",
-    committees: [
-      "Committee of the Whole / En Banc",
-      "Committee on Rules, Privileges, and Accreditation",
-      "Committee on Finance, Budget and Appropriations",
-      "Committee on Barangay Affairs, Good Government, Public Ethics & Accountability",
-      "Committee on Cultural Communities",
-      "Committee on Agriculture, Fisheries, Food and Agrarian Reforms",
-      "Committee on Ways and Means",
-      "Committee on Games & Amusement",
-      "Committee on Human Settlement, Planning & Development",
-      "Committee on Peace & Order, and Public Safety",
-      "Committee on Information and Media Affairs",
-      "Committee on Government Enterprises and Market",
-      "Committee on Cooperative and Livelihood",
-      "Committee on Transportation",
-    ],
-    imageUrl: "/images/sb/labaya.webp",
   },
   {
     id: "sb-8",
