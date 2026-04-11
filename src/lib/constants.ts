@@ -113,6 +113,12 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     roles: ["sb_secretary", "sb_member"],
   },
   {
+    title: "News & Updates",
+    href: "/admin/news",
+    icon: "Inbox",
+    roles: ["sys_admin", "sb_secretary"],
+  },
+  {
     title: "Categories",
     href: "/admin/categories",
     icon: "Tags",

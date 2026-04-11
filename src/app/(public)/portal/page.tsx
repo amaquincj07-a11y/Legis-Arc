@@ -16,6 +16,7 @@ import {
   Network,
   Star,
   Phone,
+  Calendar,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ import {
   CarouselNext,
 } from "@/components/ui/carousel";
 import { mockOrdinances, mockResolutions, mockCategories } from "@/lib/mock-data";
+import { NEWS_ITEMS } from "@/lib/news-data";
 
 const allCategoryNames = mockCategories.filter((c) => c.isActive).map((c) => c.name);
 const halfIndex = Math.ceil(allCategoryNames.length / 2);
@@ -305,7 +307,93 @@ export default function PortalPage() {
             <CarouselPrevious className="hidden sm:flex -left-4 lg:-left-12" />
             <CarouselNext className="hidden sm:flex -right-4 lg:-right-12" />
           </Carousel>
+          {/* News Archive Button moved below News and Updates */}
         </div>
+
+      </section>
+
+
+      {/* News and Updates Section */}
+      <section className="bg-white py-10 sm:py-16 lg:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-8 text-center sm:mb-10">
+            <h2 className="font-[family-name:var(--font-garamond)] text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
+              News and Updates
+            </h2>
+            <p className="font-[family-name:var(--font-garamond)] mt-2 text-sm text-muted-foreground sm:text-base">
+              Stay informed with the latest from the Sangguniang Bayan
+            </p>
+          </div>
+
+          <Carousel
+            opts={{ align: "start", loop: true }}
+            className="mx-auto w-full"
+          >
+            <CarouselContent className="-ml-3 sm:-ml-4">
+              {NEWS_ITEMS.map((news) => (
+                <CarouselItem
+                  key={news.id}
+                  className="pl-3 sm:pl-4 basis-full sm:basis-full lg:basis-full"
+                >
+                  <div className="group relative w-full overflow-hidden rounded-2xl">
+                    <div className="relative aspect-[16/7] w-full">
+                      <Image
+                        src={news.image}
+                        alt={news.title}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      {/* Dark gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+
+                      {/* Content overlay */}
+                      <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center sm:px-12 lg:px-24">
+                        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                          <Calendar className="size-3.5 text-[#cbab53] sm:size-4" />
+                          <span className="text-xs font-medium tracking-wider uppercase text-white/80 sm:text-sm">
+                            {news.date}
+                          </span>
+                        </div>
+                        <h3
+                          className="font-[family-name:var(--font-garamond)] text-lg font-bold leading-tight text-white sm:text-2xl lg:text-3xl max-w-4xl"
+                          style={{ textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}
+                        >
+                          {news.title}
+                        </h3>
+                        <p
+                          className="mt-3 line-clamp-2 text-sm leading-relaxed text-white/80 sm:mt-4 sm:text-base lg:text-lg max-w-3xl"
+                          style={{ textShadow: "0 1px 4px rgba(0,0,0,0.4)" }}
+                        >
+                          {news.excerpt}
+                        </p>
+                        <Link
+                          href={`/news/${news.id}`}
+                          className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-5 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/20 hover:border-white/50 sm:mt-5"
+                        >
+                          Read More
+                          <ArrowRight className="size-3.5" />
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden sm:flex -left-4 lg:-left-12" />
+            <CarouselNext className="hidden sm:flex -right-4 lg:-right-12" />
+          </Carousel>
+        </div>
+
+        {/* News Archive Button (moved here) */}
+      <div className="flex justify-center mt-8">
+        <a
+          href="/news"
+          className="inline-block rounded-full bg-[#1e3a5f] px-6 py-2 text-white font-semibold shadow hover:bg-[#155080] transition-colors text-sm"
+          aria-label="Go to News Archive"
+        >
+          Go to News Archive
+        </a>
+      </div>
       </section>
 
       {/* Tagline + Scrolling Categories */}
