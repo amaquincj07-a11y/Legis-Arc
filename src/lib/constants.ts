@@ -89,6 +89,12 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     roles: ["sys_admin", "sb_secretary", "sb_member", "digitization_assistant"],
   },
   {
+    title: "Document Requests",
+    href: "/admin/requests",
+    icon: "ClipboardList",
+    roles: ["sys_admin", "sb_secretary", "sb_member", "digitization_assistant"],
+  },
+  {
     title: "Ordinances",
     href: "/admin/ordinances",
     icon: "ScrollText",
