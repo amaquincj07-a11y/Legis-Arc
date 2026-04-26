@@ -158,13 +158,13 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
 
 export const PUBLIC_NAV_ITEMS = [
   { title: "Home", href: "/portal" },
+  { title: "SB Chart", href: "/about" },
   { title: "Ordinances", href: "/ordinances" },
   { title: "Resolutions", href: "/resolutions" },
-  { title: "Citizen's Charter", href: "/citizens-charter" },
   { title: "Minutes", href: "/minutes" },
-  { title: "CSO", href: "/cso" },
   { title: "Committee Reports", href: "/committee-reports" },
-  { title: "SB Chart", href: "/about" },
+  { title: "Citizen's Charter", href: "/citizens-charter" },
+  { title: "CSO", href: "/cso" },
   { title: "Contacts", href: "/contacts" },
 ];
 

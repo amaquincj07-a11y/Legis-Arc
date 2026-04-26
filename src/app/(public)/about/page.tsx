@@ -22,7 +22,7 @@ export default function AboutPage() {
               style={{ textShadow: "2px 2px 8px rgba(0,0,0,0.7)" }}
             >
               Sangguniang Bayan
-              <span className="block mt-2">Organizational Chart</span>
+              <span className="block mt-2">Member Chart</span>
             </h1>
             <p
               className="mt-4 max-w-2xl text-base sm:text-xl lg:text-2xl text-white font-[family-name:var(--font-garamond)]"

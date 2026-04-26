@@ -304,7 +304,7 @@ export default function NewResolutionPage() {
               variant="outline"
               onClick={form.handleSubmit((v) => onSubmit(v, "draft"))}
             >
-              Save as Draft
+              Save
             </Button>
             <Button
               type="button"
