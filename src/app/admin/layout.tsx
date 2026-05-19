@@ -19,12 +19,10 @@ import {
   Settings,
   Landmark,
   LogOut,
-  ChevronsUpDown,
-  Check,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { ADMIN_NAV_ITEMS, ROLE_LABELS, USER_ROLES } from "@/lib/constants";
+import { ADMIN_NAV_ITEMS, ROLE_LABELS } from "@/lib/constants";
 import {
   Sidebar,
   SidebarContent,
@@ -42,15 +40,6 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -223,7 +212,6 @@ function AdminSidebar() {
 
 function AdminHeader() {
   const crumbs = useBreadcrumbs();
-  const { user, switchRole } = useAuth();
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
@@ -251,51 +239,6 @@ function AdminHeader() {
           })}
         </BreadcrumbList>
       </Breadcrumb>
-
-      <div className="ml-auto flex items-center gap-2">
-        {user && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent">
-                <Avatar size="sm">
-                  <AvatarFallback className="bg-primary text-primary-foreground text-[10px]">
-                    {getInitials(user.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="hidden font-medium md:inline-block">
-                  {user.name}
-                </span>
-                <ChevronsUpDown className="size-4 text-muted-foreground" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <p className="font-medium">{user.name}</p>
-                <p className="text-xs font-normal text-muted-foreground">
-                  {user.email}
-                </p>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuLabel className="text-xs text-muted-foreground">
-                  Switch Role (Dev)
-                </DropdownMenuLabel>
-                {USER_ROLES.map((role) => (
-                  <DropdownMenuItem
-                    key={role.value}
-                    onClick={() => switchRole(role.value)}
-                  >
-                    <span className="flex-1">{role.label}</span>
-                    {user.role === role.value && (
-                      <Check className="size-4 text-primary" />
-                    )}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-      </div>
     </header>
   );
 }
