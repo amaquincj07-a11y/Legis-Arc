@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { toast } from "sonner";
 import {
   Plus,
   Search,
@@ -8,6 +9,10 @@ import {
   Eye,
   Download,
   Upload,
+  Pencil,
+  Globe,
+  GlobeLock,
+  Trash2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -39,6 +44,9 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { AdminActionsMenu } from "@/components/admin/admin-actions-menu";
+import { ConfirmDeleteDialog } from "@/components/admin/confirm-delete-dialog";
 import { mockCommitteeReports } from "@/lib/mock-data";
 import type { CommitteeReport } from "@/lib/types";
 
@@ -49,13 +57,17 @@ const COMMITTEES = [
 ].sort();
 
 export default function AdminCommitteeReportsPage() {
-  const [reports, setReports] = useState<CommitteeReport[]>(mockCommitteeReports);
+  const [reports, setReports] = useState<CommitteeReport[]>(
+    mockCommitteeReports.map((r) => ({ ...r, isPublished: r.isPublished ?? true }))
+  );
   const [search, setSearch] = useState("");
   const [committeeFilter, setCommitteeFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [deleteTarget, setDeleteTarget] = useState<CommitteeReport | null>(null);
 
-  // Upload dialog state
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [uploadReportNo, setUploadReportNo] = useState("");
   const [uploadSubject, setUploadSubject] = useState("");
   const [uploadCommittee, setUploadCommittee] = useState("");
@@ -96,6 +108,15 @@ export default function AdminCommitteeReportsPage() {
     setUploadFile(null);
   }
 
+  function openEditDialog(report: CommitteeReport) {
+    setEditingId(report.id);
+    setUploadReportNo(report.reportNo);
+    setUploadSubject(report.subject);
+    setUploadCommittee(report.committee);
+    setUploadFile(null);
+    setEditOpen(true);
+  }
+
   function handleUpload() {
     if (!uploadReportNo.trim() || !uploadSubject.trim() || !uploadCommittee) return;
 
@@ -105,12 +126,57 @@ export default function AdminCommitteeReportsPage() {
       subject: uploadSubject.trim(),
       committee: uploadCommittee,
       pdfUrl: uploadFile ? URL.createObjectURL(uploadFile) : "",
+      isPublished: false,
     };
 
     setReports((prev) => [newReport, ...prev]);
+    toast.success("Report uploaded as draft — publish when ready");
     resetUploadForm();
     setUploadOpen(false);
     setCurrentPage(1);
+  }
+
+  function handleEditSave() {
+    if (!editingId || !uploadReportNo.trim() || !uploadSubject.trim() || !uploadCommittee)
+      return;
+
+    setReports((prev) =>
+      prev.map((r) =>
+        r.id === editingId
+          ? {
+              ...r,
+              reportNo: uploadReportNo.trim(),
+              subject: uploadSubject.trim(),
+              committee: uploadCommittee,
+              ...(uploadFile ? { pdfUrl: URL.createObjectURL(uploadFile) } : {}),
+            }
+          : r
+      )
+    );
+    toast.success("Report updated");
+    resetUploadForm();
+    setEditOpen(false);
+    setEditingId(null);
+  }
+
+  function togglePublish(report: CommitteeReport) {
+    setReports((prev) =>
+      prev.map((r) =>
+        r.id === report.id ? { ...r, isPublished: !r.isPublished } : r
+      )
+    );
+    toast.success(
+      report.isPublished
+        ? `${report.reportNo} unpublished`
+        : `${report.reportNo} published to the public site`
+    );
+  }
+
+  function confirmDelete() {
+    if (!deleteTarget) return;
+    setReports((prev) => prev.filter((r) => r.id !== deleteTarget.id));
+    toast.success("Committee report deleted");
+    setDeleteTarget(null);
   }
 
   return (
@@ -221,6 +287,101 @@ export default function AdminCommitteeReportsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <Dialog
+          open={editOpen}
+          onOpenChange={(open) => {
+            setEditOpen(open);
+            if (!open) {
+              resetUploadForm();
+              setEditingId(null);
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-[520px]">
+            <DialogHeader>
+              <DialogTitle>Edit Committee Report</DialogTitle>
+              <DialogDescription>
+                Update the report details. Upload a new PDF only if you want to replace the file.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-reportNo">Report No. *</Label>
+                <Input
+                  id="edit-reportNo"
+                  value={uploadReportNo}
+                  onChange={(e) => setUploadReportNo(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-subject">Subject *</Label>
+                <Textarea
+                  id="edit-subject"
+                  value={uploadSubject}
+                  onChange={(e) => setUploadSubject(e.target.value)}
+                  rows={3}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-committee">Committee *</Label>
+                <Select value={uploadCommittee} onValueChange={setUploadCommittee}>
+                  <SelectTrigger id="edit-committee">
+                    <SelectValue placeholder="Select a committee" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COMMITTEES.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-pdfFile">Replace PDF (optional)</Label>
+                <label
+                  htmlFor="edit-pdfFile"
+                  className="flex h-10 cursor-pointer items-center gap-2 rounded-md border border-dashed border-slate-300 bg-slate-50 px-4 text-sm text-slate-600"
+                >
+                  <Upload className="size-4" />
+                  {uploadFile ? uploadFile.name : "Choose new PDF..."}
+                </label>
+                <input
+                  id="edit-pdfFile"
+                  type="file"
+                  accept="application/pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) setUploadFile(file);
+                  }}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  resetUploadForm();
+                  setEditOpen(false);
+                  setEditingId(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleEditSave}
+                disabled={
+                  !uploadReportNo.trim() || !uploadSubject.trim() || !uploadCommittee
+                }
+                className="bg-[#cbab53] text-slate-900 hover:bg-[#b89745]"
+              >
+                Save changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Card className="overflow-hidden border border-slate-200/90 shadow-sm shadow-slate-900/5">
@@ -283,18 +444,21 @@ export default function AdminCommitteeReportsPage() {
                 <TableHead className="text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
                   Subject
                 </TableHead>
-                <TableHead className="w-[280px] text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
+                <TableHead className="w-[240px] text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
                   Committee
                 </TableHead>
+                <TableHead className="w-[100px] text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
+                  Status
+                </TableHead>
                 <TableHead className="w-[120px] text-center text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
-                  Action
+                  Actions
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginated.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-32 text-center">
+                  <TableCell colSpan={5} className="h-32 text-center">
                     <p className="text-sm text-muted-foreground">
                       No committee reports found.
                     </p>
@@ -318,37 +482,58 @@ export default function AdminCommitteeReportsPage() {
                       </span>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center justify-center gap-3">
-                        <button
-                          type="button"
-                          className="group relative flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-[#3998eb]/80 hover:text-[#3998eb]"
-                          onClick={() => {
-                            if (report.pdfUrl) window.open(report.pdfUrl, "_blank");
-                          }}
-                        >
-                          <span className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-md bg-slate-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-md transition group-hover:opacity-100">
-                            View PDF
-                          </span>
-                          <Eye className="size-4" />
-                        </button>
-                        <button
-                          type="button"
-                          className="group relative flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-[#3998eb]/80 hover:text-[#3998eb]"
-                          onClick={() => {
-                            if (report.pdfUrl) {
-                              const link = document.createElement("a");
-                              link.href = report.pdfUrl;
-                              link.download = `${report.reportNo}.pdf`;
-                              link.click();
-                            }
-                          }}
-                        >
-                          <span className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-md bg-slate-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-md transition group-hover:opacity-100">
-                            Download
-                          </span>
-                          <Download className="size-4" />
-                        </button>
-                      </div>
+                      <Badge
+                        variant={report.isPublished ? "default" : "secondary"}
+                        className={
+                          report.isPublished
+                            ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-100"
+                        }
+                      >
+                        {report.isPublished ? "Published" : "Draft"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <AdminActionsMenu
+                        items={[
+                          {
+                            label: "Edit",
+                            icon: Pencil,
+                            onClick: () => openEditDialog(report),
+                          },
+                          {
+                            label: report.isPublished ? "Unpublish" : "Publish",
+                            icon: report.isPublished ? GlobeLock : Globe,
+                            onClick: () => togglePublish(report),
+                          },
+                          {
+                            label: "View PDF",
+                            icon: Eye,
+                            onClick: () => {
+                              if (report.pdfUrl) window.open(report.pdfUrl, "_blank");
+                            },
+                          },
+                          {
+                            label: "Download",
+                            icon: Download,
+                            onClick: () => {
+                              if (report.pdfUrl) {
+                                const link = document.createElement("a");
+                                link.href = report.pdfUrl;
+                                link.download = `${report.reportNo}.pdf`;
+                                link.click();
+                              }
+                            },
+                          },
+                          {
+                            label: "Delete",
+                            icon: Trash2,
+                            destructive: true,
+                            separatorBefore: true,
+                            onClick: () => setDeleteTarget(report),
+                          },
+                        ]}
+                      />
                     </TableCell>
                   </TableRow>
                 ))
@@ -385,6 +570,18 @@ export default function AdminCommitteeReportsPage() {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDeleteDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Delete this report?"
+        description={
+          deleteTarget
+            ? `"${deleteTarget.reportNo}" will be permanently removed. This cannot be undone.`
+            : ""
+        }
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

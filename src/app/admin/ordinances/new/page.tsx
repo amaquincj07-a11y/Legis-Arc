@@ -77,12 +77,8 @@ export default function NewOrdinancePage() {
     setPdfFile(file);
   }
 
-  function onSubmit(values: FormValues, status: "draft" | "published") {
-    toast.success(
-      status === "draft"
-        ? "Ordinance saved as draft"
-        : "Ordinance published successfully"
-    );
+  function onSubmit(_values: FormValues) {
+    toast.success("Ordinance saved successfully");
     router.push("/admin/ordinances");
   }
 
@@ -301,18 +297,8 @@ export default function NewOrdinancePage() {
           <Separator />
 
           <div className="flex justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={form.handleSubmit((v) => onSubmit(v, "draft"))}
-            >
+            <Button type="button" onClick={form.handleSubmit(onSubmit)}>
               Save
-            </Button>
-            <Button
-              type="button"
-              onClick={form.handleSubmit((v) => onSubmit(v, "published"))}
-            >
-              Publish
             </Button>
           </div>
         </form>

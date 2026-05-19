@@ -6,6 +6,8 @@ import { User, UserCircle, MapPinned } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { mockSBMembers, mockSBStaff, mockCommittees } from "@/lib/mock-data";
+import { SB_MEMBER_POSITION_SLOTS } from "@/lib/constants";
+import type { SBMember } from "@/lib/types";
 import { SBMemberCard } from "@/components/public/sb-member-card";
 
 const TERMS = ["2025-2028", "2023-2025", "2019-2022"] as const;
@@ -90,8 +92,24 @@ function PlaceholderStaffCard() {
   );
 }
 
+function sortMembersBySlot(members: SBMember[]) {
+  return [...members].sort((a, b) => {
+    const orderA =
+      SB_MEMBER_POSITION_SLOTS.find((s) => s.slot === a.positionSlot)?.order ??
+      99;
+    const orderB =
+      SB_MEMBER_POSITION_SLOTS.find((s) => s.slot === b.positionSlot)?.order ??
+      99;
+    return orderA - orderB;
+  });
+}
+
 export function AboutTermContent() {
   const [selectedTerm, setSelectedTerm] = useState<Term>("2025-2028");
+  const termMembers = sortMembersBySlot(
+    mockSBMembers.filter((m) => m.yearTerm === selectedTerm)
+  );
+  const hasTermMembers = termMembers.length > 0;
   const isCurrentTerm = selectedTerm === "2025-2028";
 
   return (
@@ -120,10 +138,14 @@ export function AboutTermContent() {
       {/* SB Member Chart */}
       <section className="bg-[#25395C] py-10 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          {isCurrentTerm ? (
+          {hasTermMembers ? (
             (() => {
-              const viceMayor = mockSBMembers.find((m) => m.position === "Vice Mayor");
-              const otherMembers = mockSBMembers.filter((m) => m.position !== "Vice Mayor");
+              const viceMayor = termMembers.find(
+                (m) => m.positionSlot === "vice_mayor"
+              );
+              const otherMembers = termMembers.filter(
+                (m) => m.positionSlot !== "vice_mayor"
+              );
 
               return (
                 <>

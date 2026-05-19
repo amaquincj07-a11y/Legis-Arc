@@ -77,12 +77,8 @@ export default function NewResolutionPage() {
     setPdfFile(file);
   }
 
-  function onSubmit(values: FormValues, status: "draft" | "published") {
-    toast.success(
-      status === "draft"
-        ? "Resolution saved as draft"
-        : "Resolution published successfully"
-    );
+  function onSubmit(_values: FormValues) {
+    toast.success("Resolution saved successfully");
     router.push("/admin/resolutions");
   }
 
@@ -299,18 +295,8 @@ export default function NewResolutionPage() {
           <Separator />
 
           <div className="flex justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={form.handleSubmit((v) => onSubmit(v, "draft"))}
-            >
+            <Button type="button" onClick={form.handleSubmit(onSubmit)}>
               Save
-            </Button>
-            <Button
-              type="button"
-              onClick={form.handleSubmit((v) => onSubmit(v, "published"))}
-            >
-              Publish
             </Button>
           </div>
         </form>

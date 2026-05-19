@@ -166,10 +166,26 @@ export interface Category {
   isActive: boolean;
 }
 
+export type SBMemberPositionSlot =
+  | "vice_mayor"
+  | "kagawad_1"
+  | "kagawad_2"
+  | "kagawad_3"
+  | "kagawad_4"
+  | "kagawad_5"
+  | "kagawad_6"
+  | "kagawad_7"
+  | "kagawad_8"
+  | "abc_president"
+  | "sk_federated"
+  | "sb_secretary";
+
 export interface SBMember {
   id: string;
   name: string;
   position: string;
+  positionSlot: SBMemberPositionSlot;
+  yearTerm: string;
   committees: string[];
   imageUrl?: string;
 }
@@ -177,6 +193,7 @@ export interface SBMember {
 export interface Committee {
   id: string;
   name: string;
+  yearTerm: string;
   chairman: string;
   viceChairman: string;
   members: string[];
@@ -196,4 +213,15 @@ export interface CommitteeReport {
   subject: string;
   committee: string;
   pdfUrl: string;
+  isPublished?: boolean;
+}
+
+export interface NewsItem {
+  id: number;
+  title: string;
+  date: string;
+  excerpt: string;
+  content: string;
+  image: string;
+  isPublished?: boolean;
 }

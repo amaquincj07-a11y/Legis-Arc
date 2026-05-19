@@ -36,7 +36,6 @@ import { MAX_FILE_SIZE } from "@/lib/constants";
 const formSchema = z.object({
   sessionDate: z.string().min(1, "Session date is required"),
   sessionType: z.enum(["regular", "special"]),
-  status: z.enum(["draft", "approved"]),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -59,7 +58,6 @@ export default function EditMinutesPage({
       ? {
           sessionDate: format(doc.sessionDate, "yyyy-MM-dd"),
           sessionType: doc.sessionType,
-          status: doc.status === "published" ? "approved" : (doc.status as "draft" | "approved"),
         }
       : undefined,
   });
@@ -166,30 +164,6 @@ export default function EditMinutesPage({
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="draft">Draft</SelectItem>
-                        <SelectItem value="approved">Approved</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </CardContent>
           </Card>
 

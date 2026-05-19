@@ -1177,7 +1177,28 @@ export const mockSBMembers: SBMember[] = [
     ],
     imageUrl: "/images/sb/apduhan.webp",
   },
-];
+].map((member) => {
+  const slotById: Record<string, import("./types").SBMemberPositionSlot> = {
+    "sb-1": "vice_mayor",
+    "sb-2": "kagawad_1",
+    "sb-3": "kagawad_2",
+    "sb-4": "kagawad_3",
+    "sb-5": "kagawad_4",
+    "sb-6": "kagawad_5",
+    "sb-7": "kagawad_6",
+    "sb-8": "kagawad_7",
+    "sb-9": "kagawad_8",
+    "sb-10": "abc_president",
+    "sb-11": "sk_federated",
+    "sb-12": "sb_secretary",
+  };
+
+  return {
+    ...member,
+    yearTerm: "2025-2028",
+    positionSlot: slotById[member.id] ?? "kagawad_1",
+  };
+});
 
 export const mockSBStaff: { id: string; name: string; position: string; imageUrl?: string }[] = [
   { id: "staff-1", name: "Staff Member 1", position: "SB Staff" },
@@ -1516,7 +1537,10 @@ export const mockCommittees: Committee[] = [
       "Fabian A. Aranaydo",
     ].map(formatCommitteePersonName),
   },
-];
+].map((committee) => ({
+  ...committee,
+  yearTerm: "2025-2028",
+}));
 
 export const mockCSOOrganizations: CSOOrganization[] = [
   // Term: 2022-2025 (20 organizations)

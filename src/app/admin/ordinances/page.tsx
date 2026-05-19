@@ -3,8 +3,8 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { format } from "date-fns";
-import { Plus, Search, X, Pencil, Download, Eye, GlobeLock } from "lucide-react";
+import { toast } from "sonner";
+import { Plus, Search, X, Pencil, Download, Eye, GlobeLock, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,39 +24,52 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AdminIconAction } from "@/components/admin/admin-icon-action";
+import { ConfirmDeleteDialog } from "@/components/admin/confirm-delete-dialog";
 import { mockOrdinances, mockCategories } from "@/lib/mock-data";
 import { formatOrdinanceNumber } from "@/lib/utils";
+import type { LegislativeDocument } from "@/lib/types";
 
 const ITEMS_PER_PAGE = 10;
 
 export default function OrdinancesPage() {
   const router = useRouter();
+  const [documents, setDocuments] = useState<LegislativeDocument[]>([
+    ...mockOrdinances,
+  ]);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [deleteTarget, setDeleteTarget] = useState<LegislativeDocument | null>(
+    null
+  );
 
   const years = useMemo(() => {
     const uniqueYears = [
-      ...new Set(mockOrdinances.map((d) => d.seriesYear)),
+      ...new Set(documents.map((d) => d.seriesYear)),
     ].sort((a, b) => b - a);
     return uniqueYears;
-  }, []);
+  }, [documents]);
 
   const filtered = useMemo(() => {
-    return mockOrdinances.filter((doc) => {
+    return documents.filter((doc) => {
       const matchesSearch =
         !search || doc.title.toLowerCase().includes(search.toLowerCase());
       const matchesCategory =
         categoryFilter === "all" || doc.category === categoryFilter;
-      const matchesStatus =
-        statusFilter === "all" || doc.status === statusFilter;
       const matchesYear =
         yearFilter === "all" || doc.seriesYear.toString() === yearFilter;
-      return matchesSearch && matchesCategory && matchesStatus && matchesYear;
+      return matchesSearch && matchesCategory && matchesYear;
     });
-  }, [search, categoryFilter, statusFilter, yearFilter]);
+  }, [documents, search, categoryFilter, yearFilter]);
+
+  function confirmDelete() {
+    if (!deleteTarget) return;
+    setDocuments((prev) => prev.filter((d) => d.id !== deleteTarget.id));
+    toast.success(`Ordinance ${formatOrdinanceNumber(deleteTarget)} deleted`);
+    setDeleteTarget(null);
+  }
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginated = filtered.slice(
@@ -65,12 +78,11 @@ export default function OrdinancesPage() {
   );
 
   const hasActiveFilters =
-    search || categoryFilter !== "all" || statusFilter !== "all" || yearFilter !== "all";
+    search || categoryFilter !== "all" || yearFilter !== "all";
 
   function clearFilters() {
     setSearch("");
     setCategoryFilter("all");
-    setStatusFilter("all");
     setYearFilter("all");
     setCurrentPage(1);
   }
@@ -136,25 +148,6 @@ export default function OrdinancesPage() {
               </Select>
 
               <Select
-                value={statusFilter}
-                onValueChange={(v) => {
-                  setStatusFilter(v);
-                  setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger className="h-9 w-[140px] rounded-full border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-sm focus:ring-[#3998eb]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select
                 value={yearFilter}
                 onValueChange={(v) => {
                   setYearFilter(v);
@@ -204,8 +197,8 @@ export default function OrdinancesPage() {
                 <TableHead className="w-[200px] text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
                   Author / Sponsor
                 </TableHead>
-                <TableHead className="w-[160px] text-center text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
-                  Action
+                <TableHead className="w-[200px] text-center text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
+                  Actions
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -241,58 +234,48 @@ export default function OrdinancesPage() {
                         {doc.authorSponsor}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center justify-center gap-3">
-                          <button
-                            type="button"
-                            className="group relative flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-[#cbab53]/80 hover:text-[#cbab53]"
-                            onClick={() => {
-                              router.push(`/admin/ordinances/${doc.id}/edit`);
-                            }}
-                          >
-                            <span className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-md bg-slate-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-md transition group-hover:opacity-100">
-                              Edit
-                            </span>
-                            <Pencil className="size-4" />
-                          </button>
-                          <button
-                            type="button"
-                            className="group relative flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-[#3998eb]/80 hover:text-[#3998eb]"
+                        <div className="flex flex-wrap items-center justify-center gap-2">
+                          <AdminIconAction
+                            label="Edit"
+                            icon={Pencil}
+                            variant="accent"
+                            onClick={() =>
+                              router.push(`/admin/ordinances/${doc.id}/edit`)
+                            }
+                          />
+                          <AdminIconAction
+                            label="Download PDF"
+                            icon={Download}
+                            variant="primary"
                             onClick={() => {
                               const link = document.createElement("a");
                               link.href = doc.pdfUrl;
                               link.download = `${doc.title}.pdf`;
                               link.click();
                             }}
-                          >
-                            <span className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-md bg-slate-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-md transition group-hover:opacity-100">
-                              Download PDF
-                            </span>
-                            <Download className="size-4" />
-                          </button>
-                          <button
-                            type="button"
-                            className="group relative flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-[#3998eb]/80 hover:text-[#3998eb]"
-                            onClick={() => {
-                              window.open(doc.pdfUrl, "_blank");
-                            }}
-                          >
-                            <span className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-md bg-slate-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-md transition group-hover:opacity-100">
-                              View PDF
-                            </span>
-                            <Eye className="size-4" />
-                          </button>
-                          <button
-                            type="button"
-                            className="group relative flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-rose-300/90 hover:text-rose-500"
-                            onClick={() => {
-                              console.log(`Unpublish ${doc.id}`);
-                            }}
-                          >
-                            <span className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-md bg-slate-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-md transition group-hover:opacity-100">
-                              Unpublish
-                            </span>
-                            <GlobeLock className="size-4" />
-                          </button>
+                          />
+                          <AdminIconAction
+                            label="View PDF"
+                            icon={Eye}
+                            variant="primary"
+                            onClick={() => window.open(doc.pdfUrl, "_blank")}
+                          />
+                          <AdminIconAction
+                            label="Unpublish"
+                            icon={GlobeLock}
+                            variant="danger"
+                            onClick={() =>
+                              toast.info(
+                                "Unpublish will be available when connected to the server"
+                              )
+                            }
+                          />
+                          <AdminIconAction
+                            label="Delete"
+                            icon={Trash2}
+                            variant="danger"
+                            onClick={() => setDeleteTarget(doc)}
+                          />
                         </div>
                       </TableCell>
                     </TableRow>
@@ -331,6 +314,18 @@ export default function OrdinancesPage() {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDeleteDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Delete this ordinance?"
+        description={
+          deleteTarget
+            ? `"${deleteTarget.title}" (${formatOrdinanceNumber(deleteTarget)}) will be permanently removed. This cannot be undone.`
+            : ""
+        }
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

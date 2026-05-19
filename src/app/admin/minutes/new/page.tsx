@@ -29,20 +29,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAuth } from "@/lib/auth-context";
 import { MAX_FILE_SIZE } from "@/lib/constants";
 
 const formSchema = z.object({
   sessionDate: z.string().min(1, "Session date is required"),
   sessionType: z.enum(["regular", "special"]),
-  status: z.enum(["draft", "approved"]),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 export default function NewMinutesPage() {
   const router = useRouter();
-  const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
 
@@ -51,7 +48,6 @@ export default function NewMinutesPage() {
     defaultValues: {
       sessionDate: "",
       sessionType: "regular",
-      status: "draft",
     },
   });
 
@@ -69,12 +65,8 @@ export default function NewMinutesPage() {
     setPdfFile(file);
   }
 
-  function onSubmit(_values: FormValues, publish: boolean) {
-    toast.success(
-      publish
-        ? "Minutes published successfully"
-        : "Minutes saved as draft"
-    );
+  function onSubmit(_values: FormValues) {
+    toast.success("Minutes saved successfully");
     router.push("/admin/minutes");
   }
 
@@ -146,30 +138,6 @@ export default function NewMinutesPage() {
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="draft">Draft</SelectItem>
-                        <SelectItem value="approved">Approved</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </CardContent>
           </Card>
 
@@ -229,18 +197,8 @@ export default function NewMinutesPage() {
           <Separator />
 
           <div className="flex justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={form.handleSubmit((v) => onSubmit(v, false))}
-            >
+            <Button type="button" onClick={form.handleSubmit(onSubmit)}>
               Save
-            </Button>
-            <Button
-              type="button"
-              onClick={form.handleSubmit((v) => onSubmit(v, true))}
-            >
-              Publish
             </Button>
           </div>
         </form>

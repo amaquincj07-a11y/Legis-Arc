@@ -10,6 +10,7 @@ import {
   Eye,
   Pencil,
   Download,
+  Trash2,
   CalendarDays,
 } from "lucide-react";
 
@@ -21,6 +22,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { AdminIconAction } from "@/components/admin/admin-icon-action";
+import { ConfirmDeleteDialog } from "@/components/admin/confirm-delete-dialog";
 import { mockMinutes } from "@/lib/mock-data";
 import type { SessionMinutes } from "@/lib/types";
 import { toast } from "sonner";
@@ -44,12 +47,14 @@ type GroupedMinutes = Record<number, Record<number, SessionMinutes[]>>;
 
 export default function MinutesPage() {
   const router = useRouter();
+  const [sessions, setSessions] = useState<SessionMinutes[]>([...mockMinutes]);
   const [openYears, setOpenYears] = useState<Set<number>>(new Set());
   const [openMonths, setOpenMonths] = useState<Set<string>>(new Set());
+  const [deleteTarget, setDeleteTarget] = useState<SessionMinutes | null>(null);
 
   const grouped = useMemo(() => {
     const result: GroupedMinutes = {};
-    for (const min of mockMinutes) {
+    for (const min of sessions) {
       const year = getYear(min.sessionDate);
       const month = getMonth(min.sessionDate);
       if (!result[year]) result[year] = {};
@@ -57,7 +62,16 @@ export default function MinutesPage() {
       result[year][month].push(min);
     }
     return result;
-  }, []);
+  }, [sessions]);
+
+  function confirmDelete() {
+    if (!deleteTarget) return;
+    setSessions((prev) => prev.filter((s) => s.id !== deleteTarget.id));
+    toast.success(
+      `Session minutes for ${format(deleteTarget.sessionDate, "MMMM d, yyyy")} deleted`
+    );
+    setDeleteTarget(null);
+  }
 
   const sortedYears = useMemo(
     () => Object.keys(grouped).map(Number).sort((a, b) => b - a),
@@ -205,41 +219,45 @@ export default function MinutesPage() {
                                     </p>
                                   </div>
 
-                                  <div className="flex items-center gap-1">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="size-8"
+                                  <div
+                                    className="flex items-center gap-1"
+                                    role="group"
+                                    aria-label="Session actions"
+                                  >
+                                    <AdminIconAction
+                                      label="View"
+                                      icon={Eye}
+                                      variant="primary"
                                       onClick={() =>
                                         router.push(
                                           `/admin/minutes/${session.id}`
                                         )
                                       }
-                                    >
-                                      <Eye className="size-4" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="size-8"
+                                    />
+                                    <AdminIconAction
+                                      label="Edit"
+                                      icon={Pencil}
+                                      variant="accent"
                                       onClick={() =>
                                         router.push(
                                           `/admin/minutes/${session.id}/edit`
                                         )
                                       }
-                                    >
-                                      <Pencil className="size-4" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="size-8"
+                                    />
+                                    <AdminIconAction
+                                      label="Download"
+                                      icon={Download}
+                                      variant="primary"
                                       onClick={() =>
                                         toast.info("Download started")
                                       }
-                                    >
-                                      <Download className="size-4" />
-                                    </Button>
+                                    />
+                                    <AdminIconAction
+                                      label="Delete"
+                                      icon={Trash2}
+                                      variant="danger"
+                                      onClick={() => setDeleteTarget(session)}
+                                    />
                                   </div>
                                 </div>
                               ))}
@@ -268,6 +286,18 @@ export default function MinutesPage() {
           </Card>
         )}
       </div>
+
+      <ConfirmDeleteDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Delete session minutes?"
+        description={
+          deleteTarget
+            ? `Minutes for ${format(deleteTarget.sessionDate, "MMMM d, yyyy")} (${deleteTarget.sessionType}) will be permanently removed.`
+            : ""
+        }
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }
