@@ -1,7 +1,7 @@
-import { mockOrdinances } from "@/lib/mock-data";
+import { generateOrdinanceStaticParams } from "@/lib/supabase/generate-static-ordinance-params";
 
 export async function generateStaticParams() {
-  return mockOrdinances.map((d) => ({ id: d.id }));
+  return generateOrdinanceStaticParams();
 }
 
 export default function OrdinanceIdLayout({

@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
+  },
   turbopack: {
     resolveAlias: {
       canvas: { browser: "./empty-module.js" },

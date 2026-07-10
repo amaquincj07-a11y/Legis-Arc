@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { Download, Search, X } from "lucide-react";
+import { Download, Search, X, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,28 +24,47 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { mockAuditLogs } from "@/lib/mock-data";
+import { fetchLGUActivityLogsAction } from "@/lib/activity-actions";
+import { ADMIN_CACHE_KEYS } from "@/lib/admin-query-cache";
+import { useAdminQuery } from "@/hooks/use-admin-query";
+import type { AuditLogEntry } from "@/lib/types";
+
+const ACTION_OPTIONS = ["upload", "edit", "delete", "publish"] as const;
 
 const actionVariant: Record<string, string> = {
   upload: "border-transparent bg-blue-100 text-blue-700",
   publish: "border-transparent bg-emerald-100 text-emerald-700",
   edit: "border-transparent bg-amber-100 text-amber-700",
-  login: "border-transparent bg-gray-100 text-gray-700",
-  logout: "border-transparent bg-gray-100 text-gray-700",
+  delete: "border-transparent bg-red-100 text-red-700",
 };
 
-const uniqueUsers = [...new Set(mockAuditLogs.map((l) => l.userName))];
-const uniqueActions = [...new Set(mockAuditLogs.map((l) => l.action))];
+function formatActionLabel(action: string) {
+  return action.charAt(0).toUpperCase() + action.slice(1);
+}
+
+function escapeCsvCell(value: string) {
+  return `"${value.replace(/"/g, '""')}"`;
+}
 
 export default function RecentActivityPage() {
+  const { data, loading } = useAdminQuery(
+    ADMIN_CACHE_KEYS.activity,
+    fetchLGUActivityLogsAction
+  );
+  const logs = data ?? [];
   const [userFilter, setUserFilter] = useState<string>("all");
   const [actionFilter, setActionFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [search, setSearch] = useState("");
 
+  const uniqueUsers = useMemo(
+    () => [...new Set(logs.map((log) => log.userName))].sort(),
+    [logs]
+  );
+
   const filtered = useMemo(() => {
-    return mockAuditLogs.filter((log) => {
+    return logs.filter((log) => {
       const matchesUser =
         userFilter === "all" || log.userName === userFilter;
       const matchesAction =
@@ -67,7 +86,7 @@ export default function RecentActivityPage() {
 
       return matchesUser && matchesAction && matchesSearch && matchesDate;
     });
-  }, [userFilter, actionFilter, dateFrom, dateTo, search]);
+  }, [logs, userFilter, actionFilter, dateFrom, dateTo, search]);
 
   const hasActiveFilters =
     search ||
@@ -85,16 +104,53 @@ export default function RecentActivityPage() {
   }
 
   function handleExportCSV() {
+    if (filtered.length === 0) {
+      toast.error("No activity to export.");
+      return;
+    }
+
+    const headers = ["Date/Time", "User", "Action", "Document", "Details"];
+    const rows = filtered.map((log) => [
+      format(log.timestamp, "yyyy-MM-dd HH:mm:ss"),
+      log.userName,
+      log.action,
+      log.documentTitle ?? "",
+      log.details,
+    ]);
+
+    const csv = [headers, ...rows]
+      .map((row) => row.map((cell) => escapeCsvCell(cell)).join(","))
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `recent-activity-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+
     toast.success("Recent activity exported to CSV");
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[320px] items-center justify-center">
+        <Loader2 className="size-8 animate-spin text-[#3998eb]" />
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Recent Activity</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Recent Activity
+          </h1>
           <p className="text-sm text-muted-foreground">
-            View system activity history — read-only, immutable records
+            Activity from ordinances, resolutions, minutes, committees, CSO, SB
+            members, and categories — read-only records
           </p>
         </div>
         <Button variant="outline" onClick={handleExportCSV}>
@@ -137,9 +193,9 @@ export default function RecentActivityPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Actions</SelectItem>
-                    {uniqueActions.map((action) => (
+                    {ACTION_OPTIONS.map((action) => (
                       <SelectItem key={action} value={action}>
-                        {action.charAt(0).toUpperCase() + action.slice(1)}
+                        {formatActionLabel(action)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -162,12 +218,12 @@ export default function RecentActivityPage() {
                 onChange={(e) => setDateTo(e.target.value)}
                 className="w-auto"
               />
-              {hasActiveFilters && (
+              {hasActiveFilters ? (
                 <Button variant="ghost" size="sm" onClick={clearFilters}>
                   <X className="mr-1 size-4" />
                   Clear All
                 </Button>
-              )}
+              ) : null}
             </div>
           </div>
         </CardHeader>
@@ -194,20 +250,19 @@ export default function RecentActivityPage() {
               ) : (
                 filtered.map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell className="pl-6 text-muted-foreground whitespace-nowrap">
+                    <TableCell className="pl-6 whitespace-nowrap text-muted-foreground">
                       {format(log.timestamp, "MMM d, yyyy h:mm a")}
                     </TableCell>
-                    <TableCell className="font-medium">
-                      {log.userName}
-                    </TableCell>
+                    <TableCell className="font-medium">{log.userName}</TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"
                         className={
-                          actionVariant[log.action] ?? "bg-gray-100 text-gray-700"
+                          actionVariant[log.action] ??
+                          "bg-gray-100 text-gray-700"
                         }
                       >
-                        {log.action}
+                        {formatActionLabel(log.action)}
                       </Badge>
                     </TableCell>
                     <TableCell className="max-w-[240px] truncate">

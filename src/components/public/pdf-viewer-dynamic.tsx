@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import type { PublicDocumentDownloadContext } from "@/lib/types";
 
 const PdfViewerInner = dynamic(
   () => import("@/components/public/pdf-viewer").then((mod) => mod.PdfViewer),
@@ -17,6 +18,20 @@ const PdfViewerInner = dynamic(
   }
 );
 
-export function PdfViewerDynamic({ pdfUrl, title }: { pdfUrl: string; title?: string }) {
-  return <PdfViewerInner pdfUrl={pdfUrl} title={title} />;
+export function PdfViewerDynamic({
+  pdfUrl,
+  title,
+  downloadContext,
+}: {
+  pdfUrl: string;
+  title?: string;
+  downloadContext?: PublicDocumentDownloadContext;
+}) {
+  return (
+    <PdfViewerInner
+      pdfUrl={pdfUrl}
+      title={title}
+      downloadContext={downloadContext}
+    />
+  );
 }

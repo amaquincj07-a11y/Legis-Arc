@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format, getYear, getMonth } from "date-fns";
@@ -12,6 +12,7 @@ import {
   Download,
   Trash2,
   CalendarDays,
+  GlobeLock,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -22,9 +23,18 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { AdminIconAction } from "@/components/admin/admin-icon-action";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { AdminRowActions } from "@/components/admin/admin-row-actions";
+import type { AdminActionItem } from "@/components/admin/admin-actions-menu";
 import { ConfirmDeleteDialog } from "@/components/admin/confirm-delete-dialog";
-import { mockMinutes } from "@/lib/mock-data";
+import {
+  deleteSessionMinutesAction,
+  fetchSessionMinutesAction,
+  toggleSessionMinutesPublishAction,
+} from "@/lib/minutes-actions";
+import { ADMIN_CACHE_KEYS, invalidateAdminCache } from "@/lib/admin-query-cache";
+import { openMinutesPdf } from "@/lib/admin-document-pdf";
+import { useAdminQuery } from "@/hooks/use-admin-query";
 import type { SessionMinutes } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -47,7 +57,12 @@ type GroupedMinutes = Record<number, Record<number, SessionMinutes[]>>;
 
 export default function MinutesPage() {
   const router = useRouter();
-  const [sessions, setSessions] = useState<SessionMinutes[]>([...mockMinutes]);
+  const {
+    data,
+    loading,
+    setData: setSessions,
+  } = useAdminQuery(ADMIN_CACHE_KEYS.minutes, fetchSessionMinutesAction);
+  const sessions = data ?? [];
   const [openYears, setOpenYears] = useState<Set<number>>(new Set());
   const [openMonths, setOpenMonths] = useState<Set<string>>(new Set());
   const [deleteTarget, setDeleteTarget] = useState<SessionMinutes | null>(null);
@@ -64,23 +79,13 @@ export default function MinutesPage() {
     return result;
   }, [sessions]);
 
-  function confirmDelete() {
-    if (!deleteTarget) return;
-    setSessions((prev) => prev.filter((s) => s.id !== deleteTarget.id));
-    toast.success(
-      `Session minutes for ${format(deleteTarget.sessionDate, "MMMM d, yyyy")} deleted`
-    );
-    setDeleteTarget(null);
-  }
-
   const sortedYears = useMemo(
     () => Object.keys(grouped).map(Number).sort((a, b) => b - a),
     [grouped]
   );
 
-  // Auto-open the most recent year and month on mount
-  useMemo(() => {
-    if (sortedYears.length > 0) {
+  useEffect(() => {
+    if (sortedYears.length > 0 && openYears.size === 0) {
       const latestYear = sortedYears[0];
       setOpenYears(new Set([latestYear]));
       const months = Object.keys(grouped[latestYear]).map(Number);
@@ -89,7 +94,22 @@ export default function MinutesPage() {
         setOpenMonths(new Set([`${latestYear}-${latestMonth}`]));
       }
     }
-  }, [sortedYears, grouped]);
+  }, [sortedYears, grouped, openYears.size]);
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    const result = await deleteSessionMinutesAction(deleteTarget.id);
+    if (result.success) {
+      setSessions((prev) => prev.filter((s) => s.id !== deleteTarget.id));
+      invalidateAdminCache(ADMIN_CACHE_KEYS.dashboard);
+      toast.success(
+        `Session minutes for ${format(deleteTarget.sessionDate, "MMMM d, yyyy")} deleted`
+      );
+      setDeleteTarget(null);
+    } else {
+      toast.error(result.error);
+    }
+  }
 
   function toggleYear(year: number) {
     setOpenYears((prev) => {
@@ -109,24 +129,99 @@ export default function MinutesPage() {
     });
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Session Minutes
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Browse and manage session minutes by year and month
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/admin/minutes/new">
-            <Plus className="mr-2 size-4" />
-            Upload Minutes
-          </Link>
-        </Button>
+  const getSessionActions = useCallback(
+    (session: SessionMinutes): AdminActionItem[] => [
+      {
+        label: "Edit",
+        icon: Pencil,
+        onClick: () => router.push(`/admin/minutes/${session.id}/edit`),
+      },
+      {
+        label: "Download PDF",
+        icon: Download,
+        onClick: () =>
+          void openMinutesPdf(
+            session.id,
+            `minutes-${format(session.sessionDate, "yyyy-MM-dd")}`,
+            "download"
+          ),
+      },
+      {
+        label: "View PDF",
+        icon: Eye,
+        onClick: () =>
+          void openMinutesPdf(
+            session.id,
+            `minutes-${format(session.sessionDate, "yyyy-MM-dd")}`,
+            "view"
+          ),
+      },
+      {
+        label: session.isPublic ? "Unpublish" : "Publish",
+        icon: GlobeLock,
+        onClick: async () => {
+          const result = await toggleSessionMinutesPublishAction(session.id);
+          if (result.success) {
+            setSessions((prev) =>
+              prev.map((item) =>
+                item.id === session.id ? result.data : item
+              )
+            );
+            toast.success(
+              result.data.isPublic
+                ? "Session minutes published"
+                : "Session minutes unpublished"
+            );
+          } else {
+            toast.error(result.error);
+          }
+        },
+      },
+      {
+        label: "Delete",
+        icon: Trash2,
+        destructive: true,
+        separatorBefore: true,
+        onClick: () => setDeleteTarget(session),
+      },
+    ],
+    [router]
+  );
+
+  if (loading) {
+    return (
+      <div className="space-y-4 sm:space-y-6">
+        <AdminPageHeader
+          title="Session Minutes"
+          description="Browse and manage session minutes by year and month"
+          action={{
+            label: "Upload Minutes",
+            href: "/admin/minutes/new",
+            icon: Plus,
+          }}
+        />
+        <Card>
+          <CardContent className="flex h-32 items-center justify-center">
+            <p className="text-sm text-muted-foreground">
+              Loading session minutes...
+            </p>
+          </CardContent>
+        </Card>
       </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      <AdminPageHeader
+        title="Session Minutes"
+        description="Browse and manage session minutes by year and month"
+        action={{
+          label: "Upload Minutes",
+          href: "/admin/minutes/new",
+          icon: Plus,
+        }}
+      />
 
       <div className="space-y-3">
         {sortedYears.map((year) => {
@@ -140,7 +235,7 @@ export default function MinutesPage() {
                 open={openYears.has(year)}
                 onOpenChange={() => toggleYear(year)}
               >
-                <CollapsibleTrigger className="flex w-full items-center gap-3 px-6 py-4 text-left hover:bg-muted/50 transition-colors">
+                <CollapsibleTrigger className="flex w-full items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-muted/50 sm:px-6">
                   <ChevronRight
                     className={`size-4 text-muted-foreground transition-transform ${
                       openYears.has(year) ? "rotate-90" : ""
@@ -157,7 +252,7 @@ export default function MinutesPage() {
                   <div className="border-t">
                     {months.map((month) => {
                       const monthKey = `${year}-${month}`;
-                      const sessions = grouped[year][month].sort(
+                      const monthSessions = grouped[year][month].sort(
                         (a, b) =>
                           b.sessionDate.getTime() - a.sessionDate.getTime()
                       );
@@ -168,7 +263,7 @@ export default function MinutesPage() {
                           open={openMonths.has(monthKey)}
                           onOpenChange={() => toggleMonth(monthKey)}
                         >
-                          <CollapsibleTrigger className="flex w-full items-center gap-3 px-6 py-3 pl-12 text-left hover:bg-muted/50 transition-colors border-b last:border-b-0">
+                          <CollapsibleTrigger className="flex w-full items-center gap-3 border-b px-4 py-3 pl-8 text-left transition-colors last:border-b-0 hover:bg-muted/50 sm:px-6 sm:pl-12">
                             <ChevronRight
                               className={`size-3.5 text-muted-foreground transition-transform ${
                                 openMonths.has(monthKey) ? "rotate-90" : ""
@@ -178,21 +273,21 @@ export default function MinutesPage() {
                               {MONTH_NAMES[month]}
                             </span>
                             <span className="text-sm text-muted-foreground">
-                              ({sessions.length} session
-                              {sessions.length !== 1 ? "s" : ""})
+                              ({monthSessions.length} session
+                              {monthSessions.length !== 1 ? "s" : ""})
                             </span>
                           </CollapsibleTrigger>
 
                           <CollapsibleContent>
                             <div className="divide-y bg-muted/30">
-                              {sessions.map((session) => (
+                              {monthSessions.map((session) => (
                                 <div
                                   key={session.id}
-                                  className="flex items-center gap-4 px-6 py-3 pl-20"
+                                  className="flex flex-col gap-3 px-4 py-3 pl-8 sm:flex-row sm:items-center sm:gap-4 sm:px-6 sm:pl-20"
                                 >
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-medium text-sm">
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <span className="text-sm font-medium">
                                         {format(
                                           session.sessionDate,
                                           "MMMM d, yyyy"
@@ -211,54 +306,17 @@ export default function MinutesPage() {
                                           : "Special"}
                                       </Badge>
                                     </div>
-                                    <p className="text-sm text-muted-foreground mt-0.5">
+                                    <p className="mt-0.5 text-sm text-muted-foreground">
                                       {format(
                                         session.sessionDate,
-                                        "EEEE, MMMM d, yyyy 'at' h:mm a"
+                                        "EEEE, MMMM d, yyyy"
                                       )}
                                     </p>
                                   </div>
 
-                                  <div
-                                    className="flex items-center gap-1"
-                                    role="group"
-                                    aria-label="Session actions"
-                                  >
-                                    <AdminIconAction
-                                      label="View"
-                                      icon={Eye}
-                                      variant="primary"
-                                      onClick={() =>
-                                        router.push(
-                                          `/admin/minutes/${session.id}`
-                                        )
-                                      }
-                                    />
-                                    <AdminIconAction
-                                      label="Edit"
-                                      icon={Pencil}
-                                      variant="accent"
-                                      onClick={() =>
-                                        router.push(
-                                          `/admin/minutes/${session.id}/edit`
-                                        )
-                                      }
-                                    />
-                                    <AdminIconAction
-                                      label="Download"
-                                      icon={Download}
-                                      variant="primary"
-                                      onClick={() =>
-                                        toast.info("Download started")
-                                      }
-                                    />
-                                    <AdminIconAction
-                                      label="Delete"
-                                      icon={Trash2}
-                                      variant="danger"
-                                      onClick={() => setDeleteTarget(session)}
-                                    />
-                                  </div>
+                                  <AdminRowActions
+                                    items={getSessionActions(session)}
+                                  />
                                 </div>
                               ))}
                             </div>

@@ -151,6 +151,17 @@ export const DEFAULT_CATEGORIES = [
   "Franchise",
 ] as const;
 
+/** Budget-category ordinances may be labeled Appropriation Ordinance instead of Municipal. */
+export const APPROPRIATION_ORDINANCE_CATEGORY = "Budget";
+
+/** Module access granted to all LGU staff (primary admin and created users). */
+export const LGU_STAFF_MODULE_ACCESS = [
+  "ordinances",
+  "resolutions",
+  "minutes",
+  "categories",
+] as const;
+
 export const USER_ROLES: { value: UserRole; label: string }[] = [
   { value: "sys_admin", label: "System Administrator" },
   { value: "sb_secretary", label: "SB Secretary" },
@@ -170,6 +181,7 @@ export type NavItem = {
   href: string;
   icon: string;
   roles: UserRole[];
+  primaryAdminOnly?: boolean;
   badge?: string;
 };
 
@@ -205,12 +217,6 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     roles: ["sb_secretary"],
   },
   {
-    title: "Committees",
-    href: "/admin/committees",
-    icon: "UsersRound",
-    roles: ["sys_admin", "sb_secretary"],
-  },
-  {
     title: "SB Members",
     href: "/admin/sb-members",
     icon: "UserCircle",
@@ -220,18 +226,6 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     title: "CSO",
     href: "/admin/cso",
     icon: "Handshake",
-    roles: ["sys_admin", "sb_secretary"],
-  },
-  {
-    title: "Committee Reports",
-    href: "/admin/committee-reports",
-    icon: "ClipboardList",
-    roles: ["sb_secretary", "sb_member"],
-  },
-  {
-    title: "News & Updates",
-    href: "/admin/news",
-    icon: "Inbox",
     roles: ["sys_admin", "sb_secretary"],
   },
   {
@@ -245,17 +239,18 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     href: "/admin/users",
     icon: "Users",
     roles: ["sys_admin", "sb_secretary"],
-  },
-  {
-    title: "Tracking",
-    href: "/admin/tracking",
-    icon: "GitBranch",
-    roles: ["sb_secretary", "sb_member"],
+    primaryAdminOnly: true,
   },
   {
     title: "Recent Activity",
     href: "/admin/recent-activity",
     icon: "Shield",
+    roles: ["sys_admin", "sb_secretary"],
+  },
+  {
+    title: "Billing",
+    href: "/admin/billing",
+    icon: "CreditCard",
     roles: ["sys_admin", "sb_secretary"],
   },
   {
@@ -266,16 +261,16 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
   },
 ];
 
+export const PUBLIC_HOME_PATH = "/home";
+export const PUBLIC_SBCHART_PATH = "/sbchart";
+
 export const PUBLIC_NAV_ITEMS = [
-  { title: "Home", href: "/portal" },
-  { title: "SB Chart", href: "/about" },
+  { title: "Home", href: PUBLIC_HOME_PATH },
+  { title: "SB Chart", href: PUBLIC_SBCHART_PATH },
   { title: "Ordinances", href: "/ordinances" },
   { title: "Resolutions", href: "/resolutions" },
   { title: "Minutes", href: "/minutes" },
-  { title: "Committee Reports", href: "/committee-reports" },
-  { title: "Citizen's Charter", href: "/citizens-charter" },
   { title: "CSO", href: "/cso" },
-  { title: "Contacts", href: "/contacts" },
 ];
 
 export const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB

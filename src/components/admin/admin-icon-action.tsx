@@ -40,7 +40,7 @@ export function AdminIconAction({
       aria-label={label}
       title={label}
       className={cn(
-        "group relative flex size-8 shrink-0 items-center justify-center rounded-full border shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40",
+        "group relative flex size-10 shrink-0 items-center justify-center rounded-full border shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40 sm:size-8",
         variantStyles[variant]
       )}
       onClick={onClick}

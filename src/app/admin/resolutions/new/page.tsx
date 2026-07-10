@@ -29,7 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { mockCategories } from "@/lib/mock-data";
+import { useActiveCategories } from "@/hooks/use-active-categories";
+import { createResolutionAction } from "@/lib/resolution-actions";
 import { MAX_FILE_SIZE } from "@/lib/constants";
 
 const currentYear = new Date().getFullYear();
@@ -41,15 +42,16 @@ const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
   authorSponsor: z.string().optional(),
   category: z.string().min(1, "Category is required"),
-  dateEnacted: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 export default function NewResolutionPage() {
   const router = useRouter();
+  const { categories } = useActiveCategories();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -59,7 +61,6 @@ export default function NewResolutionPage() {
       title: "",
       authorSponsor: "",
       category: "",
-      dateEnacted: "",
     },
   });
 
@@ -77,9 +78,30 @@ export default function NewResolutionPage() {
     setPdfFile(file);
   }
 
-  function onSubmit(_values: FormValues) {
-    toast.success("Resolution saved successfully");
-    router.push("/admin/resolutions");
+  async function onSubmit(values: FormValues) {
+    if (!pdfFile) {
+      toast.error("Please upload a PDF document");
+      return;
+    }
+
+    setSubmitting(true);
+    const formData = new FormData();
+    formData.append("resolutionNumber", values.no ?? "");
+    formData.append("seriesYear", values.series);
+    formData.append("title", values.title);
+    formData.append("authorSponsor", values.authorSponsor ?? "");
+    formData.append("category", values.category);
+    formData.append("pdf", pdfFile);
+
+    const result = await createResolutionAction(formData);
+    setSubmitting(false);
+
+    if (result.success) {
+      toast.success("Resolution saved successfully");
+      router.push("/admin/resolutions");
+    } else {
+      toast.error(result.error);
+    }
   }
 
   return (
@@ -101,7 +123,7 @@ export default function NewResolutionPage() {
       </div>
 
       <Form {...form}>
-        <form className="space-y-6">
+        <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Document Information</CardTitle>
@@ -130,10 +152,7 @@ export default function NewResolutionPage() {
                       <FormLabel>
                         Series <span className="text-destructive">*</span>
                       </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
@@ -196,23 +215,18 @@ export default function NewResolutionPage() {
                       <FormLabel>
                         Category <span className="text-destructive">*</span>
                       </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select category" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {mockCategories
-                            .filter((c) => c.isActive)
-                            .map((cat) => (
-                              <SelectItem key={cat.id} value={cat.name}>
-                                {cat.name}
-                              </SelectItem>
-                            ))}
+                          {categories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.name}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -220,20 +234,6 @@ export default function NewResolutionPage() {
                   )}
                 />
               </div>
-
-              <FormField
-                control={form.control}
-                name="dateEnacted"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date Enacted</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </CardContent>
           </Card>
 
@@ -295,8 +295,8 @@ export default function NewResolutionPage() {
           <Separator />
 
           <div className="flex justify-end gap-3">
-            <Button type="button" onClick={form.handleSubmit(onSubmit)}>
-              Save
+            <Button type="submit" disabled={submitting}>
+              {submitting ? "Saving..." : "Save"}
             </Button>
           </div>
         </form>

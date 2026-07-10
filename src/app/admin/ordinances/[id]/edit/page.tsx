@@ -1,13 +1,12 @@
 "use client";
 
-import { use, useState, useRef } from "react";
+import { use, useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { format } from "date-fns";
 import { ArrowLeft, Upload, FileText, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -30,32 +29,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { mockOrdinances, mockCategories } from "@/lib/mock-data";
+import { useActiveCategories } from "@/hooks/use-active-categories";
+import {
+  fetchOrdinanceByIdAction,
+  updateOrdinanceAction,
+} from "@/lib/ordinance-actions";
+import { APPROPRIATION_ORDINANCE_CATEGORY, MAX_FILE_SIZE } from "@/lib/constants";
+import { OrdinanceKindField } from "@/components/admin/ordinance-kind-field";
 import { formatOrdinanceNumber } from "@/lib/utils";
-import { MAX_FILE_SIZE } from "@/lib/constants";
+import type { LegislativeDocument } from "@/lib/types";
 
 const currentYear = new Date().getFullYear();
 const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
 const formSchema = z.object({
-  documentType: z.enum(["ordinance", "resolution"]),
-  proposedNumber: z.string().optional(),
-  approvedNumber: z.string().optional(),
+  ordinanceNumber: z.string().min(1, "Ordinance number is required"),
   seriesYear: z.string().min(1, "Series year is required"),
   title: z.string().min(1, "Title is required"),
   authorSponsor: z.string().optional(),
   category: z.string().min(1, "Category is required"),
-  dateEnacted: z.string().optional(),
-  dateApproved: z.string().optional(),
-  publicationInfo: z.string().optional(),
-  remarks: z.string().optional(),
-  notes: z.string().optional(),
+  isAppropriationOrdinance: z.boolean(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-function formatDateForInput(date: Date): string {
-  return format(date, "yyyy-MM-dd");
+function getOrdinanceNumberFromDoc(doc: LegislativeDocument): string {
+  const fullNumber = doc.approvedNumber || doc.proposedNumber;
+  const separatorIndex = fullNumber.indexOf("-");
+  if (separatorIndex === -1) return fullNumber;
+  return fullNumber.slice(separatorIndex + 1);
 }
 
 export default function EditOrdinancePage({
@@ -65,30 +67,60 @@ export default function EditOrdinancePage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const { categories } = useActiveCategories();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-
-  const doc = mockOrdinances.find((d) => d.id === id);
+  const [doc, setDoc] = useState<LegislativeDocument | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: doc
-      ? {
-          documentType: doc.documentType,
-          proposedNumber: doc.proposedNumber,
-          approvedNumber: doc.approvedNumber,
-          seriesYear: doc.seriesYear.toString(),
-          title: doc.title,
-          authorSponsor: doc.authorSponsor,
-          category: doc.category,
-          dateEnacted: formatDateForInput(doc.dateEnacted),
-          dateApproved: formatDateForInput(doc.dateApproved),
-          publicationInfo: doc.publicationInfo,
-          remarks: doc.remarks,
-          notes: doc.notes,
-        }
-      : undefined,
+    defaultValues: {
+      ordinanceNumber: "",
+      seriesYear: currentYear.toString(),
+      title: "",
+      authorSponsor: "",
+      category: "",
+      isAppropriationOrdinance: false,
+    },
   });
+
+  const selectedCategory = form.watch("category");
+
+  useEffect(() => {
+    if (selectedCategory !== APPROPRIATION_ORDINANCE_CATEGORY) {
+      form.setValue("isAppropriationOrdinance", false);
+    }
+  }, [selectedCategory, form]);
+
+  useEffect(() => {
+    async function load() {
+      const result = await fetchOrdinanceByIdAction(id);
+      if (result.success) {
+        setDoc(result.data);
+        form.reset({
+          ordinanceNumber: getOrdinanceNumberFromDoc(result.data),
+          seriesYear: result.data.seriesYear.toString(),
+          title: result.data.title,
+          authorSponsor: result.data.authorSponsor,
+          category: result.data.category,
+          isAppropriationOrdinance:
+            result.data.ordinanceKind === "appropriation",
+        });
+      }
+      setLoading(false);
+    }
+    void load();
+  }, [id, form]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <p className="text-sm text-muted-foreground">Loading ordinance...</p>
+      </div>
+    );
+  }
 
   if (!doc) {
     return (
@@ -118,16 +150,38 @@ export default function EditOrdinancePage({
     setPdfFile(file);
   }
 
-  function onSubmit(_values: FormValues) {
-    toast.success("Ordinance updated successfully");
-    router.push(`/admin/ordinances/${id}`);
+  async function onSubmit(values: FormValues) {
+    setSubmitting(true);
+    const formData = new FormData();
+    formData.append("ordinanceNumber", values.ordinanceNumber);
+    formData.append("seriesYear", values.seriesYear);
+    formData.append("title", values.title);
+    formData.append("authorSponsor", values.authorSponsor ?? "");
+    formData.append("category", values.category);
+    formData.append(
+      "ordinanceKind",
+      values.isAppropriationOrdinance ? "appropriation" : "municipal"
+    );
+    if (pdfFile) {
+      formData.append("pdf", pdfFile);
+    }
+
+    const result = await updateOrdinanceAction(id, formData);
+    setSubmitting(false);
+
+    if (result.success) {
+      toast.success("Ordinance updated successfully");
+      router.push("/admin/ordinances");
+    } else {
+      toast.error(result.error);
+    }
   }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>
-          <Link href={`/admin/ordinances/${id}`}>
+          <Link href="/admin/ordinances">
             <ArrowLeft className="size-4" />
           </Link>
         </Button>
@@ -151,24 +205,15 @@ export default function EditOrdinancePage({
               <div className="grid gap-6 sm:grid-cols-2">
                 <FormField
                   control={form.control}
-                  name="documentType"
+                  name="ordinanceNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Document Type</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="ordinance">Ordinance</SelectItem>
-                          <SelectItem value="resolution">Resolution</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>
+                        No. <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. 01, 02, 03" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -180,11 +225,11 @@ export default function EditOrdinancePage({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Series Year <span className="text-destructive">*</span>
+                        Series <span className="text-destructive">*</span>
                       </FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -199,36 +244,6 @@ export default function EditOrdinancePage({
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid gap-6 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="proposedNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Proposed No.</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. 2026-05" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="approvedNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Approved No.</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. 2026-05" {...field} />
-                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -280,7 +295,7 @@ export default function EditOrdinancePage({
                       </FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -288,13 +303,11 @@ export default function EditOrdinancePage({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {mockCategories
-                            .filter((c) => c.isActive)
-                            .map((cat) => (
-                              <SelectItem key={cat.id} value={cat.name}>
-                                {cat.name}
-                              </SelectItem>
-                            ))}
+                          {categories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.name}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -303,98 +316,19 @@ export default function EditOrdinancePage({
                 />
               </div>
 
-              <div className="grid gap-6 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="dateEnacted"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date Enacted</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="dateApproved"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date Approved</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="publicationInfo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Publication Info</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g. Published in Panglao Gazette, Vol. 12, Issue 3"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+              <OrdinanceKindField
+                category={selectedCategory}
+                checked={form.watch("isAppropriationOrdinance")}
+                onCheckedChange={(checked) =>
+                  form.setValue("isAppropriationOrdinance", checked)
+                }
               />
-
-              <div className="grid gap-6 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="remarks"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Remarks</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Optional remarks"
-                          className="min-h-[80px] resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notes</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Optional internal notes"
-                          className="min-h-[80px] resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">
-                Replace PDF Document
-              </CardTitle>
+              <CardTitle className="text-base">PDF Document</CardTitle>
             </CardHeader>
             <CardContent>
               {pdfFile ? (
@@ -451,9 +385,11 @@ export default function EditOrdinancePage({
 
           <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" asChild>
-              <Link href={`/admin/ordinances/${id}`}>Cancel</Link>
+              <Link href="/admin/ordinances">Cancel</Link>
             </Button>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? "Saving..." : "Save Changes"}
+            </Button>
           </div>
         </form>
       </Form>

@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useRef } from "react";
+import { use, useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -12,9 +12,9 @@ import { ArrowLeft, Upload, FileText, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { AdminFormActions } from "@/components/admin/admin-form-actions";
 import {
   Form,
   FormControl,
@@ -30,7 +30,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { mockMinutes } from "@/lib/mock-data";
+import {
+  fetchSessionMinutesByIdAction,
+  updateSessionMinutesAction,
+} from "@/lib/minutes-actions";
 import { MAX_FILE_SIZE } from "@/lib/constants";
 
 const formSchema = z.object({
@@ -49,20 +52,45 @@ export default function EditMinutesPage({
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-
-  const doc = mockMinutes.find((d) => d.id === id);
+  const [sessionDateLabel, setSessionDateLabel] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [notFound, setNotFound] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: doc
-      ? {
-          sessionDate: format(doc.sessionDate, "yyyy-MM-dd"),
-          sessionType: doc.sessionType,
-        }
-      : undefined,
+    defaultValues: {
+      sessionDate: "",
+      sessionType: "regular",
+    },
   });
 
-  if (!doc) {
+  useEffect(() => {
+    async function load() {
+      const result = await fetchSessionMinutesByIdAction(id);
+      if (result.success) {
+        setSessionDateLabel(format(result.data.sessionDate, "MMMM d, yyyy"));
+        form.reset({
+          sessionDate: format(result.data.sessionDate, "yyyy-MM-dd"),
+          sessionType: result.data.sessionType,
+        });
+      } else {
+        setNotFound(true);
+      }
+      setLoading(false);
+    }
+    void load();
+  }, [id, form]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <p className="text-sm text-muted-foreground">Loading session minutes...</p>
+      </div>
+    );
+  }
+
+  if (notFound) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <h2 className="text-xl font-semibold">Minutes not found</h2>
@@ -90,22 +118,37 @@ export default function EditMinutesPage({
     setPdfFile(file);
   }
 
-  function onSubmit(_values: FormValues) {
-    toast.success("Minutes updated successfully");
-    router.push(`/admin/minutes/${id}`);
+  async function onSubmit(values: FormValues) {
+    setSubmitting(true);
+    const formData = new FormData();
+    formData.append("sessionDate", values.sessionDate);
+    formData.append("sessionType", values.sessionType);
+    if (pdfFile) {
+      formData.append("pdf", pdfFile);
+    }
+
+    const result = await updateSessionMinutesAction(id, formData);
+    setSubmitting(false);
+
+    if (result.success) {
+      toast.success("Minutes updated successfully");
+      router.push("/admin/minutes");
+    } else {
+      toast.error(result.error);
+    }
   }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>
-          <Link href={`/admin/minutes/${id}`}>
+          <Link href="/admin/minutes">
             <ArrowLeft className="size-4" />
           </Link>
         </Button>
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Edit Minutes — {format(doc.sessionDate, "MMMM d, yyyy")}
+            Edit Minutes — {sessionDateLabel}
           </h1>
           <p className="text-sm text-muted-foreground">
             Update the session details below
@@ -144,10 +187,7 @@ export default function EditMinutesPage({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Session Type</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
@@ -163,7 +203,6 @@ export default function EditMinutesPage({
                   )}
                 />
               </div>
-
             </CardContent>
           </Card>
 
@@ -224,12 +263,23 @@ export default function EditMinutesPage({
 
           <Separator />
 
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" asChild>
-              <Link href={`/admin/minutes/${id}`}>Cancel</Link>
+          <AdminFormActions>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto"
+              asChild
+            >
+              <Link href="/admin/minutes">Cancel</Link>
             </Button>
-            <Button type="submit">Save Changes</Button>
-          </div>
+            <Button
+              type="submit"
+              className="w-full sm:w-auto"
+              disabled={submitting}
+            >
+              {submitting ? "Saving..." : "Save Changes"}
+            </Button>
+          </AdminFormActions>
         </form>
       </Form>
     </div>

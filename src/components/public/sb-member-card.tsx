@@ -12,16 +12,14 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { formatSBMemberDisplayName } from "@/lib/utils";
 import type { SBMember, Committee } from "@/lib/types";
 
 function getMemberCommitteeRoles(
   member: SBMember,
   committees: Committee[]
 ) {
-  const formattedName =
-    member.position === "Vice Mayor"
-      ? `Vice Mayor ${member.name}`
-      : `Hon. ${member.name}`;
+  const formattedName = formatSBMemberDisplayName(member);
 
   const roles: { committee: string; role: "Chairman" | "Vice Chairman" | "Member" }[] = [];
 

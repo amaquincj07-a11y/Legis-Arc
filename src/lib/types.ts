@@ -7,47 +7,18 @@ export type UserRole =
   | "sb_secretary"
   | "sb_member"
   | "digitization_assistant";
+
+export type AccountPortal = "lgu" | "company";
 export type RequestStatus =
   | "submitted"
   | "approved"
   | "released"
   | "denied";
-export type ReferralType =
-  | "letter"
-  | "brgy_resolution"
-  | "brgy_ordinance"
-  | "subd_application"
-  | "accreditation"
-  | "board_council_resolutions"
-  | "memorandum"
-  | "executive_orders"
-  | "draft_resolutions"
-  | "draft_ordinance"
-  | "others";
-export type TrackingStatus =
-  | "for_referral"
-  | "under_committee"
-  | "for_public_hearing"
-  | "for_committee_report"
-  | "for_signature"
-  | "for_approval"
-  | "for_reporting"
-  | "others";
 
 export interface TrackingEvent {
   status: string;
   date: Date;
   performedBy: string;
-}
-
-export interface RoutingHistoryEntry {
-  office: string;
-  assignedTo: string;
-  stage: string;
-  date: Date;
-  remark?: string;
-  committee?: string;
-  userEmail?: string;
 }
 
 export interface DocumentVersion {
@@ -79,26 +50,6 @@ export interface LegislativeDocument {
   pdfUrl: string;
   versions: DocumentVersion[];
   timeline: TrackingEvent[];
-  /** Current office/committee holding the document */
-  currentOffice?: string;
-  /** Person responsible at current location */
-  assignedTo?: string;
-  /** Stage (e.g. For Review, For Signature, For Publication) */
-  stage?: string;
-  /** Log of routing movements */
-  routingHistory?: RoutingHistoryEntry[];
-  /** Session Date for tracking (YYYY-MM-DD) */
-  sessionDate?: Date;
-  /** Type of referral (Letter, Brgy Resolution, etc.) */
-  referralType?: ReferralType;
-  /** Subject of the referral aligned to referral type */
-  trackingSubject?: string;
-  /** Committee assigned to handle the document */
-  assignedCommittee?: string;
-  /** Legislative output/result from tracking */
-  legislativeOutput?: string;
-  /** User email who updated the document */
-  lastUpdatedByEmail?: string;
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
@@ -121,21 +72,38 @@ export type ModuleKey =
   | "ordinances"
   | "resolutions"
   | "minutes"
-  | "tracking"
-  | "committee_reports"
   | "categories";
 
 export interface User {
   id: string;
   name: string;
   email: string;
+  lguId?: string;
+  position: string;
+  mobile: string;
   role: UserRole;
   isActive: boolean;
+  isPrimaryAdmin?: boolean;
+  managedPassword?: string;
   lastLogin: Date;
   createdAt: Date;
   moduleAccess?: ModuleKey[];
   allowedCategories?: string[];
-  allowedCommittees?: string[];
+}
+
+export interface CompanyAdmin {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface AuthAccount {
+  id: string;
+  email: string;
+  password: string;
+  name: string;
+  portal: AccountPortal;
+  userId?: string;
 }
 
 export interface AuditLogEntry {
@@ -158,6 +126,29 @@ export interface DocumentRequest {
   dateReleased?: Date;
   status: RequestStatus;
   processedBy: string;
+}
+
+export interface DocumentDownloadRecord {
+  id: string;
+  dateRequested: Date;
+  name: string;
+  office: string;
+  purpose: string;
+  fileType: string;
+  documentNumber: string;
+  title: string;
+  category: string;
+}
+
+export interface PublicDocumentDownloadContext {
+  province: string;
+  municipality: string;
+  documentId: string;
+  documentType: DocumentType;
+  documentNumber?: string;
+  documentTitle: string;
+  documentCategory?: string;
+  municipalityLabel?: string;
 }
 
 export interface Category {
@@ -207,15 +198,6 @@ export interface CSOOrganization {
   term: string;
 }
 
-export interface CommitteeReport {
-  id: string;
-  reportNo: string;
-  subject: string;
-  committee: string;
-  pdfUrl: string;
-  isPublished?: boolean;
-}
-
 export interface NewsItem {
   id: number;
   title: string;
@@ -223,5 +205,92 @@ export interface NewsItem {
   excerpt: string;
   content: string;
   image: string;
-  isPublished?: boolean;
+}
+
+export type SupportPlan = "annual";
+export type LGUPaymentStatus = "paid" | "unpaid";
+export type BillingEntryType = "invoice" | "payment";
+
+export interface BillingOverview {
+  paymentStatus: LGUPaymentStatus;
+  accountStatus: LGUClientStatus;
+  subscriptionPlan: string;
+  subscriptionAmount: number;
+  expiresOn: Date | null;
+  daysRemaining: number | null;
+}
+
+export interface BillingHistoryEntry {
+  id: string;
+  date: Date;
+  description: string;
+  amount: number;
+  periodStart: Date;
+  periodEnd: Date;
+}
+
+export interface InvoiceLineItem {
+  description: string;
+  amount: number;
+}
+
+export interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  periodLabel: string;
+  issueDate: Date;
+  dueDate: Date;
+  lineItems: InvoiceLineItem[];
+  subtotal: number;
+  tax: number;
+  total: number;
+  status: "paid" | "open" | "past_due";
+}
+
+export interface LGUDepartmentProfile {
+  province: string;
+  municipality: string;
+  streetAddress: string;
+  supportPlan: SupportPlan;
+}
+
+export type LGUClientStatus = "trial" | "active" | "expired" | "suspended";
+
+export interface LGUAdministrator {
+  fullName: string;
+  position: string;
+  officeEmail: string;
+  mobileNumber: string;
+  password?: string;
+  managedPassword?: string;
+}
+
+export interface LGUClient {
+  id: string;
+  municipality: string;
+  province: string;
+  status: LGUClientStatus;
+  subscriptionAmount: number;
+  subscriptionStartDate: Date | null;
+  subscriptionEndDate: Date | null;
+  documentCount: number;
+  streetAddress?: string;
+  supportPlan?: SupportPlan;
+  primaryAdminProfileId?: string;
+  administrator: LGUAdministrator;
+}
+
+export interface SuperAdminDashboardStats {
+  activeLGUs: number;
+  paid: number;
+  trial: number;
+  expiringSoon: number;
+  revenue: number;
+  documents: number;
+}
+
+export interface CreateLGUAccountInput {
+  municipality: string;
+  province: string;
+  administrator: LGUAdministrator;
 }

@@ -34,7 +34,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
         {/* Back link */}
         <Link
-          href="/portal"
+          href="/home"
           className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-[#3998eb] transition-colors hover:text-[#2a7bc8] sm:mb-8"
         >
           <ArrowLeft className="size-4" />

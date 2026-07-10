@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -19,6 +19,7 @@ import {
   Settings,
   Landmark,
   LogOut,
+  CreditCard,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
@@ -65,6 +66,7 @@ const iconMap: Record<string, LucideIcon> = {
   Handshake,
   Shield,
   Settings,
+  CreditCard,
 };
 
 function getInitials(name: string) {
@@ -95,11 +97,18 @@ function useBreadcrumbs() {
 
 function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, logout } = useAuth();
 
-  const filteredNav = ADMIN_NAV_ITEMS.filter((item) =>
-    user ? item.roles.includes(user.role) : false
-  );
+  function handleLogout() {
+    void logout().then(() => router.push("/login"));
+  }
+
+  const filteredNav = ADMIN_NAV_ITEMS.filter((item) => {
+    if (!user) return false;
+    if (item.primaryAdminOnly && !user.isPrimaryAdmin) return false;
+    return item.roles.includes(user.role);
+  });
 
   return (
     <Sidebar
@@ -173,7 +182,7 @@ function AdminSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              onClick={logout}
+              onClick={handleLogout}
               tooltip="Logout"
               className="mt-1 rounded-md border border-sidebar-border/60 bg-black/30 text-[13px] text-sidebar-foreground/80 hover:border-(--gold)/70 hover:bg-[rgba(15,23,42,0.9)] hover:text-sidebar-foreground"
             >
@@ -188,18 +197,26 @@ function AdminSidebar() {
             <SidebarSeparator />
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton size="lg" className="cursor-default">
-                  <Avatar size="sm">
-                    <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-[10px]">
-                      {getInitials(user.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-medium">{user.name}</span>
-                    <span className="truncate text-xs opacity-70">
-                      {ROLE_LABELS[user.role]}
-                    </span>
-                  </div>
+                <SidebarMenuButton
+                  asChild
+                  size="lg"
+                  isActive={pathname === "/admin/profile"}
+                  tooltip="View profile"
+                  className="hover:bg-[rgba(31,41,55,0.9)]/90 hover:text-sidebar-foreground data-[active=true]:bg-linear-to-r data-[active=true]:from-[rgba(203,171,83,0.18)] data-[active=true]:to-[rgba(57,152,235,0.16)]"
+                >
+                  <Link href="/admin/profile">
+                    <Avatar size="sm">
+                      <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-[10px]">
+                        {getInitials(user.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-medium">{user.name}</span>
+                      <span className="truncate text-xs opacity-70">
+                        {ROLE_LABELS[user.role]}
+                      </span>
+                    </div>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -212,31 +229,46 @@ function AdminSidebar() {
 
 function AdminHeader() {
   const crumbs = useBreadcrumbs();
+  const lastCrumb = crumbs[crumbs.length - 1];
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
-      <SidebarTrigger className="-ml-1" />
-      <Separator orientation="vertical" className="mr-2 h-4!" />
+    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-4">
+      <SidebarTrigger className="-ml-1 size-10 shrink-0 sm:size-9" />
 
-      <Breadcrumb>
-        <BreadcrumbList>
-          {crumbs.map((crumb, index) => {
-            const isLast = index === crumbs.length - 1;
-            return (
-              <BreadcrumbItem key={crumb.href}>
-                {isLast ? (
-                  <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                ) : (
-                  <>
-                    <BreadcrumbLink asChild>
-                      <Link href={crumb.href}>{crumb.label}</Link>
-                    </BreadcrumbLink>
-                    <BreadcrumbSeparator />
-                  </>
-                )}
-              </BreadcrumbItem>
-            );
-          })}
+      <Separator
+        orientation="vertical"
+        className="mr-1 hidden h-4! sm:mr-2 sm:block"
+      />
+
+      <Breadcrumb className="min-w-0 flex-1">
+        <BreadcrumbList className="flex-nowrap">
+          {crumbs.length <= 2 ? (
+            crumbs.map((crumb, index) => {
+              const isLast = index === crumbs.length - 1;
+              return (
+                <BreadcrumbItem key={crumb.href} className="min-w-0">
+                  {isLast ? (
+                    <BreadcrumbPage className="truncate">
+                      {crumb.label}
+                    </BreadcrumbPage>
+                  ) : (
+                    <>
+                      <BreadcrumbLink asChild>
+                        <Link href={crumb.href} className="truncate">
+                          {crumb.label}
+                        </Link>
+                      </BreadcrumbLink>
+                      <BreadcrumbSeparator />
+                    </>
+                  )}
+                </BreadcrumbItem>
+              );
+            })
+          ) : lastCrumb ? (
+            <BreadcrumbItem className="min-w-0">
+              <BreadcrumbPage className="truncate">{lastCrumb.label}</BreadcrumbPage>
+            </BreadcrumbItem>
+          ) : null}
         </BreadcrumbList>
       </Breadcrumb>
     </header>
@@ -253,7 +285,9 @@ export default function AdminLayout({
       <AdminSidebar />
       <SidebarInset>
         <AdminHeader />
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+        <main className="relative flex-1 overflow-auto p-3 sm:p-4 md:p-6">
+          {children}
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );

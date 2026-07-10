@@ -42,11 +42,11 @@ export function AdminActionsMenu({
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 gap-1.5 rounded-full border-slate-200 px-3 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+          className="h-10 min-w-10 gap-1.5 rounded-full border-slate-200 px-3 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 sm:h-8 sm:min-w-0"
           aria-label="Row actions"
         >
           <MoreHorizontal className="size-4" />
-          Actions
+          <span className="hidden sm:inline">Actions</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align={align} className="w-48">

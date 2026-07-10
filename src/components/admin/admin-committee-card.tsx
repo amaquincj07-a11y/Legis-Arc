@@ -3,7 +3,6 @@
 import { Pencil, Trash2, User } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import type { Committee } from "@/lib/types";
 
 export function AdminCommitteeCard({
@@ -22,12 +21,6 @@ export function AdminCommitteeCard({
           <h3 className="text-base font-semibold leading-snug text-slate-900">
             {committee.name}
           </h3>
-          <Badge
-            variant="secondary"
-            className="shrink-0 rounded-full bg-[#3998eb]/10 text-[10px] font-medium text-[#3998eb] hover:bg-[#3998eb]/10"
-          >
-            {committee.yearTerm}
-          </Badge>
         </div>
 
         <div className="mt-3 flex-1 space-y-2 text-sm text-slate-600">

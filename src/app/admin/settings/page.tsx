@@ -38,9 +38,9 @@ export default function SettingsPage() {
   const activeUsers = mockUsers.filter((u) => u.isActive).length;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
           System Settings
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -61,14 +61,16 @@ export default function SettingsPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg border p-4">
+          <div className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-medium">Last Backup</p>
               <p className="text-xs text-muted-foreground">
                 February 17, 2026 at 11:00 PM — Automatic
               </p>
             </div>
-            <Button onClick={handleBackup}>Create Backup</Button>
+            <Button onClick={handleBackup} className="w-full sm:w-auto">
+              Create Backup
+            </Button>
           </div>
           <div className="rounded-lg border p-4">
             <p className="text-sm font-medium mb-2">Backup History</p>
@@ -186,7 +188,7 @@ export default function SettingsPage() {
       <Separator />
 
       <div className="flex justify-end">
-        <Button onClick={handleSaveSettings}>
+        <Button onClick={handleSaveSettings} className="w-full sm:w-auto">
           <Save className="mr-2 size-4" />
           Save Settings
         </Button>

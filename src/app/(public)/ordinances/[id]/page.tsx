@@ -1,22 +1,19 @@
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { mockOrdinances } from "@/lib/mock-data";
-import { formatOrdinanceNumber } from "@/lib/utils";
-import { PdfViewerDynamic } from "@/components/public/pdf-viewer-dynamic";
+import { Suspense } from "react";
+import { Loader2 } from "lucide-react";
+import { generateOrdinanceStaticParams } from "@/lib/supabase/generate-static-ordinance-params";
+import { OrdinanceDetailContent } from "./ordinance-detail-content";
 
 export async function generateStaticParams() {
-  return mockOrdinances.map((d) => ({ id: d.id }));
+  return generateOrdinanceStaticParams();
+}
+
+function OrdinanceDetailFallback() {
+  return (
+    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <p className="text-sm text-muted-foreground">Loading ordinance...</p>
+    </div>
+  );
 }
 
 export default async function OrdinanceDetailPage({
@@ -25,56 +22,10 @@ export default async function OrdinanceDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const doc = mockOrdinances.find((d) => d.id === id);
-
-  if (!doc) notFound();
-
-  const docNumber = formatOrdinanceNumber(doc);
 
   return (
-    <div className="min-h-[70vh]">
-      {/* Breadcrumb */}
-      <div className="border-b bg-muted/30">
-        <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="/portal">Home</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="/ordinances">Ordinances</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{docNumber}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Back Button */}
-        <Link href="/ordinances">
-          <Button variant="ghost" size="sm" className="mb-6 gap-2 text-muted-foreground">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Ordinances
-          </Button>
-        </Link>
-
-        {/* PDF Viewer */}
-        <Card className="overflow-hidden border border-border">
-          <PdfViewerDynamic
-            pdfUrl={doc.pdfUrl}
-            title={docNumber}
-          />
-        </Card>
-      </div>
-    </div>
+    <Suspense fallback={<OrdinanceDetailFallback />}>
+      <OrdinanceDetailContent id={id} />
+    </Suspense>
   );
 }

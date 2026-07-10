@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { FileText, Eye, Search, SlidersHorizontal, X } from "lucide-react";
+import { FileText, Eye, Search, SlidersHorizontal, X, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,34 +14,65 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { mockResolutions, mockCategories } from "@/lib/mock-data";
+import { fetchPublicOrdinanceCategoriesAction } from "@/lib/public-ordinance-actions";
+import { fetchPublicResolutionsAction } from "@/lib/public-resolution-actions";
+import { usePlaceFilter } from "@/lib/place-filter-context";
+import { formatResolutionNumber } from "@/lib/utils";
+import type { Category, LegislativeDocument } from "@/lib/types";
 
-const PUBLIC_RESOLUTIONS = mockResolutions.filter((d) => d.isPublic);
-
-const YEARS = [...new Set(PUBLIC_RESOLUTIONS.map((d) => d.seriesYear))].sort(
-  (a, b) => b - a
-);
-const AUTHORS = [
-  ...new Set(PUBLIC_RESOLUTIONS.map((d) => d.authorSponsor)),
-].sort();
+function toTimestamp(value: Date | string): number {
+  return new Date(value).getTime();
+}
 
 export function ResolutionsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  
-  // Initialize state from URL params
+  const { province, municipality, municipalityName, provinceName } = usePlaceFilter();
+
   const initialQ = searchParams.get("q") ?? "";
   const initialYear = searchParams.get("year") ?? "all";
   const initialCategory = searchParams.get("category") ?? "all";
-  
+
   const [search, setSearch] = useState(initialQ);
   const [yearFilter, setYearFilter] = useState(initialYear);
   const [categoryFilter, setCategoryFilter] = useState(initialCategory);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [resolutions, setResolutions] = useState<LegislativeDocument[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const ITEMS_PER_PAGE = 10;
-  
-  // Update state when URL params change
+
+  const loadResolutions = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+
+    const [resolutionsResult, categoriesResult] = await Promise.all([
+      fetchPublicResolutionsAction(province, municipality),
+      fetchPublicOrdinanceCategoriesAction(province, municipality),
+    ]);
+
+    if (resolutionsResult.success) {
+      setResolutions(resolutionsResult.data);
+    } else {
+      setResolutions([]);
+      setLoadError(resolutionsResult.error);
+    }
+
+    if (categoriesResult.success) {
+      setCategories(categoriesResult.data);
+    } else {
+      setCategories([]);
+    }
+
+    setLoading(false);
+  }, [province, municipality]);
+
+  useEffect(() => {
+    void loadResolutions();
+  }, [loadResolutions]);
+
   useEffect(() => {
     const q = searchParams.get("q") ?? "";
     const year = searchParams.get("year") ?? "all";
@@ -51,14 +82,19 @@ export function ResolutionsContent() {
     setCategoryFilter(category);
   }, [searchParams]);
 
+  const years = useMemo(() => {
+    return [...new Set(resolutions.map((d) => d.seriesYear))].sort((a, b) => b - a);
+  }, [resolutions]);
+
   const filtered = useMemo(() => {
-    let docs = PUBLIC_RESOLUTIONS;
+    let docs = resolutions;
     if (search) {
+      const q = search.toLowerCase();
       docs = docs.filter(
         (d) =>
-          d.title.toLowerCase().includes(search.toLowerCase()) ||
-          d.approvedNumber?.toLowerCase().includes(search.toLowerCase()) ||
-          d.proposedNumber?.toLowerCase().includes(search.toLowerCase())
+          d.title.toLowerCase().includes(q) ||
+          d.approvedNumber?.toLowerCase().includes(q) ||
+          d.proposedNumber?.toLowerCase().includes(q)
       );
     }
     if (yearFilter !== "all") {
@@ -68,14 +104,13 @@ export function ResolutionsContent() {
       docs = docs.filter((d) => d.category === categoryFilter);
     }
     return docs.sort(
-      (a, b) => b.dateApproved.getTime() - a.dateApproved.getTime()
+      (a, b) => toTimestamp(b.dateApproved) - toTimestamp(a.dateApproved)
     );
-  }, [search, yearFilter, categoryFilter]);
+  }, [resolutions, search, yearFilter, categoryFilter]);
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, yearFilter, categoryFilter]);
+  }, [search, yearFilter, categoryFilter, province, municipality]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginated = filtered.slice(
@@ -90,19 +125,18 @@ export function ResolutionsContent() {
 
   return (
     <div className="min-h-[70vh]">
-      {/* Page Header with Background Image */}
       <div className="relative overflow-hidden">
         <div className="relative w-full">
           <Image
-            src="/images/sb/Resolution-Background.png"
-            alt="Sangguniang Bayan of Panglao"
+            src="/images/sb/Hero-background.png"
+            alt={`Sangguniang Bayan of ${municipalityName}`}
             width={1920}
             height={1080}
-            className="w-full h-auto object-contain"
+            className="h-auto w-full object-contain"
             priority
           />
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center px-4">
+            <div className="px-4 text-center">
               <h1
                 className="font-[family-name:var(--font-garamond)] text-3xl font-bold uppercase tracking-[0.15em] text-white sm:text-5xl lg:text-7xl"
                 style={{ textShadow: "0 4px 12px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4)" }}
@@ -113,21 +147,20 @@ export function ResolutionsContent() {
                 className="font-[family-name:var(--font-garamond)] mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-white/90 sm:mt-4 sm:text-base lg:text-lg"
                 style={{ textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}
               >
-                Browse published resolutions of the Sangguniang Bayan ng Panglao.
-                Resolutions express the formal will of the legislative body on
-                matters of public interest and governance.
+                Browse published resolutions of the Sangguniang Bayan ng{" "}
+                {municipalityName}, {provinceName}. Resolutions express the formal
+                will of the legislative body on matters of public interest and
+                governance.
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Filters */}
       <div className="border-b bg-white">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
-          {/* Search + filter toggle row */}
           <div className="flex items-center gap-2">
-            <div className="relative flex-1 min-w-0">
+            <div className="relative min-w-0 flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search resolutions..."
@@ -140,28 +173,31 @@ export function ResolutionsContent() {
               type="button"
               variant="outline"
               size="icon"
-              className="shrink-0 lg:hidden h-9 w-9"
+              className="h-9 w-9 shrink-0 lg:hidden"
               onClick={() => setShowMobileFilters(!showMobileFilters)}
               aria-label="Toggle filters"
             >
               <SlidersHorizontal className="h-4 w-4" />
             </Button>
-            <span className="font-[family-name:var(--font-garamond)] hidden text-sm text-muted-foreground sm:inline whitespace-nowrap">
+            <span className="font-[family-name:var(--font-garamond)] hidden whitespace-nowrap text-sm text-muted-foreground sm:inline">
               {filtered.length} result{filtered.length !== 1 ? "s" : ""}
             </span>
           </div>
 
-          {/* Desktop Filters */}
           <div className="mt-2 hidden items-center gap-3 lg:flex">
-            <span className="font-[family-name:var(--font-garamond)] text-sm font-medium text-muted-foreground">Filter by:</span>
+            <span className="font-[family-name:var(--font-garamond)] text-sm font-medium text-muted-foreground">
+              Filter by:
+            </span>
             <Select value={yearFilter} onValueChange={setYearFilter}>
               <SelectTrigger className="font-[family-name:var(--font-garamond)] h-8 w-[120px] text-sm">
                 <SelectValue placeholder="Year" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Years</SelectItem>
-                {YEARS.map((y) => (
-                  <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                {years.map((y) => (
+                  <SelectItem key={y} value={String(y)}>
+                    {y}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -171,8 +207,10 @@ export function ResolutionsContent() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {mockCategories.filter((c) => c.isActive).map((c) => (
-                  <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.name}>
+                    {c.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -182,7 +220,6 @@ export function ResolutionsContent() {
             </span>
           </div>
 
-          {/* Mobile Filters */}
           {showMobileFilters && (
             <div className="mt-3 flex flex-col gap-2 lg:hidden">
               <Select value={yearFilter} onValueChange={setYearFilter}>
@@ -191,8 +228,10 @@ export function ResolutionsContent() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Years</SelectItem>
-                  {YEARS.map((y) => (
-                    <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                  {years.map((y) => (
+                    <SelectItem key={y} value={String(y)}>
+                      {y}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -202,8 +241,10 @@ export function ResolutionsContent() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
-                  {mockCategories.filter((c) => c.isActive).map((c) => (
-                    <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.name}>
+                      {c.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -216,7 +257,10 @@ export function ResolutionsContent() {
                     variant="ghost"
                     size="sm"
                     className="h-7 gap-1 text-xs text-muted-foreground"
-                    onClick={() => { setYearFilter("all"); setCategoryFilter("all"); }}
+                    onClick={() => {
+                      setYearFilter("all");
+                      setCategoryFilter("all");
+                    }}
                   >
                     <X className="h-3 w-3" /> Clear
                   </Button>
@@ -227,37 +271,69 @@ export function ResolutionsContent() {
         </div>
       </div>
 
-      {/* Card Grid */}
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <Loader2 className="mb-4 h-8 w-8 animate-spin text-muted-foreground" />
+            <p className="font-[family-name:var(--font-garamond)] text-base text-muted-foreground">
+              Loading resolutions for {municipalityName}, {provinceName}...
+            </p>
+          </div>
+        ) : loadError ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
               <FileText className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h3 className="font-[family-name:var(--font-garamond)] text-xl font-semibold">No resolutions found</h3>
+            <h3 className="font-[family-name:var(--font-garamond)] text-xl font-semibold">
+              Unable to load resolutions
+            </h3>
             <p className="font-[family-name:var(--font-garamond)] mt-1 text-base text-muted-foreground">
-              Try adjusting the filters above.
+              {loadError}
+            </p>
+            <Button className="mt-4" variant="outline" onClick={() => void loadResolutions()}>
+              Try again
+            </Button>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+              <FileText className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h3 className="font-[family-name:var(--font-garamond)] text-xl font-semibold">
+              No resolutions found
+            </h3>
+            <p className="font-[family-name:var(--font-garamond)] mt-1 text-base text-muted-foreground">
+              {resolutions.length === 0
+                ? `No published resolutions are available for ${municipalityName}, ${provinceName} yet.`
+                : "Try adjusting the filters above."}
             </p>
           </div>
         ) : (
           <>
-            {/* Table */}
             <div className="overflow-x-auto">
-              <table className="table-auto w-full border-collapse border border-gray-200">
+              <table className="w-full table-auto border-collapse border border-gray-200">
                 <thead style={tableHeaderStyle}>
                   <tr>
-                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-left text-sm font-semibold sm:text-base">Resolution No.</th>
-                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-left text-sm font-semibold sm:text-base">Title</th>
-                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-center text-sm font-semibold sm:text-base">Category</th>
-                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-center text-sm font-semibold sm:text-base">Author/Sponsor</th>
-                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-center text-sm font-semibold sm:text-base">Actions</th>
+                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-left text-sm font-semibold sm:text-base">
+                      Resolution No.
+                    </th>
+                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-left text-sm font-semibold sm:text-base">
+                      Title
+                    </th>
+                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-center text-sm font-semibold sm:text-base">
+                      Category
+                    </th>
+                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-center text-sm font-semibold sm:text-base">
+                      Author/Sponsor
+                    </th>
+                    <th className="font-[family-name:var(--font-garamond)] px-4 py-3 text-center text-sm font-semibold sm:text-base">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginated.map((doc) => {
-                    const fullNumber = doc.approvedNumber || doc.proposedNumber;
-                    const [year, num] = fullNumber.split("-");
-                    const formattedNumber = `${num}-${year}`;
+                    const formattedNumber = formatResolutionNumber(doc);
                     return (
                       <tr key={doc.id} className="hover:bg-gray-50">
                         <td className="font-[family-name:var(--font-garamond)] border border-gray-300 px-4 py-2 text-center text-sm sm:text-base">
@@ -296,11 +372,12 @@ export function ResolutionsContent() {
               </table>
             </div>
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
                 <p className="font-[family-name:var(--font-garamond)] text-base text-muted-foreground">
-                  Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length} resolutions
+                  Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–
+                  {Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of{" "}
+                  {filtered.length} resolutions
                 </p>
                 <div className="flex items-center gap-1">
                   <Button
@@ -335,8 +412,6 @@ export function ResolutionsContent() {
                 </div>
               </div>
             )}
-
-
           </>
         )}
       </div>

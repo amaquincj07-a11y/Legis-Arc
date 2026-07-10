@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -29,8 +29,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { mockCategories } from "@/lib/mock-data";
-import { MAX_FILE_SIZE } from "@/lib/constants";
+import { useActiveCategories } from "@/hooks/use-active-categories";
+import { createOrdinanceAction } from "@/lib/ordinance-actions";
+import { APPROPRIATION_ORDINANCE_CATEGORY, MAX_FILE_SIZE } from "@/lib/constants";
+import { OrdinanceKindField } from "@/components/admin/ordinance-kind-field";
 
 const currentYear = new Date().getFullYear();
 const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
@@ -41,15 +43,17 @@ const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
   authorSponsor: z.string().optional(),
   category: z.string().min(1, "Category is required"),
-  dateEnacted: z.string().optional(),
+  isAppropriationOrdinance: z.boolean(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 export default function NewOrdinancePage() {
   const router = useRouter();
+  const { categories } = useActiveCategories();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -59,9 +63,17 @@ export default function NewOrdinancePage() {
       title: "",
       authorSponsor: "",
       category: "",
-      dateEnacted: "",
+      isAppropriationOrdinance: false,
     },
   });
+
+  const selectedCategory = form.watch("category");
+
+  useEffect(() => {
+    if (selectedCategory !== APPROPRIATION_ORDINANCE_CATEGORY) {
+      form.setValue("isAppropriationOrdinance", false);
+    }
+  }, [selectedCategory, form]);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -77,9 +89,34 @@ export default function NewOrdinancePage() {
     setPdfFile(file);
   }
 
-  function onSubmit(_values: FormValues) {
-    toast.success("Ordinance saved successfully");
-    router.push("/admin/ordinances");
+  async function onSubmit(values: FormValues) {
+    if (!pdfFile) {
+      toast.error("Please upload a PDF document");
+      return;
+    }
+
+    setSubmitting(true);
+    const formData = new FormData();
+    formData.append("ordinanceNumber", values.ordinanceNumber);
+    formData.append("seriesYear", values.seriesYear);
+    formData.append("title", values.title);
+    formData.append("authorSponsor", values.authorSponsor ?? "");
+    formData.append("category", values.category);
+    formData.append(
+      "ordinanceKind",
+      values.isAppropriationOrdinance ? "appropriation" : "municipal"
+    );
+    formData.append("pdf", pdfFile);
+
+    const result = await createOrdinanceAction(formData);
+    setSubmitting(false);
+
+    if (result.success) {
+      toast.success("Ordinance saved successfully");
+      router.push("/admin/ordinances");
+    } else {
+      toast.error(result.error);
+    }
   }
 
   return (
@@ -101,7 +138,7 @@ export default function NewOrdinancePage() {
       </div>
 
       <Form {...form}>
-        <form className="space-y-6">
+        <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Document Information</CardTitle>
@@ -134,7 +171,7 @@ export default function NewOrdinancePage() {
                       </FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -200,7 +237,7 @@ export default function NewOrdinancePage() {
                       </FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -208,13 +245,11 @@ export default function NewOrdinancePage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {mockCategories
-                            .filter((c) => c.isActive)
-                            .map((cat) => (
-                              <SelectItem key={cat.id} value={cat.name}>
-                                {cat.name}
-                              </SelectItem>
-                            ))}
+                          {categories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.name}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -223,18 +258,12 @@ export default function NewOrdinancePage() {
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="dateEnacted"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date Enacted</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+              <OrdinanceKindField
+                category={selectedCategory}
+                checked={form.watch("isAppropriationOrdinance")}
+                onCheckedChange={(checked) =>
+                  form.setValue("isAppropriationOrdinance", checked)
+                }
               />
             </CardContent>
           </Card>
@@ -297,8 +326,8 @@ export default function NewOrdinancePage() {
           <Separator />
 
           <div className="flex justify-end gap-3">
-            <Button type="button" onClick={form.handleSubmit(onSubmit)}>
-              Save
+            <Button type="submit" disabled={submitting}>
+              {submitting ? "Saving..." : "Save"}
             </Button>
           </div>
         </form>

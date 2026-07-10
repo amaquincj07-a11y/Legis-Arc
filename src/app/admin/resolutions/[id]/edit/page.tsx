@@ -1,13 +1,12 @@
 "use client";
 
-import { use, useState, useRef } from "react";
+import { use, useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { format } from "date-fns";
 import { ArrowLeft, Upload, FileText, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -30,8 +29,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { mockResolutions, mockCategories } from "@/lib/mock-data";
+import { useActiveCategories } from "@/hooks/use-active-categories";
+import {
+  fetchResolutionByIdAction,
+  updateResolutionAction,
+} from "@/lib/resolution-actions";
+import { formatResolutionNumber } from "@/lib/utils";
 import { MAX_FILE_SIZE } from "@/lib/constants";
+import type { LegislativeDocument } from "@/lib/types";
 
 const currentYear = new Date().getFullYear();
 const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
@@ -42,13 +47,15 @@ const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
   authorSponsor: z.string().optional(),
   category: z.string().min(1, "Category is required"),
-  dateEnacted: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-function formatDateForInput(date: Date): string {
-  return format(date, "yyyy-MM-dd");
+function getResolutionNumberFromDoc(doc: LegislativeDocument): string {
+  const fullNumber = doc.approvedNumber || doc.proposedNumber;
+  const separatorIndex = fullNumber.indexOf("-");
+  if (separatorIndex === -1) return "";
+  return fullNumber.slice(separatorIndex + 1);
 }
 
 export default function EditResolutionPage({
@@ -58,24 +65,49 @@ export default function EditResolutionPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const { categories } = useActiveCategories();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-
-  const doc = mockResolutions.find((d) => d.id === id);
+  const [doc, setDoc] = useState<LegislativeDocument | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: doc
-      ? {
-          no: doc.approvedNumber?.split("-")[1] || "",
-          series: doc.seriesYear.toString(),
-          title: doc.title,
-          authorSponsor: doc.authorSponsor,
-          category: doc.category,
-          dateEnacted: formatDateForInput(doc.dateEnacted),
-        }
-      : undefined,
+    defaultValues: {
+      no: "",
+      series: currentYear.toString(),
+      title: "",
+      authorSponsor: "",
+      category: "",
+    },
   });
+
+  useEffect(() => {
+    async function load() {
+      const result = await fetchResolutionByIdAction(id);
+      if (result.success) {
+        setDoc(result.data);
+        form.reset({
+          no: getResolutionNumberFromDoc(result.data),
+          series: result.data.seriesYear.toString(),
+          title: result.data.title,
+          authorSponsor: result.data.authorSponsor,
+          category: result.data.category,
+        });
+      }
+      setLoading(false);
+    }
+    void load();
+  }, [id, form]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <p className="text-sm text-muted-foreground">Loading resolution...</p>
+      </div>
+    );
+  }
 
   if (!doc) {
     return (
@@ -105,22 +137,40 @@ export default function EditResolutionPage({
     setPdfFile(file);
   }
 
-  function onSubmit(_values: FormValues) {
-    toast.success("Resolution updated successfully");
-    router.push(`/admin/resolutions/${id}`);
+  async function onSubmit(values: FormValues) {
+    setSubmitting(true);
+    const formData = new FormData();
+    formData.append("resolutionNumber", values.no ?? "");
+    formData.append("seriesYear", values.series);
+    formData.append("title", values.title);
+    formData.append("authorSponsor", values.authorSponsor ?? "");
+    formData.append("category", values.category);
+    if (pdfFile) {
+      formData.append("pdf", pdfFile);
+    }
+
+    const result = await updateResolutionAction(id, formData);
+    setSubmitting(false);
+
+    if (result.success) {
+      toast.success("Resolution updated successfully");
+      router.push("/admin/resolutions");
+    } else {
+      toast.error(result.error);
+    }
   }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>
-          <Link href={`/admin/resolutions/${id}`}>
+          <Link href="/admin/resolutions">
             <ArrowLeft className="size-4" />
           </Link>
         </Button>
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Edit Resolution No. {doc.approvedNumber || doc.proposedNumber}
+            Edit Resolution {formatResolutionNumber(doc)}
           </h1>
           <p className="text-sm text-muted-foreground">
             Update the document details below
@@ -141,7 +191,7 @@ export default function EditResolutionPage({
                   name="no"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>No</FormLabel>
+                      <FormLabel>No.</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g. 01, 02, 03, 04" {...field} />
                       </FormControl>
@@ -158,10 +208,7 @@ export default function EditResolutionPage({
                       <FormLabel>
                         Series <span className="text-destructive">*</span>
                       </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
@@ -224,23 +271,18 @@ export default function EditResolutionPage({
                       <FormLabel>
                         Category <span className="text-destructive">*</span>
                       </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select category" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {mockCategories
-                            .filter((c) => c.isActive)
-                            .map((cat) => (
-                              <SelectItem key={cat.id} value={cat.name}>
-                                {cat.name}
-                              </SelectItem>
-                            ))}
+                          {categories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.name}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -248,76 +290,12 @@ export default function EditResolutionPage({
                   )}
                 />
               </div>
-
-              <div className="grid gap-6 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="authorSponsor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Author / Sponsor</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. Hon. Elena Villareal" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Category <span className="text-destructive">*</span>
-                      </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {mockCategories
-                            .filter((c) => c.isActive)
-                            .map((cat) => (
-                              <SelectItem key={cat.id} value={cat.name}>
-                                {cat.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="dateEnacted"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date Enacted</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">
-                Replace PDF Document
-              </CardTitle>
+              <CardTitle className="text-base">PDF Document</CardTitle>
             </CardHeader>
             <CardContent>
               {pdfFile ? (
@@ -374,9 +352,11 @@ export default function EditResolutionPage({
 
           <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" asChild>
-              <Link href={`/admin/resolutions/${id}`}>Cancel</Link>
+              <Link href="/admin/resolutions">Cancel</Link>
             </Button>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? "Saving..." : "Save Changes"}
+            </Button>
           </div>
         </form>
       </Form>

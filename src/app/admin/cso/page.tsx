@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { toast } from "sonner";
 import {
   Plus,
@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Pencil,
   Trash2,
+  Loader2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,14 @@ import {
 } from "@/components/ui/dialog";
 import { AdminIconAction } from "@/components/admin/admin-icon-action";
 import { ConfirmDeleteDialog } from "@/components/admin/confirm-delete-dialog";
-import { mockCSOOrganizations } from "@/lib/mock-data";
+import {
+  createCSOOrganizationAction,
+  deleteCSOOrganizationAction,
+  fetchCSOOrganizationsAction,
+  updateCSOOrganizationAction,
+} from "@/lib/cso-actions";
+import { ADMIN_CACHE_KEYS } from "@/lib/admin-query-cache";
+import { useAdminQuery } from "@/hooks/use-admin-query";
 import { CSO_YEAR_TERMS } from "@/lib/constants";
 import type { CSOOrganization } from "@/lib/types";
 
@@ -73,9 +81,13 @@ function resolveTerm(form: CSOFormState): string {
 }
 
 export default function AdminCSOPage() {
-  const [organizations, setOrganizations] = useState<CSOOrganization[]>([
-    ...mockCSOOrganizations,
-  ]);
+  const {
+    data,
+    loading,
+    setData: setOrganizations,
+  } = useAdminQuery(ADMIN_CACHE_KEYS.cso, fetchCSOOrganizationsAction);
+  const organizations = data ?? [];
+  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [termFilter, setTermFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -141,14 +153,22 @@ export default function AdminCSOPage() {
     setForm(emptyForm());
   }
 
-  function confirmDelete() {
+  async function confirmDelete() {
     if (!deleteTarget) return;
+
+    const result = await deleteCSOOrganizationAction(deleteTarget.id);
+
+    if (!result.success) {
+      toast.error(result.error);
+      return;
+    }
+
     setOrganizations((prev) => prev.filter((o) => o.id !== deleteTarget.id));
     toast.success("CSO removed");
     setDeleteTarget(null);
   }
 
-  function handleSave() {
+  async function handleSave() {
     const name = form.name.trim();
     const officerName = form.officerName.trim();
     const term = resolveTerm(form);
@@ -171,27 +191,38 @@ export default function AdminCSOPage() {
       return;
     }
 
+    const formData = new FormData();
+    formData.set("name", name);
+    formData.set("officerName", officerName);
+    formData.set("term", term);
+    formData.set("position", position);
+
+    setSaving(true);
+    const result = editingId
+      ? await updateCSOOrganizationAction(editingId, formData)
+      : await createCSOOrganizationAction(formData);
+    setSaving(false);
+
+    if (!result.success) {
+      toast.error(result.error);
+      return;
+    }
+
     if (editingId) {
       setOrganizations((prev) =>
-        prev.map((org) =>
-          org.id === editingId
-            ? { ...org, name, officerName, term, position }
-            : org
-        )
+        prev
+          .map((org) => (org.id === editingId ? result.data : org))
+          .sort((a, b) => a.name.localeCompare(b.name))
       );
       toast.success("CSO updated");
     } else {
-      const newOrg: CSOOrganization = {
-        id: `cso-${Date.now()}`,
-        name,
-        officerName,
-        term,
-        position,
-      };
-      setOrganizations((prev) => [newOrg, ...prev]);
+      setOrganizations((prev) =>
+        [...prev, result.data].sort((a, b) => a.name.localeCompare(b.name))
+      );
       toast.success("CSO added");
       setCurrentPage(1);
     }
+
     closeDialog();
   }
 
@@ -228,7 +259,8 @@ export default function AdminCSOPage() {
         </div>
         <Button
           onClick={openAddDialog}
-          className="gap-2 rounded-full bg-[#cbab53] px-5 py-2.5 text-[13px] font-semibold tracking-wide text-slate-900 shadow-md shadow-[#cbab53]/35 transition hover:bg-[#b89745]"
+          disabled={loading}
+          className="h-11 w-full gap-2 rounded-full bg-[#cbab53] px-5 text-[13px] font-semibold tracking-wide text-slate-900 shadow-md shadow-[#cbab53]/35 transition hover:bg-[#b89745] sm:h-10 sm:w-auto"
         >
           <Plus className="size-4" />
           Add CSO
@@ -295,86 +327,127 @@ export default function AdminCSOPage() {
         </CardHeader>
 
         <CardContent className="px-0 pb-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-slate-200 bg-slate-50/60">
-                <TableHead className="text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
-                  Name of the Association
-                </TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
-                  Name of Officer
-                </TableHead>
-                <TableHead className="w-[22%] text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
-                  Position
-                </TableHead>
-                <TableHead className="w-[120px] text-center text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
-                  Actions
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginated.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="h-36 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <Handshake className="size-8 text-slate-300" />
-                      <p className="text-sm font-medium text-slate-600">
-                        No CSO entries found
+          {loading ? (
+            <div className="flex h-36 items-center justify-center px-4">
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 className="size-8 animate-spin text-[#3998eb]" />
+                <p className="text-sm text-muted-foreground">
+                  Loading organizations…
+                </p>
+              </div>
+            </div>
+          ) : paginated.length === 0 ? (
+            <div className="flex h-36 items-center justify-center px-4">
+              <div className="flex flex-col items-center gap-2">
+                <Handshake className="size-8 text-slate-300" />
+                <p className="text-sm font-medium text-slate-600">
+                  No CSO entries found
+                </p>
+                <p className="text-center text-xs text-muted-foreground">
+                  {organizations.length === 0
+                    ? "Click Add CSO to register your first organization."
+                    : "Try adjusting your search or year term filter."}
+                </p>
+                {organizations.length === 0 && (
+                  <Button
+                    size="sm"
+                    className="mt-2 rounded-full"
+                    onClick={openAddDialog}
+                  >
+                    <Plus className="mr-1 size-4" />
+                    Add CSO
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="divide-y lg:hidden">
+                {paginated.map((org) => (
+                  <article key={org.id} className="space-y-3 p-4">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium leading-snug text-slate-900">
+                        {org.name}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {organizations.length === 0
-                          ? "Click Add CSO to register your first organization."
-                          : "Try adjusting your search or year term filter."}
+                        {org.officerName} · {org.position}
                       </p>
-                      {organizations.length === 0 && (
-                        <Button
-                          size="sm"
-                          className="mt-2 rounded-full"
-                          onClick={openAddDialog}
-                        >
-                          <Plus className="mr-1 size-4" />
-                          Add CSO
-                        </Button>
-                      )}
+                      <p className="text-xs text-slate-500">{org.term}</p>
                     </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                paginated.map((org) => (
-                  <TableRow
-                    key={org.id}
-                    className="border-slate-100/90 hover:bg-slate-50/80"
-                  >
-                    <TableCell className="py-4 text-[13px] font-medium text-slate-800">
-                      {org.name}
-                    </TableCell>
-                    <TableCell className="py-4 text-[13px] text-slate-700">
-                      {org.officerName}
-                    </TableCell>
-                    <TableCell className="py-4 text-[13px] text-slate-700">
-                      {org.position}
-                    </TableCell>
-                    <TableCell className="py-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <AdminIconAction
-                          label="Edit"
-                          icon={Pencil}
-                          variant="accent"
-                          onClick={() => openEditDialog(org)}
-                        />
-                        <AdminIconAction
-                          label="Delete"
-                          icon={Trash2}
-                          variant="danger"
-                          onClick={() => setDeleteTarget(org)}
-                        />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                    <div className="flex items-center gap-2">
+                      <AdminIconAction
+                        label="Edit"
+                        icon={Pencil}
+                        variant="accent"
+                        onClick={() => openEditDialog(org)}
+                      />
+                      <AdminIconAction
+                        label="Delete"
+                        icon={Trash2}
+                        variant="danger"
+                        onClick={() => setDeleteTarget(org)}
+                      />
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              <div className="hidden overflow-x-auto lg:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-slate-200 bg-slate-50/60">
+                      <TableHead className="text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
+                        Name of the Association
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
+                        Name of Officer
+                      </TableHead>
+                      <TableHead className="w-[22%] text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
+                        Position
+                      </TableHead>
+                      <TableHead className="w-[120px] text-center text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
+                        Actions
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginated.map((org) => (
+                      <TableRow
+                        key={org.id}
+                        className="border-slate-100/90 hover:bg-slate-50/80"
+                      >
+                        <TableCell className="py-4 text-[13px] font-medium text-slate-800">
+                          {org.name}
+                        </TableCell>
+                        <TableCell className="py-4 text-[13px] text-slate-700">
+                          {org.officerName}
+                        </TableCell>
+                        <TableCell className="py-4 text-[13px] text-slate-700">
+                          {org.position}
+                        </TableCell>
+                        <TableCell className="py-4">
+                          <div className="flex flex-nowrap items-center justify-center gap-1.5">
+                            <AdminIconAction
+                              label="Edit"
+                              icon={Pencil}
+                              variant="accent"
+                              onClick={() => openEditDialog(org)}
+                            />
+                            <AdminIconAction
+                              label="Delete"
+                              icon={Trash2}
+                              variant="danger"
+                              onClick={() => setDeleteTarget(org)}
+                            />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -437,7 +510,7 @@ export default function AdminCSOPage() {
       <Dialog open={dialogOpen} onOpenChange={(open) => !open && closeDialog()}>
         <DialogContent className="max-w-md sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Add CSO</DialogTitle>
+            <DialogTitle>{editingId ? "Edit CSO" : "Add CSO"}</DialogTitle>
             <DialogDescription>
               Enter the civil society organization details. All fields are
               required.
@@ -530,10 +603,20 @@ export default function AdminCSOPage() {
             </Button>
             <Button
               type="button"
+              disabled={saving}
               className="rounded-full bg-[#cbab53] text-slate-900 hover:bg-[#b89745]"
-              onClick={handleSave}
+              onClick={() => void handleSave()}
             >
-              {editingId ? "Save changes" : "Save"}
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Saving…
+                </>
+              ) : editingId ? (
+                "Save changes"
+              ) : (
+                "Save"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -548,7 +631,7 @@ export default function AdminCSOPage() {
             ? `"${deleteTarget.name}" will be permanently removed from the directory.`
             : ""
         }
-        onConfirm={confirmDelete}
+        onConfirm={() => void confirmDelete()}
       />
     </div>
   );

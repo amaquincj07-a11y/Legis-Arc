@@ -11,9 +11,9 @@ import { ArrowLeft, Upload, FileText, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { AdminFormActions } from "@/components/admin/admin-form-actions";
 import {
   Form,
   FormControl,
@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { createSessionMinutesAction } from "@/lib/minutes-actions";
 import { MAX_FILE_SIZE } from "@/lib/constants";
 
 const formSchema = z.object({
@@ -42,6 +43,7 @@ export default function NewMinutesPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -65,9 +67,27 @@ export default function NewMinutesPage() {
     setPdfFile(file);
   }
 
-  function onSubmit(_values: FormValues) {
-    toast.success("Minutes saved successfully");
-    router.push("/admin/minutes");
+  async function onSubmit(values: FormValues) {
+    if (!pdfFile) {
+      toast.error("Please upload a PDF document");
+      return;
+    }
+
+    setSubmitting(true);
+    const formData = new FormData();
+    formData.append("sessionDate", values.sessionDate);
+    formData.append("sessionType", values.sessionType);
+    formData.append("pdf", pdfFile);
+
+    const result = await createSessionMinutesAction(formData);
+    setSubmitting(false);
+
+    if (result.success) {
+      toast.success("Minutes saved successfully");
+      router.push("/admin/minutes");
+    } else {
+      toast.error(result.error);
+    }
   }
 
   return (
@@ -89,7 +109,7 @@ export default function NewMinutesPage() {
       </div>
 
       <Form {...form}>
-        <form className="space-y-6">
+        <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Session Information</CardTitle>
@@ -118,10 +138,7 @@ export default function NewMinutesPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Session Type</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
@@ -137,7 +154,6 @@ export default function NewMinutesPage() {
                   )}
                 />
               </div>
-
             </CardContent>
           </Card>
 
@@ -196,11 +212,15 @@ export default function NewMinutesPage() {
 
           <Separator />
 
-          <div className="flex justify-end gap-3">
-            <Button type="button" onClick={form.handleSubmit(onSubmit)}>
-              Save
+          <AdminFormActions>
+            <Button
+              type="submit"
+              className="w-full sm:w-auto"
+              disabled={submitting}
+            >
+              {submitting ? "Saving..." : "Save"}
             </Button>
-          </div>
+          </AdminFormActions>
         </form>
       </Form>
     </div>

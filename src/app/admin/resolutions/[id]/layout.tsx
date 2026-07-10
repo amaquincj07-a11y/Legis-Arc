@@ -1,7 +1,7 @@
-import { mockResolutions } from "@/lib/mock-data";
+import { generateResolutionStaticParams } from "@/lib/supabase/generate-static-resolution-params";
 
 export async function generateStaticParams() {
-  return mockResolutions.map((d) => ({ id: d.id }));
+  return generateResolutionStaticParams();
 }
 
 export default function ResolutionIdLayout({

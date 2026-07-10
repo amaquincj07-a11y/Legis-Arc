@@ -1,17 +1,83 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Landmark, Phone, Mail, Clock, MapPin } from "lucide-react";
 import { PUBLIC_NAV_ITEMS } from "@/lib/constants";
+import { usePlaceFilter } from "@/lib/place-filter-context";
+import {
+  fetchPublicLGUContactInfoAction,
+  type PublicLGUContactInfo,
+} from "@/lib/public-contact-actions";
+
+function getDisplayContactInfo(
+  contactInfo: PublicLGUContactInfo | null,
+  municipalityName: string,
+  provinceName: string
+): PublicLGUContactInfo {
+  return (
+    contactInfo ?? {
+      municipalityName,
+      provinceName,
+      officeAddressLines: [
+        "Office of the Sangguniang Bayan",
+        `${municipalityName}, ${provinceName}`,
+      ],
+      phoneLines: ["Contact information is not yet available."],
+      emailLines: ["Contact information is not yet available."],
+      officeHoursLines: [
+        "Monday – Friday",
+        "8:00 AM – 5:00 PM",
+        "Closed on weekends & holidays",
+      ],
+    }
+  );
+}
 
 export function PublicFooter() {
+  const {
+    province,
+    municipality,
+    municipalityName,
+    provinceName,
+    municipalityLabel,
+  } = usePlaceFilter();
+
+  const [contactInfo, setContactInfo] = useState<PublicLGUContactInfo | null>(
+    null
+  );
+
+  const loadContactInfo = useCallback(async () => {
+    const result = await fetchPublicLGUContactInfoAction(province, municipality);
+    if (result.success) {
+      setContactInfo(result.data);
+    } else {
+      setContactInfo(null);
+    }
+  }, [province, municipality]);
+
+  useEffect(() => {
+    void loadContactInfo();
+  }, [loadContactInfo]);
+
+  const displayInfo = getDisplayContactInfo(
+    contactInfo,
+    municipalityName,
+    provinceName
+  );
+
+  const primaryEmail = displayInfo.emailLines[0];
+  const isEmailLink =
+    primaryEmail.includes("@") &&
+    !primaryEmail.toLowerCase().includes("not yet available");
+
   return (
     <footer className="relative mt-auto">
-      {/* Gold accent line */}
       <div className="h-1 bg-linear-to-r from-gold via-gold-light to-gold" />
 
       <div className="text-white" style={{ backgroundColor: "#0E132B" }}>
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
           <div className="grid gap-8 sm:grid-cols-2 sm:gap-10 lg:grid-cols-3">
-            {/* Column 1: Branding */}
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 backdrop-blur-sm">
@@ -19,21 +85,20 @@ export function PublicFooter() {
                 </div>
                 <div>
                   <p className="font-bold leading-tight tracking-tight">
-                    Sangguniang Bayan ng Panglao
+                    Sangguniang Bayan of {municipalityName}
                   </p>
                   <p className="text-xs text-white/50">
-                    Municipality of Panglao, Bohol
+                    {municipalityLabel}, {provinceName}
                   </p>
                 </div>
               </div>
               <p className="max-w-xs text-sm leading-relaxed text-white/60">
                 Promoting transparency and good governance through accessible
                 legislative records. Browse ordinances, resolutions, and session
-                minutes of the Sangguniang Bayan.
+                minutes of the Sangguniang Bayan of {municipalityName}.
               </p>
             </div>
 
-            {/* Column 2: Quick Links */}
             <div>
               <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white/40">
                 Quick Links
@@ -51,7 +116,6 @@ export function PublicFooter() {
               </nav>
             </div>
 
-            {/* Column 3: Contact */}
             <div>
               <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white/40">
                 Contact Us
@@ -60,42 +124,75 @@ export function PublicFooter() {
                 <div className="flex items-start gap-3 text-white/60">
                   <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gold/70" />
                   <span>
-                    Municipal Building, Poblacion,
-                    <br />
-                    Panglao, Bohol 6340
+                    {displayInfo.officeAddressLines.map((line, index) => (
+                      <span key={line}>
+                        {index > 0 ? <br /> : null}
+                        {line}
+                      </span>
+                    ))}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 text-white/60">
-                  <Phone className="h-4 w-4 shrink-0 text-gold/70" />
-                  <span>(038) 502-XXXX</span>
+                <div className="flex items-start gap-3 text-white/60">
+                  <Phone className="mt-0.5 h-4 w-4 shrink-0 text-gold/70" />
+                  <span>
+                    {displayInfo.phoneLines.map((line, index) => (
+                      <span key={line}>
+                        {index > 0 ? <br /> : null}
+                        {line}
+                      </span>
+                    ))}
+                  </span>
                 </div>
-                <div className="flex items-center gap-3 text-white/60">
-                  <Mail className="h-4 w-4 shrink-0 text-gold/70" />
-                  <a
-                    href="mailto:sb@panglao.gov.ph"
-                    className="transition-colors hover:text-gold"
-                  >
-                    sb@panglao.gov.ph
-                  </a>
+                <div className="flex items-start gap-3 text-white/60">
+                  <Mail className="mt-0.5 h-4 w-4 shrink-0 text-gold/70" />
+                  {isEmailLink ? (
+                    <a
+                      href={`mailto:${primaryEmail}`}
+                      className="transition-colors hover:text-gold"
+                    >
+                      {displayInfo.emailLines.map((line, index) => (
+                        <span key={line}>
+                          {index > 0 ? <br /> : null}
+                          {line}
+                        </span>
+                      ))}
+                    </a>
+                  ) : (
+                    <span>
+                      {displayInfo.emailLines.map((line, index) => (
+                        <span key={line}>
+                          {index > 0 ? <br /> : null}
+                          {line}
+                        </span>
+                      ))}
+                    </span>
+                  )}
                 </div>
-                <div className="flex items-center gap-3 text-white/60">
-                  <Clock className="h-4 w-4 shrink-0 text-gold/70" />
-                  <span>Mon - Fri, 8:00 AM - 5:00 PM</span>
+                <div className="flex items-start gap-3 text-white/60">
+                  <Clock className="mt-0.5 h-4 w-4 shrink-0 text-gold/70" />
+                  <span>
+                    {displayInfo.officeHoursLines.map((line, index) => (
+                      <span key={line}>
+                        {index > 0 ? <br /> : null}
+                        {line}
+                      </span>
+                    ))}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom bar */}
         <div className="border-t border-white/10">
-          <div className="mx-auto flex max-w-7xl flex-col items-center gap-2 px-4 py-4 sm:flex-row sm:justify-between sm:px-6 lg:px-8">
-            <p className="text-xs text-white/40 text-center">
-              &copy; {new Date().getFullYear()} Sangguniang Bayan ng Panglao.
-              All rights reserved.
+          <div className="mx-auto max-w-7xl px-4 py-5 text-center sm:px-6 lg:px-8">
+            <p className="text-xs text-white/40">
+              &copy; {new Date().getFullYear()} Sangguniang Bayan of{" "}
+              {municipalityName}. All rights reserved.
             </p>
-            <p className="text-xs text-white/30">
-              Legislative Records Management System
+            <p className="mt-1.5 text-xs text-white/30">
+              Powered by LegisArc | Legislative Archive Platform for Local
+              Government Units
             </p>
           </div>
         </div>

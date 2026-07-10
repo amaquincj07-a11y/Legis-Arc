@@ -9,11 +9,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -47,27 +43,25 @@ export default function LoginPage() {
   async function onSubmit(values: LoginValues) {
     setIsLoading(true);
 
-    // Brief delay to simulate network request
-    await new Promise((r) => setTimeout(r, 400));
+    const result = await login(values.email, values.password);
 
-    const success = login(values.email, values.password);
-
-    if (success) {
-      toast.success("Welcome back!", {
-        description: "Redirecting to dashboard...",
-      });
-      router.push("/admin/dashboard");
-    } else {
+    if (!result.success) {
       toast.error("Login failed", {
-        description: "Invalid email or password. Please try again.",
+        description: result.error ?? "Invalid email or password. Please try again.",
       });
       setIsLoading(false);
+      return;
     }
+
+    toast.success("Welcome back!", {
+      description: "Redirecting to dashboard...",
+    });
+    router.push(result.redirectTo);
+    setIsLoading(false);
   }
 
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4">
-      {/* Background */}
       <div className="absolute inset-0 bg-navy">
         <div className="absolute inset-0 bg-linear-to-br from-navy via-navy-light/60 to-navy" />
         <div
@@ -89,10 +83,10 @@ export default function LoginPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-tight text-foreground">
-              Sangguniang Bayan ng Panglao
+              LegisDoc Platform
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Legislative Management System
+              Sign in to your dashboard
             </p>
           </div>
         </CardHeader>
@@ -109,7 +103,7 @@ export default function LoginPage() {
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder="you@panglao.gov.ph"
+                        placeholder="you@example.com"
                         autoComplete="email"
                         disabled={isLoading}
                         {...field}
@@ -158,9 +152,9 @@ export default function LoginPage() {
           </Form>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            Accounts are created by the System Administrator.
+            LGU accounts are created by the Company Admin team.
             <br />
-            Contact your admin if you need access.
+            Contact support if you need access.
           </p>
         </CardContent>
       </Card>

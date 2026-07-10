@@ -1,17 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { format } from "date-fns";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Plus, Pencil, UserX, UserCheck, Shield, ChevronDown } from "lucide-react";
+import { Plus, Pencil, UserX, UserCheck, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
+import { PasswordReveal } from "@/components/ui/password-reveal";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -28,83 +28,48 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import { useAuth } from "@/lib/auth-context";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { mockUsers, mockCategories } from "@/lib/mock-data";
-import { USER_ROLES, ROLE_LABELS } from "@/lib/constants";
-import type { User, UserRole, ModuleKey } from "@/lib/types";
-
-const roleBadgeClass: Record<UserRole, string> = {
-  sys_admin: "border-purple-300 bg-purple-50 text-purple-700",
-  sb_secretary: "border-blue-300 bg-blue-50 text-blue-700",
-  sb_member: "border-teal-300 bg-teal-50 text-teal-700",
-  digitization_assistant: "border-orange-300 bg-orange-50 text-orange-700",
-};
-
-const ALL_MODULES: { key: ModuleKey; label: string }[] = [
-  { key: "ordinances", label: "Ordinances" },
-  { key: "resolutions", label: "Resolutions" },
-  { key: "minutes", label: "Minutes" },
-  { key: "tracking", label: "Tracking" },
-  { key: "committee_reports", label: "Committee Reports" },
-  { key: "categories", label: "Categories & Referral Types" },
-];
-
-const MODULE_LABELS: Record<ModuleKey, string> = {
-  ordinances: "Ordinances",
-  resolutions: "Resolutions",
-  minutes: "Minutes",
-  tracking: "Tracking",
-  committee_reports: "Committee Reports",
-  categories: "Categories",
-};
-
-const ALL_COMMITTEES = [
-  "Committee on Tourism and Cultural Heritage",
-  "Committee on Finance, Budget and Appropriations",
-  "Committee on Environment",
-  "Committee on Public Works, Infrastructure & Public Utilities",
-  "Committee on Peace & Order and Public Safety",
-  "Committee on Education",
-  "Committee on Economic Development and Social Enterprise",
-  "Committee on Health and Social Services",
-  "Committee on Human Settlement, Land Use & Development",
-];
-
-const CATEGORY_NAMES = mockCategories.filter((c) => c.isActive).map((c) => c.name);
+  createLGUUserAction,
+  fetchLGUUsersAction,
+  toggleLGUUserActiveAction,
+  updateLGUUserAction,
+} from "@/lib/lgu-user-actions";
+import { ADMIN_CACHE_KEYS } from "@/lib/admin-query-cache";
+import { useAdminQuery } from "@/hooks/use-admin-query";
+import type { User } from "@/lib/types";
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([...mockUsers]);
+  const router = useRouter();
+  const { user: currentUser } = useAuth();
+  const {
+    data,
+    loading,
+    setData: setUsers,
+  } = useAdminQuery(ADMIN_CACHE_KEYS.users, fetchLGUUsersAction, {
+    enabled: Boolean(currentUser?.isPrimaryAdmin),
+  });
+  const users = data ?? [];
+  const [saving, setSaving] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
 
   const [formName, setFormName] = useState("");
   const [formEmail, setFormEmail] = useState("");
+  const [formPosition, setFormPosition] = useState("");
+  const [formMobile, setFormMobile] = useState("");
   const [formPassword, setFormPassword] = useState("");
-  const [formRole, setFormRole] = useState<UserRole>("sb_member");
-  const [formModuleAccess, setFormModuleAccess] = useState<ModuleKey[]>([]);
-  const [formAllowedCategories, setFormAllowedCategories] = useState<string[]>([]);
-  const [formAllowedCommittees, setFormAllowedCommittees] = useState<string[]>([]);
+
+  const accessDenied = Boolean(currentUser && !currentUser.isPrimaryAdmin);
+  const editingPrimaryAdmin = Boolean(editingUser?.isPrimaryAdmin);
 
   function openCreateDialog() {
     setEditingUser(null);
     setFormName("");
     setFormEmail("");
+    setFormPosition("");
+    setFormMobile("");
     setFormPassword("");
-    setFormRole("sb_member");
-    setFormModuleAccess(["ordinances", "resolutions", "tracking", "committee_reports"]);
-    setFormAllowedCategories([]);
-    setFormAllowedCommittees([]);
     setDialogOpen(true);
   }
 
@@ -112,136 +77,104 @@ export default function UsersPage() {
     setEditingUser(user);
     setFormName(user.name);
     setFormEmail(user.email);
-    setFormPassword("");
-    setFormRole(user.role);
-    setFormModuleAccess(user.moduleAccess || []);
-    setFormAllowedCategories(user.allowedCategories || []);
-    setFormAllowedCommittees(user.allowedCommittees || []);
+    setFormPosition(user.position);
+    setFormMobile(user.mobile ?? "");
+    setFormPassword(user.managedPassword ?? "");
     setDialogOpen(true);
   }
 
-  function toggleModule(key: ModuleKey) {
-    setFormModuleAccess((prev) => {
-      const next = prev.includes(key)
-        ? prev.filter((m) => m !== key)
-        : [...prev, key];
-      // Clear sub-access when module is unchecked
-      if (!next.includes("ordinances") && !next.includes("resolutions")) {
-        setFormAllowedCategories([]);
-      }
-      if (!next.includes("committee_reports")) {
-        setFormAllowedCommittees([]);
-      }
-      return next;
-    });
-  }
+  async function handleSave() {
+    const formData = new FormData();
+    formData.set("name", formName);
+    formData.set("email", formEmail);
+    formData.set("position", formPosition);
+    formData.set("password", formPassword);
+    if (editingPrimaryAdmin) {
+      formData.set("mobile", formMobile);
+    }
 
-  function toggleCategory(name: string) {
-    setFormAllowedCategories((prev) =>
-      prev.includes(name) ? prev.filter((c) => c !== name) : [...prev, name]
-    );
-  }
+    setSaving(true);
+    const result = editingUser
+      ? await updateLGUUserAction(editingUser.id, formData)
+      : await createLGUUserAction(formData);
+    setSaving(false);
 
-  function toggleCommittee(name: string) {
-    setFormAllowedCommittees((prev) =>
-      prev.includes(name) ? prev.filter((c) => c !== name) : [...prev, name]
-    );
-  }
-
-  function selectAllCategories() {
-    setFormAllowedCategories(
-      formAllowedCategories.length === CATEGORY_NAMES.length ? [] : [...CATEGORY_NAMES]
-    );
-  }
-
-  function selectAllCommittees() {
-    setFormAllowedCommittees(
-      formAllowedCommittees.length === ALL_COMMITTEES.length ? [] : [...ALL_COMMITTEES]
-    );
-  }
-
-  function handleSave() {
-    if (!formName.trim() || !formEmail.trim()) {
-      toast.error("Name and email are required");
+    if (!result.success) {
+      toast.error(result.error);
       return;
     }
 
-    const isFull = formRole === "sb_secretary";
-    const moduleAccess = isFull ? ALL_MODULES.map((m) => m.key) : formModuleAccess;
-    const allowedCategories = isFull ? [] : formAllowedCategories;
-    const allowedCommittees = isFull ? [] : formAllowedCommittees;
-
     if (editingUser) {
       setUsers((prev) =>
-        prev.map((u) =>
-          u.id === editingUser.id
-            ? {
-                ...u,
-                name: formName.trim(),
-                email: formEmail.trim(),
-                role: formRole,
-                moduleAccess,
-                allowedCategories,
-                allowedCommittees,
-              }
-            : u
-        )
+        prev.map((u) => (u.id === editingUser.id ? result.data : u))
       );
-      toast.success("User updated");
+      toast.success(
+        editingPrimaryAdmin
+          ? "Primary administrator updated"
+          : "User updated"
+      );
     } else {
-      if (!formPassword.trim()) {
-        toast.error("Password is required for new users");
-        return;
-      }
-      const newUser: User = {
-        id: `user-${Date.now()}`,
-        name: formName.trim(),
-        email: formEmail.trim(),
-        role: formRole,
-        isActive: true,
-        lastLogin: new Date(),
-        createdAt: new Date(),
-        moduleAccess,
-        allowedCategories,
-        allowedCommittees,
-      };
-      setUsers((prev) => [...prev, newUser]);
+      setUsers((prev) => [...prev, result.data]);
       toast.success("User created");
     }
 
     setDialogOpen(false);
   }
 
-  function toggleActive(userId: string) {
+  async function toggleActive(userId: string, nextActive: boolean) {
+    const result = await toggleLGUUserActiveAction(userId, nextActive);
+    if (!result.success) {
+      toast.error(result.error);
+      return;
+    }
+
     setUsers((prev) =>
-      prev.map((u) =>
-        u.id === userId ? { ...u, isActive: !u.isActive } : u
-      )
+      prev.map((u) => (u.id === userId ? result.data : u))
     );
-    const user = users.find((u) => u.id === userId);
-    toast.success(
-      user?.isActive ? "User deactivated" : "User activated"
-    );
+    toast.success(nextActive ? "User activated" : "User deactivated");
   }
 
-  // SB Secretary has full access always
-  const isSbSecretary = formRole === "sb_secretary";
-  const hasOrdOrRes = isSbSecretary || formModuleAccess.includes("ordinances") || formModuleAccess.includes("resolutions");
-  const hasCommittee = isSbSecretary || formModuleAccess.includes("committee_reports");
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+  if (accessDenied) {
+    return (
+      <div className="mx-auto max-w-lg space-y-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
             User Management
           </h1>
           <p className="text-sm text-muted-foreground">
-            Manage user accounts, roles, and module access
+            Only the primary LGU administrator can manage user accounts.
           </p>
         </div>
-        <Button onClick={openCreateDialog}>
-          <Plus className="mr-2 size-4" />
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            You do not have permission to access this section.
+          </CardContent>
+        </Card>
+        <Button variant="outline" onClick={() => router.push("/admin/dashboard")}>
+          Back to Dashboard
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+            User Management
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Manage your primary administrator account and LGU staff logins.
+            Sub-users cannot access this section.
+          </p>
+        </div>
+        <Button
+          onClick={openCreateDialog}
+          disabled={loading}
+          className="h-11 w-full gap-2 sm:h-10 sm:w-auto"
+        >
+          <Plus className="size-4" />
           Create User
         </Button>
       </div>
@@ -249,331 +182,289 @@ export default function UsersPage() {
       <Card>
         <CardHeader className="pb-0" />
         <CardContent className="px-0 pb-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="pl-6">Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Access</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Login</TableHead>
-                <TableHead className="text-right pr-6">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="pl-6 font-medium">
-                    {user.name}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {user.email}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={roleBadgeClass[user.role]}
-                    >
-                      {ROLE_LABELS[user.role]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1 max-w-[280px]">
-                      {(user.moduleAccess || []).map((m) => (
-                        <Badge
-                          key={m}
-                          variant="secondary"
-                          className="text-[10px] px-1.5 py-0"
-                        >
-                          {MODULE_LABELS[m]}
-                        </Badge>
-                      ))}
-                      {(!user.moduleAccess || user.moduleAccess.length === 0) && (
-                        <span className="text-xs text-muted-foreground">No access</span>
-                      )}
+          {loading ? (
+            <div className="flex h-32 items-center justify-center">
+              <Loader2 className="size-8 animate-spin text-[#3998eb]" />
+            </div>
+          ) : (
+            <>
+              <div className="divide-y lg:hidden">
+                {users.map((user) => (
+                  <article key={user.id} className="space-y-3 p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-900">
+                          {user.name}
+                        </p>
+                        <p className="break-all text-xs text-muted-foreground">
+                          {user.email}
+                        </p>
+                        {user.isPrimaryAdmin ? (
+                          <Badge variant="outline" className="mt-1 text-[10px]">
+                            Primary Admin
+                          </Badge>
+                        ) : null}
+                      </div>
+                      <Badge
+                        variant={user.isActive ? "default" : "secondary"}
+                        className={
+                          user.isActive
+                            ? "shrink-0 border-transparent bg-emerald-100 text-emerald-700"
+                            : "shrink-0"
+                        }
+                      >
+                        {user.isActive ? "Active" : "Inactive"}
+                      </Badge>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={user.isActive ? "default" : "secondary"}
-                      className={
-                        user.isActive
-                          ? "border-transparent bg-emerald-100 text-emerald-700"
-                          : ""
-                      }
-                    >
-                      {user.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {format(user.lastLogin, "MMM d, h:mm a")}
-                  </TableCell>
-                  <TableCell className="text-right pr-6">
+                    <div>
+                      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        Current Password
+                      </p>
+                      <PasswordReveal
+                        value={user.managedPassword}
+                        emptyLabel="Not on file"
+                      />
+                    </div>
                     <div className="flex items-center justify-end gap-1">
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="icon"
-                        className="size-8"
+                        className="size-9 rounded-full"
                         onClick={() => openEditDialog(user)}
+                        aria-label={
+                          user.isPrimaryAdmin
+                            ? "Edit primary administrator"
+                            : "Edit user"
+                        }
                       >
                         <Pencil className="size-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-8"
-                        onClick={() => toggleActive(user.id)}
-                      >
-                        {user.isActive ? (
-                          <UserX className="size-4" />
-                        ) : (
-                          <UserCheck className="size-4" />
-                        )}
-                      </Button>
+                      {!user.isPrimaryAdmin ? (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="size-9 rounded-full"
+                          onClick={() => void toggleActive(user.id, !user.isActive)}
+                          aria-label={
+                            user.isActive ? "Deactivate user" : "Activate user"
+                          }
+                        >
+                          {user.isActive ? (
+                            <UserX className="size-4" />
+                          ) : (
+                            <UserCheck className="size-4" />
+                          )}
+                        </Button>
+                      ) : null}
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </article>
+                ))}
+                {users.length === 0 && (
+                  <p className="p-6 text-center text-sm text-muted-foreground">
+                    No users found.
+                  </p>
+                )}
+              </div>
+
+              <div className="hidden overflow-x-auto lg:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="pl-6">Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Current Password</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="pr-6 text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="pl-6 font-medium">
+                          <div className="flex flex-col gap-1">
+                            <span>{user.name}</span>
+                            {user.isPrimaryAdmin ? (
+                              <Badge variant="outline" className="w-fit text-[10px]">
+                                Primary Admin
+                              </Badge>
+                            ) : null}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {user.email}
+                        </TableCell>
+                        <TableCell>
+                          <PasswordReveal
+                            value={user.managedPassword}
+                            emptyLabel="Not on file"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={user.isActive ? "default" : "secondary"}
+                            className={
+                              user.isActive
+                                ? "border-transparent bg-emerald-100 text-emerald-700"
+                                : ""
+                            }
+                          >
+                            {user.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="pr-6 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8"
+                              onClick={() => openEditDialog(user)}
+                              aria-label={
+                                user.isPrimaryAdmin
+                                  ? "Edit primary administrator"
+                                  : "Edit user"
+                              }
+                            >
+                              <Pencil className="size-4" />
+                            </Button>
+                            {!user.isPrimaryAdmin ? (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-8"
+                                onClick={() =>
+                                  void toggleActive(user.id, !user.isActive)
+                                }
+                                aria-label={
+                                  user.isActive
+                                    ? "Deactivate user"
+                                    : "Activate user"
+                                }
+                              >
+                                {user.isActive ? (
+                                  <UserX className="size-4" />
+                                ) : (
+                                  <UserCheck className="size-4" />
+                                )}
+                              </Button>
+                            ) : null}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {users.length === 0 && (
+                      <TableRow>
+                        <TableCell
+                          colSpan={5}
+                          className="h-32 text-center text-muted-foreground"
+                        >
+                          No users found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editingUser ? "Edit User" : "Create User"}
+              {editingUser
+                ? editingPrimaryAdmin
+                  ? "Edit Primary Administrator"
+                  : "Edit User"
+                : "Create User"}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            {/* Basic Info - responsive 2-col */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="userName">
-                  Name <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="userName"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  placeholder="Full name"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="userEmail">
-                  Email <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="userEmail"
-                  type="email"
-                  value={formEmail}
-                  onChange={(e) => setFormEmail(e.target.value)}
-                  placeholder="email@panglao.gov.ph"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="userPassword">
-                  Password{" "}
-                  {!editingUser && <span className="text-destructive">*</span>}
-                </Label>
-                <Input
-                  id="userPassword"
-                  type="password"
-                  value={formPassword}
-                  onChange={(e) => setFormPassword(e.target.value)}
-                  placeholder={
-                    editingUser ? "Leave blank to keep current" : "Set password"
-                  }
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>Role</Label>
-                <Select
-                  value={formRole}
-                  onValueChange={(v) => setFormRole(v as UserRole)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {USER_ROLES.map((role) => (
-                      <SelectItem key={role.value} value={role.value}>
-                        {role.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Module Access */}
             <div className="grid gap-2">
-              <Label className="flex items-center gap-2">
-                <Shield className="size-4 text-muted-foreground" />
-                Module Access
+              <Label htmlFor="userName">
+                Full Name <span className="text-destructive">*</span>
               </Label>
-              {isSbSecretary && (
-                <p className="text-xs text-muted-foreground">
-                  SB Secretary has full access to all modules by default.
-                </p>
-              )}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 rounded-md border p-3">
-                {ALL_MODULES.map((mod) => {
-                  const checked = isSbSecretary || formModuleAccess.includes(mod.key);
-                  return (
-                    <div key={mod.key} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`mod-${mod.key}`}
-                        checked={checked}
-                        disabled={isSbSecretary}
-                        onCheckedChange={() => toggleModule(mod.key)}
-                      />
-                      <label
-                        htmlFor={`mod-${mod.key}`}
-                        className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed ${
-                          isSbSecretary ? "text-muted-foreground" : ""
-                        }`}
-                      >
-                        {mod.label}
-                      </label>
-                    </div>
-                  );
-                })}
-              </div>
+              <Input
+                id="userName"
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                placeholder="Full name"
+              />
             </div>
-
-            {/* Category Sub-access (when Ordinances or Resolutions is enabled) */}
-            {hasOrdOrRes && (
-              <Collapsible defaultOpen>
-                <div className="rounded-md border">
-                  <CollapsibleTrigger className="flex w-full items-center justify-between p-3 hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">Allowed Categories</span>
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                        {isSbSecretary ? "All" : `${formAllowedCategories.length} of ${CATEGORY_NAMES.length}`}
-                      </Badge>
-                    </div>
-                    <ChevronDown className="size-4 text-muted-foreground transition-transform [[data-state=open]>&]:rotate-180" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="border-t px-3 pb-3">
-                      {isSbSecretary ? (
-                        <p className="text-xs text-muted-foreground pt-2">
-                          SB Secretary has access to all categories.
-                        </p>
-                      ) : (
-                        <>
-                          <div className="flex items-center justify-between py-2">
-                            <p className="text-xs text-muted-foreground">
-                              Select which categories this user can access for Ordinances &amp; Resolutions
-                            </p>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-xs"
-                              onClick={selectAllCategories}
-                            >
-                              {formAllowedCategories.length === CATEGORY_NAMES.length ? "Deselect All" : "Select All"}
-                            </Button>
-                          </div>
-                          <ScrollArea className="h-[180px]">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              {CATEGORY_NAMES.map((cat) => (
-                                <div key={cat} className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id={`cat-${cat}`}
-                                    checked={formAllowedCategories.includes(cat)}
-                                    onCheckedChange={() => toggleCategory(cat)}
-                                  />
-                                  <label
-                                    htmlFor={`cat-${cat}`}
-                                    className="text-sm leading-none cursor-pointer"
-                                  >
-                                    {cat}
-                                  </label>
-                                </div>
-                              ))}
-                            </div>
-                          </ScrollArea>
-                        </>
-                      )}
-                    </div>
-                  </CollapsibleContent>
-                </div>
-              </Collapsible>
-            )}
-
-            {/* Committee Sub-access (when Committee Reports is enabled) */}
-            {hasCommittee && (
-              <Collapsible defaultOpen>
-                <div className="rounded-md border">
-                  <CollapsibleTrigger className="flex w-full items-center justify-between p-3 hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">Allowed Committees</span>
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                        {isSbSecretary ? "All" : `${formAllowedCommittees.length} of ${ALL_COMMITTEES.length}`}
-                      </Badge>
-                    </div>
-                    <ChevronDown className="size-4 text-muted-foreground transition-transform [[data-state=open]>&]:rotate-180" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="border-t px-3 pb-3">
-                      {isSbSecretary ? (
-                        <p className="text-xs text-muted-foreground pt-2">
-                          SB Secretary has access to all committees.
-                        </p>
-                      ) : (
-                        <>
-                          <div className="flex items-center justify-between py-2">
-                            <p className="text-xs text-muted-foreground">
-                              Select which committees this user can access
-                            </p>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-xs"
-                              onClick={selectAllCommittees}
-                            >
-                              {formAllowedCommittees.length === ALL_COMMITTEES.length ? "Deselect All" : "Select All"}
-                            </Button>
-                          </div>
-                          <div className="grid grid-cols-1 gap-2">
-                            {ALL_COMMITTEES.map((com) => (
-                              <div key={com} className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={`com-${com}`}
-                                  checked={formAllowedCommittees.includes(com)}
-                                  onCheckedChange={() => toggleCommittee(com)}
-                                />
-                                <label
-                                  htmlFor={`com-${com}`}
-                                  className="text-sm leading-none cursor-pointer"
-                                >
-                                  {com}
-                                </label>
-                              </div>
-                            ))}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </CollapsibleContent>
-                </div>
-              </Collapsible>
-            )}
+            <div className="grid gap-2">
+              <Label htmlFor="userPosition">Position</Label>
+              <Input
+                id="userPosition"
+                value={formPosition}
+                onChange={(e) => setFormPosition(e.target.value)}
+                placeholder="e.g. Municipal Secretary"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="userEmail">
+                Email <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="userEmail"
+                type="email"
+                value={formEmail}
+                onChange={(e) => setFormEmail(e.target.value)}
+                placeholder="email@municipality.gov.ph"
+              />
+            </div>
+            {editingPrimaryAdmin ? (
+              <div className="grid gap-2">
+                <Label htmlFor="userMobile">Mobile Number</Label>
+                <Input
+                  id="userMobile"
+                  value={formMobile}
+                  onChange={(e) => setFormMobile(e.target.value)}
+                  placeholder="09171234567"
+                />
+              </div>
+            ) : null}
+            <div className="grid gap-2">
+              <Label htmlFor="userPassword">
+                {editingUser ? "Current Password" : "Password"}{" "}
+                {!editingUser && <span className="text-destructive">*</span>}
+              </Label>
+              <PasswordInput
+                id="userPassword"
+                value={formPassword}
+                onChange={(e) => setFormPassword(e.target.value)}
+                placeholder={
+                  editingUser
+                    ? formPassword
+                      ? undefined
+                      : "No password on file — enter a new password"
+                    : "Min. 8 characters"
+                }
+                autoComplete={editingUser ? "current-password" : "new-password"}
+              />
+              {editingUser ? (
+                <p className="text-xs text-muted-foreground">
+                  Use the eye icon to view or hide. Change the value to update
+                  the login password.
+                </p>
+              ) : null}
+            </div>
           </div>
           <DialogFooter>
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
-            <Button onClick={handleSave}>
-              {editingUser ? "Save Changes" : "Create User"}
+            <Button disabled={saving} onClick={() => void handleSave()}>
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Saving…
+                </>
+              ) : editingUser ? (
+                "Save Changes"
+              ) : (
+                "Create User"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

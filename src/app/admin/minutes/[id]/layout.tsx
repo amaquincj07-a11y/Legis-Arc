@@ -1,7 +1,7 @@
-import { mockMinutes } from "@/lib/mock-data";
+import { generateSessionMinutesStaticParams } from "@/lib/supabase/generate-static-session-minutes-params";
 
 export async function generateStaticParams() {
-  return mockMinutes.map((m) => ({ id: m.id }));
+  return generateSessionMinutesStaticParams();
 }
 
 export default function MinutesIdLayout({
