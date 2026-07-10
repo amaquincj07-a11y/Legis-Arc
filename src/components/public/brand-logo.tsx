@@ -29,7 +29,7 @@ export function BrandLogo({ compact = false, className }: BrandLogoProps) {
         aria-hidden
       >
         <Image
-          src="/images/sb/logo.png"
+          src="/images/sb/Logo.png"
           alt=""
           width={96}
           height={96}

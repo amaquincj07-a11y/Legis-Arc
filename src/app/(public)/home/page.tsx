@@ -88,7 +88,7 @@ export default function HomePage() {
       <section className="relative overflow-hidden">
         <div className="relative aspect-[5/3] w-full sm:aspect-[2/1] lg:aspect-[21/9]">
           <Image
-            src="/images/sb/Hero-background.png"
+            src="/images/sb/Hero-Background.png"
             alt={`Sangguniang Bayan of ${municipalityName}`}
             fill
             sizes="100vw"

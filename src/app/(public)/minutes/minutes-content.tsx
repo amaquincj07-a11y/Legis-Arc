@@ -147,7 +147,7 @@ export function MinutesContent() {
     <div className="min-h-[70vh]">
       <section className="relative">
         <Image
-          src="/images/sb/Hero-background.png"
+          src="/images/sb/Hero-Background.png"
           alt={`Sangguniang Bayan of ${municipalityName}`}
           width={1920}
           height={1080}

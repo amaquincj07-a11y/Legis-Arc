@@ -128,7 +128,7 @@ export function ResolutionsContent() {
       <div className="relative overflow-hidden">
         <div className="relative w-full">
           <Image
-            src="/images/sb/Hero-background.png"
+            src="/images/sb/Hero-Background.png"
             alt={`Sangguniang Bayan of ${municipalityName}`}
             width={1920}
             height={1080}
