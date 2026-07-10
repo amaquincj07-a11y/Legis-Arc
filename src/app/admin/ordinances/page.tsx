@@ -3,17 +3,9 @@
 import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Plus, Pencil, Download, Eye, GlobeLock, Trash2 } from "lucide-react";
+import { Plus, Pencil, Download, Eye, Trash2 } from "lucide-react";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -23,10 +15,14 @@ import {
 } from "@/components/ui/select";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { AdminFilterBar } from "@/components/admin/admin-filter-bar";
-import { AdminRowActions } from "@/components/admin/admin-row-actions";
 import { AdminPagination } from "@/components/admin/admin-pagination";
-import type { AdminActionItem } from "@/components/admin/admin-actions-menu";
+import {
+  AdminActionsMenu,
+  type AdminActionItem,
+} from "@/components/admin/admin-actions-menu";
 import { ConfirmDeleteDialog } from "@/components/admin/confirm-delete-dialog";
+import { PublicVisibilityBadge } from "@/components/admin/public-visibility-badge";
+import { createPublishVisibilityAction } from "@/lib/admin-document-visibility";
 import { useActiveCategories } from "@/hooks/use-active-categories";
 import { useAdminQuery } from "@/hooks/use-admin-query";
 import {
@@ -45,7 +41,7 @@ import type { LegislativeDocument } from "@/lib/types";
 const ITEMS_PER_PAGE = 10;
 
 const filterSelectClass =
-  "h-10 w-full rounded-full border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-sm focus:ring-[#3998eb] sm:h-9 sm:w-[170px]";
+  "h-9 w-[150px] rounded-full border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-sm focus:ring-[#3998eb] sm:w-[170px]";
 
 export default function OrdinancesPage() {
   const router = useRouter();
@@ -100,25 +96,21 @@ export default function OrdinancesPage() {
         icon: Eye,
         onClick: () => void openOrdinancePdf(doc.id, doc.title, "view"),
       },
-      {
-        label: "Unpublish",
-        icon: GlobeLock,
-        onClick: async () => {
-          const result = await toggleOrdinancePublishAction(doc.id);
-          if (result.success) {
-            setDocuments((prev) =>
-              prev.map((item) => (item.id === doc.id ? result.data : item))
-            );
-            toast.success(
-              result.data.isPublic
-                ? "Ordinance published"
-                : "Ordinance unpublished"
-            );
-          } else {
-            toast.error(result.error);
-          }
-        },
-      },
+      createPublishVisibilityAction(doc, async () => {
+        const result = await toggleOrdinancePublishAction(doc.id);
+        if (result.success) {
+          setDocuments((prev) =>
+            prev.map((item) => (item.id === doc.id ? result.data : item))
+          );
+          toast.success(
+            result.data.isPublic && result.data.status === "published"
+              ? "Ordinance published to public portal"
+              : "Ordinance removed from public portal"
+          );
+        } else {
+          toast.error(result.error);
+        }
+      }),
       {
         label: "Delete",
         icon: Trash2,
@@ -241,90 +233,62 @@ export default function OrdinancesPage() {
               </p>
             </div>
           ) : (
-            <>
-              <div className="divide-y lg:hidden">
-                {paginated.map((doc) => {
-                  const formattedNumber = formatOrdinanceNumber(doc);
-                  return (
-                    <article
-                      key={doc.id}
-                      className="space-y-3 p-4 transition hover:bg-slate-50/80"
-                    >
-                      <div className="space-y-1">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-[#3998eb]">
+            <div className="overflow-x-auto px-4 pt-4">
+              <table className="w-full table-auto border-collapse border border-gray-200">
+                <thead className="bg-[#101B29] text-white">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-semibold sm:text-base">
+                      Ordinance No.
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold sm:text-base">
+                      Title
+                    </th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold sm:text-base">
+                      Category
+                    </th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold sm:text-base">
+                      Author/Sponsor
+                    </th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold sm:text-base">
+                      Visibility
+                    </th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold sm:text-base">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginated.map((doc) => {
+                    const formattedNumber = formatOrdinanceNumber(doc);
+                    return (
+                      <tr key={doc.id} className="hover:bg-gray-50">
+                        <td className="border border-gray-300 px-4 py-2 text-center text-sm sm:text-base">
                           {formattedNumber}
-                        </p>
-                        <h2 className="text-sm font-medium leading-snug text-slate-900">
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2 text-sm sm:text-base">
                           {doc.title}
-                        </h2>
-                      </div>
-                      <div className="flex flex-wrap gap-2 text-xs text-slate-600">
-                        <span className="inline-flex items-center rounded-full bg-[#3998eb]/8 px-2.5 py-1 font-medium text-[#3998eb]">
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2 text-center text-sm sm:text-base">
                           {doc.category}
-                        </span>
-                        <span className="rounded-full bg-slate-100 px-2.5 py-1">
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2 text-center text-sm sm:text-base">
                           {doc.authorSponsor}
-                        </span>
-                      </div>
-                      <AdminRowActions items={getRowActions(doc)} />
-                    </article>
-                  );
-                })}
-              </div>
-
-              <div className="hidden overflow-x-auto lg:block">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-slate-200 bg-slate-50/60">
-                      <TableHead className="w-[120px] text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
-                        No-Series
-                      </TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
-                        Title
-                      </TableHead>
-                      <TableHead className="w-[160px] text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
-                        Category
-                      </TableHead>
-                      <TableHead className="w-[200px] text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
-                        Author / Sponsor
-                      </TableHead>
-                      <TableHead className="min-w-[228px] w-[228px] text-center text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">
-                        Actions
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginated.map((doc) => {
-                      const formattedNumber = formatOrdinanceNumber(doc);
-                      return (
-                        <TableRow
-                          key={doc.id}
-                          className="border-slate-100/90 transition hover:bg-slate-50"
-                        >
-                          <TableCell className="text-[13px] font-semibold text-slate-800">
-                            {formattedNumber}
-                          </TableCell>
-                          <TableCell className="max-w-[360px] whitespace-normal wrap-break-word text-[13px] text-slate-800">
-                            {doc.title}
-                          </TableCell>
-                          <TableCell>
-                            <span className="inline-flex items-center rounded-full bg-[#3998eb]/8 px-3 py-1 text-[11px] font-medium text-[#3998eb]">
-                              {doc.category}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-[13px] text-slate-700">
-                            {doc.authorSponsor}
-                          </TableCell>
-                          <TableCell className="whitespace-nowrap">
-                            <AdminRowActions items={getRowActions(doc)} />
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </>
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2 text-center">
+                          <PublicVisibilityBadge
+                            status={doc.status}
+                            isPublic={doc.isPublic}
+                          />
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2 text-center">
+                          <AdminActionsMenu items={getRowActions(doc)} />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
 
           <AdminPagination

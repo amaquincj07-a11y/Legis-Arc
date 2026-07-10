@@ -2,10 +2,10 @@
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
-import { PanelLeftIcon } from "lucide-react"
+import { MenuIcon, PanelLeftIcon, XIcon } from "lucide-react"
 import { Slot } from "radix-ui"
 
-import { useIsMobile } from "@/hooks/use-mobile"
+import { useIsCompactSidebar } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -66,7 +66,7 @@ function SidebarProvider({
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }) {
-  const isMobile = useIsMobile()
+  const isMobile = useIsCompactSidebar()
   const [openMobile, setOpenMobile] = React.useState(false)
 
   // This is the internal state of the sidebar.
@@ -187,7 +187,8 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
+          showCloseButton={false}
+          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) gap-0 p-0"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -196,10 +197,25 @@ function Sidebar({
           side={side}
         >
           <SheetHeader className="sr-only">
-            <SheetTitle>Sidebar</SheetTitle>
-            <SheetDescription>Displays the mobile sidebar.</SheetDescription>
+            <SheetTitle>Navigation menu</SheetTitle>
+            <SheetDescription>
+              Main navigation links for the admin dashboard.
+            </SheetDescription>
           </SheetHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
+          <div className="flex items-center justify-between border-b border-sidebar-border/60 px-4 py-3">
+            <p className="text-sm font-semibold text-sidebar-foreground">
+              Navigation
+            </p>
+            <button
+              type="button"
+              onClick={() => setOpenMobile(false)}
+              className="flex size-10 items-center justify-center rounded-md text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              aria-label="Close navigation menu"
+            >
+              <XIcon className="size-5" aria-hidden />
+            </button>
+          </div>
+          <div className="flex h-full min-h-0 w-full flex-col">{children}</div>
         </SheetContent>
       </Sheet>
     )
@@ -207,7 +223,7 @@ function Sidebar({
 
   return (
     <div
-      className="group peer text-sidebar-foreground hidden md:block"
+      className="group peer text-sidebar-foreground hidden lg:block"
       data-state={state}
       data-collapsible={state === "collapsed" ? collapsible : ""}
       data-variant={variant}
@@ -229,7 +245,7 @@ function Sidebar({
       <div
         data-slot="sidebar-container"
         className={cn(
-          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
+          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear lg:flex",
           side === "left"
             ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
             : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
@@ -258,7 +274,33 @@ function SidebarTrigger({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar, isMobile, state } = useSidebar()
+
+  if (isMobile) {
+    return (
+      <Button
+        data-sidebar="trigger"
+        data-slot="sidebar-trigger"
+        variant="outline"
+        className={cn(
+          "h-10 gap-2 border-border/80 bg-background px-3 text-sm font-medium shadow-sm",
+          className
+        )}
+        onClick={(event) => {
+          onClick?.(event)
+          toggleSidebar()
+        }}
+        aria-label="Open navigation menu"
+        {...props}
+      >
+        <MenuIcon className="size-4" aria-hidden />
+        <span>Menu</span>
+      </Button>
+    )
+  }
+
+  const collapseLabel =
+    state === "expanded" ? "Collapse sidebar" : "Expand sidebar"
 
   return (
     <Button
@@ -266,15 +308,17 @@ function SidebarTrigger({
       data-slot="sidebar-trigger"
       variant="ghost"
       size="icon"
-      className={cn("size-7", className)}
+      className={cn("size-9", className)}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
       }}
+      aria-label={collapseLabel}
+      title={collapseLabel}
       {...props}
     >
       <PanelLeftIcon />
-      <span className="sr-only">Toggle Sidebar</span>
+      <span className="sr-only">{collapseLabel}</span>
     </Button>
   )
 }
@@ -310,7 +354,7 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
       data-slot="sidebar-inset"
       className={cn(
         "bg-background relative flex w-full flex-1 flex-col",
-        "md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2",
+        "lg:peer-data-[variant=inset]:m-2 lg:peer-data-[variant=inset]:ml-0 lg:peer-data-[variant=inset]:rounded-xl lg:peer-data-[variant=inset]:shadow-sm lg:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2",
         className
       )}
       {...props}

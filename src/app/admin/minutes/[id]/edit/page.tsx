@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useRef, useEffect } from "react";
+import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -8,13 +8,14 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { ArrowLeft, Upload, FileText, X } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { AdminFormActions } from "@/components/admin/admin-form-actions";
+import { EditPdfDocumentField } from "@/components/admin/edit-pdf-document-field";
 import {
   Form,
   FormControl,
@@ -34,7 +35,6 @@ import {
   fetchSessionMinutesByIdAction,
   updateSessionMinutesAction,
 } from "@/lib/minutes-actions";
-import { MAX_FILE_SIZE } from "@/lib/constants";
 
 const formSchema = z.object({
   sessionDate: z.string().min(1, "Session date is required"),
@@ -50,9 +50,10 @@ export default function EditMinutesPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [sessionDateLabel, setSessionDateLabel] = useState("");
+  const [existingPdfFileName, setExistingPdfFileName] = useState("");
+  const [hasExistingPdf, setHasExistingPdf] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [notFound, setNotFound] = useState(false);
@@ -69,7 +70,12 @@ export default function EditMinutesPage({
     async function load() {
       const result = await fetchSessionMinutesByIdAction(id);
       if (result.success) {
-        setSessionDateLabel(format(result.data.sessionDate, "MMMM d, yyyy"));
+        const sessionDate = result.data.sessionDate;
+        setSessionDateLabel(format(sessionDate, "MMMM d, yyyy"));
+        setExistingPdfFileName(
+          `minutes-${format(sessionDate, "yyyy-MM-dd")}.pdf`
+        );
+        setHasExistingPdf(Boolean(result.data.pdfUrl));
         form.reset({
           sessionDate: format(result.data.sessionDate, "yyyy-MM-dd"),
           sessionType: result.data.sessionType,
@@ -102,20 +108,6 @@ export default function EditMinutesPage({
         </Button>
       </div>
     );
-  }
-
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.type !== "application/pdf") {
-      toast.error("Only PDF files are accepted");
-      return;
-    }
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error("File size must be less than 25MB");
-      return;
-    }
-    setPdfFile(file);
   }
 
   async function onSubmit(values: FormValues) {
@@ -208,55 +200,14 @@ export default function EditMinutesPage({
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Replace PDF Document</CardTitle>
+              <CardTitle className="text-base">PDF Document</CardTitle>
             </CardHeader>
             <CardContent>
-              {pdfFile ? (
-                <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-4">
-                  <FileText className="size-8 text-destructive/80" />
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate font-medium text-sm">
-                      {pdfFile.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {(pdfFile.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setPdfFile(null);
-                      if (fileInputRef.current) fileInputRef.current.value = "";
-                    }}
-                  >
-                    <X className="size-4" />
-                  </Button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex w-full flex-col items-center gap-2 rounded-lg border-2 border-dashed border-muted-foreground/25 p-8 text-center transition-colors hover:border-muted-foreground/50 hover:bg-muted/50"
-                >
-                  <Upload className="size-8 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium text-sm">
-                      Click to upload new PDF
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      PDF only, max 25MB — replaces current document
-                    </p>
-                  </div>
-                </button>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="application/pdf"
-                className="hidden"
-                onChange={handleFileChange}
+              <EditPdfDocumentField
+                existingFileName={existingPdfFileName}
+                hasExistingDocument={hasExistingPdf}
+                value={pdfFile}
+                onChange={setPdfFile}
               />
             </CardContent>
           </Card>

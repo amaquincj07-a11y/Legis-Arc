@@ -193,12 +193,6 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     roles: ["sys_admin", "sb_secretary", "sb_member", "digitization_assistant"],
   },
   {
-    title: "Document Requests",
-    href: "/admin/requests",
-    icon: "ClipboardList",
-    roles: ["sys_admin", "sb_secretary", "sb_member", "digitization_assistant"],
-  },
-  {
     title: "Ordinances",
     href: "/admin/ordinances",
     icon: "ScrollText",
@@ -246,6 +240,12 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     href: "/admin/recent-activity",
     icon: "Shield",
     roles: ["sys_admin", "sb_secretary"],
+  },
+  {
+    title: "Document Requests",
+    href: "/admin/requests",
+    icon: "ClipboardList",
+    roles: ["sys_admin", "sb_secretary", "sb_member", "digitization_assistant"],
   },
   {
     title: "Billing",

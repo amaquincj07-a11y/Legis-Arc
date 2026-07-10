@@ -12,7 +12,6 @@ import {
   Download,
   Trash2,
   CalendarDays,
-  GlobeLock,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -24,9 +23,13 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
-import { AdminRowActions } from "@/components/admin/admin-row-actions";
-import type { AdminActionItem } from "@/components/admin/admin-actions-menu";
+import {
+  AdminActionsMenu,
+  type AdminActionItem,
+} from "@/components/admin/admin-actions-menu";
+import { PublicVisibilityBadge } from "@/components/admin/public-visibility-badge";
 import { ConfirmDeleteDialog } from "@/components/admin/confirm-delete-dialog";
+import { createPublishVisibilityAction } from "@/lib/admin-document-visibility";
 import {
   deleteSessionMinutesAction,
   fetchSessionMinutesAction,
@@ -156,27 +159,23 @@ export default function MinutesPage() {
             "view"
           ),
       },
-      {
-        label: session.isPublic ? "Unpublish" : "Publish",
-        icon: GlobeLock,
-        onClick: async () => {
-          const result = await toggleSessionMinutesPublishAction(session.id);
-          if (result.success) {
-            setSessions((prev) =>
-              prev.map((item) =>
-                item.id === session.id ? result.data : item
-              )
-            );
-            toast.success(
-              result.data.isPublic
-                ? "Session minutes published"
-                : "Session minutes unpublished"
-            );
-          } else {
-            toast.error(result.error);
-          }
-        },
-      },
+      createPublishVisibilityAction(session, async () => {
+        const result = await toggleSessionMinutesPublishAction(session.id);
+        if (result.success) {
+          setSessions((prev) =>
+            prev.map((item) =>
+              item.id === session.id ? result.data : item
+            )
+          );
+          toast.success(
+            result.data.isPublic && result.data.status === "published"
+              ? "Session minutes published to public portal"
+              : "Session minutes removed from public portal"
+          );
+        } else {
+          toast.error(result.error);
+        }
+      }),
       {
         label: "Delete",
         icon: Trash2,
@@ -305,6 +304,10 @@ export default function MinutesPage() {
                                           ? "Regular"
                                           : "Special"}
                                       </Badge>
+                                      <PublicVisibilityBadge
+                                        status={session.status}
+                                        isPublic={session.isPublic}
+                                      />
                                     </div>
                                     <p className="mt-0.5 text-sm text-muted-foreground">
                                       {format(
@@ -314,9 +317,7 @@ export default function MinutesPage() {
                                     </p>
                                   </div>
 
-                                  <AdminRowActions
-                                    items={getSessionActions(session)}
-                                  />
+                                  <AdminActionsMenu items={getSessionActions(session)} />
                                 </div>
                               ))}
                             </div>

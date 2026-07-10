@@ -1,13 +1,13 @@
 "use client";
 
-import { use, useState, useRef, useEffect } from "react";
+import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, FileText, X } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,7 +35,7 @@ import {
   updateResolutionAction,
 } from "@/lib/resolution-actions";
 import { formatResolutionNumber } from "@/lib/utils";
-import { MAX_FILE_SIZE } from "@/lib/constants";
+import { EditPdfDocumentField } from "@/components/admin/edit-pdf-document-field";
 import type { LegislativeDocument } from "@/lib/types";
 
 const currentYear = new Date().getFullYear();
@@ -66,7 +66,6 @@ export default function EditResolutionPage({
   const { id } = use(params);
   const router = useRouter();
   const { categories } = useActiveCategories();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [doc, setDoc] = useState<LegislativeDocument | null>(null);
   const [loading, setLoading] = useState(true);
@@ -121,20 +120,6 @@ export default function EditResolutionPage({
         </Button>
       </div>
     );
-  }
-
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.type !== "application/pdf") {
-      toast.error("Only PDF files are accepted");
-      return;
-    }
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error("File size must be less than 25MB");
-      return;
-    }
-    setPdfFile(file);
   }
 
   async function onSubmit(values: FormValues) {
@@ -298,52 +283,11 @@ export default function EditResolutionPage({
               <CardTitle className="text-base">PDF Document</CardTitle>
             </CardHeader>
             <CardContent>
-              {pdfFile ? (
-                <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-4">
-                  <FileText className="size-8 text-destructive/80" />
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate font-medium text-sm">
-                      {pdfFile.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {(pdfFile.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setPdfFile(null);
-                      if (fileInputRef.current) fileInputRef.current.value = "";
-                    }}
-                  >
-                    <X className="size-4" />
-                  </Button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex w-full flex-col items-center gap-2 rounded-lg border-2 border-dashed border-muted-foreground/25 p-8 text-center transition-colors hover:border-muted-foreground/50 hover:bg-muted/50"
-                >
-                  <Upload className="size-8 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium text-sm">
-                      Click to upload new PDF
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      PDF only, max 25MB — replaces current document
-                    </p>
-                  </div>
-                </button>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="application/pdf"
-                className="hidden"
-                onChange={handleFileChange}
+              <EditPdfDocumentField
+                existingFileName={`Resolution ${formatResolutionNumber(doc)}.pdf`}
+                hasExistingDocument={Boolean(doc.pdfUrl)}
+                value={pdfFile}
+                onChange={setPdfFile}
               />
             </CardContent>
           </Card>

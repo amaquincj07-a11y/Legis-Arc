@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -39,6 +40,7 @@ import {
   SidebarGroupLabel,
   SidebarGroupContent,
   SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -99,6 +101,11 @@ function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { setOpenMobile } = useSidebar();
+
+  useEffect(() => {
+    setOpenMobile(false);
+  }, [pathname, setOpenMobile]);
 
   function handleLogout() {
     void logout().then(() => router.push("/login"));
@@ -232,8 +239,8 @@ function AdminHeader() {
   const lastCrumb = crumbs[crumbs.length - 1];
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-4">
-      <SidebarTrigger className="-ml-1 size-10 shrink-0 sm:size-9" />
+    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur supports-backdrop-filter:bg-background/80 sm:px-4">
+      <SidebarTrigger className="-ml-1 shrink-0" />
 
       <Separator
         orientation="vertical"

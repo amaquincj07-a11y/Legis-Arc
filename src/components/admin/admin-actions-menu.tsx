@@ -20,6 +20,7 @@ export type AdminActionItem = {
   destructive?: boolean;
   hidden?: boolean;
   separatorBefore?: boolean;
+  accent?: "publish" | "unpublish";
 };
 
 type AdminActionsMenuProps = {
@@ -59,7 +60,11 @@ export function AdminActionsMenu({
                 className={cn(
                   "gap-2 cursor-pointer text-sm",
                   item.destructive &&
-                    "text-rose-600 focus:bg-rose-50 focus:text-rose-600"
+                    "text-rose-600 focus:bg-rose-50 focus:text-rose-600",
+                  item.accent === "publish" &&
+                    "text-emerald-700 focus:bg-emerald-50 focus:text-emerald-700",
+                  item.accent === "unpublish" &&
+                    "text-amber-700 focus:bg-amber-50 focus:text-amber-700"
                 )}
                 onClick={item.onClick}
               >

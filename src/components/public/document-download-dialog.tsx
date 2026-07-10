@@ -317,31 +317,24 @@ export function DocumentDownloadDialog({
                     setConsentError("");
                   }}
                   aria-invalid={Boolean(consentError)}
+                  className="mt-0.5"
                 />
-                <Label
+                <label
                   htmlFor="download-consent"
-                  className="text-sm leading-relaxed font-normal text-muted-foreground"
+                  className="min-w-0 flex-1 cursor-pointer text-sm leading-relaxed text-muted-foreground"
                 >
                   I agree that my information will be used only to record this
                   document download and improve public access to legislative
                   records. Read the{" "}
                   <button
                     type="button"
-                    className="font-medium text-[#1e3a5f] underline underline-offset-2 hover:text-[#3998eb]"
+                    className="inline font-medium text-[#1e3a5f] underline underline-offset-2 hover:text-[#3998eb]"
                     onClick={() => setShowPrivacyDialog(true)}
                   >
-                    Privacy Notice
-                  </button>{" "}
-                  &amp;{" "}
-                  <button
-                    type="button"
-                    className="font-medium text-[#1e3a5f] underline underline-offset-2 hover:text-[#3998eb]"
-                    onClick={() => setShowPrivacyDialog(true)}
-                  >
-                    Terms of Use
+                    Privacy Notice &amp; Terms of Use
                   </button>
                   .
-                </Label>
+                </label>
               </div>
               {consentError ? (
                 <p className="text-xs text-destructive">{consentError}</p>
