@@ -220,24 +220,19 @@ export function PlaceFilterMobileTrigger({
         <button
           type="button"
           className={cn(
-            "flex h-10 min-w-0 items-center gap-2 rounded-xl border px-3 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 sm:hidden",
+            "flex h-9 min-w-0 max-w-46 items-center gap-2 rounded-full border px-3 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 sm:hidden",
             headerTheme
-              ? "max-w-[min(100%,240px)] border-navy/10 bg-linear-to-r from-slate-50 to-white text-navy shadow-sm ring-1 ring-navy/5 hover:border-gold/40 hover:bg-white"
+              ? "border-navy/10 bg-linear-to-r from-slate-50 to-white text-navy shadow-sm ring-1 ring-navy/5 hover:border-gold/40 hover:bg-white"
               : "h-11 w-full rounded-md px-3 text-white hover:bg-white/10",
             className
           )}
-          aria-label={`Current location: ${shortLocationLabel}. Tap to change.`}
+          aria-label={`Select location. Current: ${shortLocationLabel}`}
         >
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gold/15 text-gold">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gold/15 text-gold">
             <MapPin className="h-3.5 w-3.5" aria-hidden />
           </span>
-          <span className="min-w-0 flex-1 truncate">
-            <span className="block text-[10px] font-semibold uppercase tracking-wide text-navy/60">
-             Select Location
-            </span>
-            <span className="block truncate font-semibold text-navy">
-              {shortLocationLabel}
-            </span>
+          <span className="min-w-0 flex-1 truncate font-semibold text-navy">
+            {shortLocationLabel}
           </span>
           <ChevronDown
             className={cn(

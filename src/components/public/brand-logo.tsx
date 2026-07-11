@@ -13,7 +13,7 @@ export function BrandLogo({ compact = false, className }: BrandLogoProps) {
   return (
     <Link
       href={PUBLIC_HOME_PATH}
-      aria-label="LegisArc — Legislative Archive home"
+      aria-label="LegisArc home"
       className={cn(
         "group flex min-w-0 items-center gap-2.5 rounded-lg outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:ring-offset-2 sm:gap-3",
         className
@@ -38,27 +38,15 @@ export function BrandLogo({ compact = false, className }: BrandLogoProps) {
         />
       </span>
 
-      <span className="flex min-w-0 flex-col leading-none">
-        <span
-          className={cn(
-            "font-(family-name:--font-garamond) font-semibold tracking-tight text-navy transition-colors group-hover:text-navy-light",
-            compact
-              ? "text-base sm:text-lg"
-              : "text-lg sm:text-xl md:text-[1.35rem]"
-          )}
-        >
-          Legis<span className="text-gold">Arc</span>
-        </span>
-        <span
-          className={cn(
-            "font-(family-name:--font-garamond) mt-0.5 truncate uppercase tracking-[0.18em] text-muted-foreground transition-colors group-hover:text-muted-foreground/80",
-            compact
-              ? "hidden text-[9px] md:block"
-              : "text-[9px] sm:text-[10px] md:text-[11px]"
-          )}
-        >
-          Legislative Archive
-        </span>
+      <span
+        className={cn(
+          "font-(family-name:--font-garamond) min-w-0 font-semibold tracking-tight text-navy transition-colors group-hover:text-navy-light",
+          compact
+            ? "text-base sm:text-lg"
+            : "text-lg sm:text-xl md:text-[1.35rem]"
+        )}
+      >
+        Legis<span className="text-gold">Arc</span>
       </span>
     </Link>
   );

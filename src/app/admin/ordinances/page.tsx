@@ -160,11 +160,7 @@ export default function OrdinancesPage() {
         title="Ordinances"
         description="Manage and track all municipal ordinances"
       >
-        <AdminUploadTrigger
-          documentLabel="Ordinance"
-          uploadHref="/admin/ordinances/new"
-          scanHref="/admin/ordinances/scan"
-        />
+        <AdminUploadTrigger uploadHref="/admin/ordinances/new" />
       </AdminPageHeader>
 
       <Card className="overflow-hidden border border-slate-200/90 shadow-sm shadow-slate-900/5">

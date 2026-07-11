@@ -83,17 +83,19 @@ export function PublicHeader() {
           compact ? "py-2 md:py-2.5" : "py-2.5 md:py-4 lg:py-5"
         )}
       >
-        <div className="mx-auto grid w-full max-w-7xl grid-cols-[auto_1fr] items-center gap-3 px-4 sm:gap-5 sm:px-6 lg:px-8">
-          <BrandLogo compact={compact} className="shrink-0" />
+        <div className="relative mx-auto flex w-full max-w-7xl items-center px-4 sm:px-6 lg:px-8">
+          <BrandLogo compact={compact} className="relative z-10 shrink-0" />
 
-          <div className="flex min-w-0 justify-center px-1 sm:px-2">
-            <PlaceFilterBar theme="header" />
-            <PlaceFilterMobileTrigger theme="header" />
+          <div className="pointer-events-none absolute inset-x-4 flex justify-center sm:inset-x-6 lg:inset-x-8">
+            <div className="pointer-events-auto flex min-w-0 max-w-[calc(100%-7rem)] justify-center sm:max-w-none">
+              <PlaceFilterBar theme="header" />
+              <PlaceFilterMobileTrigger theme="header" />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main navigation — always visible, compresses on smaller screens */}
+      {/* Main navigation — horizontal scroll on all screen sizes */}
       <nav
         aria-label="Main navigation"
         className="relative border-t-4 border-gold bg-white"
@@ -113,7 +115,7 @@ export function PublicHeader() {
         <div
           ref={navRef}
           onScroll={updateScrollHints}
-          className="mx-auto flex w-full max-w-7xl items-stretch overflow-x-auto scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="mx-auto flex w-full max-w-7xl touch-pan-x flex-nowrap items-stretch overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] scroll-smooth scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {PUBLIC_NAV_ITEMS.map((item) => {
             const active = isNavActive(pathname, item.href);
@@ -125,7 +127,7 @@ export function PublicHeader() {
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   NAV_LINK_BASE,
-                  "flex min-w-[4.25rem] flex-1 items-center justify-center px-1 py-2.5 text-center text-[10px] leading-tight sm:min-w-0 sm:px-2 sm:py-3 sm:text-xs lg:px-3 lg:py-4 lg:text-xs xl:px-5 xl:text-sm",
+                  "flex shrink-0 items-center justify-center whitespace-nowrap px-4 py-3 text-xs sm:px-5 sm:text-sm lg:flex-1 lg:shrink lg:px-4 lg:py-4 xl:px-5",
                   active
                     ? "border-b-2 border-gold text-gold lg:border-b-4"
                     : "border-b-2 border-transparent lg:border-b-4"

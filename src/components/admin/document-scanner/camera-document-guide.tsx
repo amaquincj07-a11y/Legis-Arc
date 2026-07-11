@@ -22,7 +22,7 @@ export const CameraDocumentGuide = forwardRef<HTMLDivElement, CameraDocumentGuid
         <div className="relative h-full w-full">
           <div
             ref={ref}
-            className="absolute left-1/2 top-1/2 aspect-[2159/3556] h-[96%] w-auto max-w-[96%] -translate-x-1/2 -translate-y-1/2 rounded-sm border-2 border-dashed border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.38)]"
+            className="absolute left-1/2 top-1/2 aspect-2159/3556 h-[96%] w-auto max-w-[96%] -translate-x-1/2 -translate-y-1/2 rounded-sm border-2 border-dashed border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.38)]"
           />
           <span className="absolute left-1/2 top-[2%] -translate-x-1/2 whitespace-nowrap text-[10px] font-medium text-white/85 sm:text-xs">
             Legal · {LEGAL_PAPER_LABEL}

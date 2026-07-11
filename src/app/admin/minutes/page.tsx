@@ -196,9 +196,7 @@ export default function MinutesPage() {
         >
           <AdminUploadTrigger
             label="Upload Minutes"
-            documentLabel="Session Minutes"
             uploadHref="/admin/minutes/new"
-            scanHref="/admin/minutes/scan"
           />
         </AdminPageHeader>
         <Card>
@@ -220,9 +218,7 @@ export default function MinutesPage() {
       >
         <AdminUploadTrigger
           label="Upload Minutes"
-          documentLabel="Session Minutes"
           uploadHref="/admin/minutes/new"
-          scanHref="/admin/minutes/scan"
         />
       </AdminPageHeader>
 
