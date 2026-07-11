@@ -14,12 +14,10 @@ import {
 
 /**
  * CamScanner-style Enhance pipeline:
- * 1. Illumination normalization (moderate Retinex)
- * 2. CLAHE for local contrast and crisp text
- * 3. S-curve global contrast for text/background separation
+ * 1. Illumination normalization
+ * 2. CLAHE + sigmoid contrast for crisp text
+ * 3. Paper whitening + ink deepening
  * 4. Multi-scale unsharp masking
- * 5. Paper background whitening
- * 6. User contrast / brightness / details adjustments
  */
 export function applyCamScannerEnhance(
   imageData: ImageData,
@@ -30,7 +28,7 @@ export function applyCamScannerEnhance(
 
   const luminance = buildLuminance(data, pixelCount);
 
-  const blurRadius = Math.max(6, Math.round(Math.min(width, height) / 22));
+  const blurRadius = Math.max(6, Math.round(Math.min(width, height) / 20));
   const downsampled = downsampleLuminance(luminance, width, height, 1024);
   const smallBlur = boxBlur(
     downsampled.data,
@@ -52,23 +50,30 @@ export function applyCamScannerEnhance(
 
   const normalized = new Float32Array(pixelCount);
   for (let p = 0; p < pixelCount; p++) {
-    const illum = Math.max(illumination[p], 14);
-    normalized[p] = clamp255((luminance[p] / illum) * 140);
+    const illum = Math.max(illumination[p], 12);
+    normalized[p] = clamp255((luminance[p] / illum) * 142);
+  }
+
+  const stretchLow = percentile(normalized, 0.02);
+  const stretchHigh = percentile(normalized, 0.98);
+  const stretchRange = Math.max(stretchHigh - stretchLow, 1);
+  for (let p = 0; p < pixelCount; p++) {
+    normalized[p] = clamp255(((normalized[p] - stretchLow) / stretchRange) * 255);
   }
 
   const tileSize = Math.max(
     32,
-    Math.min(72, Math.round(Math.min(width, height) / 14))
+    Math.min(72, Math.round(Math.min(width, height) / 13))
   );
-  const clipLimit = 2.4 + adjustments.contrast / 80;
+  const clipLimit = 2.8 + adjustments.contrast / 70;
   let enhanced = applyClahe(normalized, width, height, tileSize, clipLimit);
 
-  const contrastStrength = 2.2 + adjustments.contrast / 45;
+  const contrastStrength = 2.6 + adjustments.contrast / 38;
   for (let p = 0; p < pixelCount; p++) {
     enhanced[p] = sigmoidContrast(enhanced[p], contrastStrength);
   }
 
-  const brightnessOffset = adjustments.brightness * 0.45;
+  const brightnessOffset = adjustments.brightness * 0.5;
   if (brightnessOffset !== 0) {
     for (let p = 0; p < pixelCount; p++) {
       enhanced[p] = clamp255(enhanced[p] + brightnessOffset);
@@ -76,23 +81,28 @@ export function applyCamScannerEnhance(
   }
 
   for (let p = 0; p < pixelCount; p++) {
-    if (enhanced[p] > 195) {
-      enhanced[p] = clamp255(enhanced[p] + (255 - enhanced[p]) * 0.42);
-    } else if (enhanced[p] < 95) {
-      enhanced[p] = clamp255(enhanced[p] * 0.88);
+    if (enhanced[p] > 198) {
+      enhanced[p] = clamp255(enhanced[p] + (255 - enhanced[p]) * 0.5);
+    } else if (enhanced[p] < 92) {
+      enhanced[p] = clamp255(enhanced[p] * 0.84);
     }
   }
 
-  const baseDetails = 0.75;
-  const userDetails = Math.max(0, adjustments.details / 100) * 1.8;
+  const detailsNorm = Math.max(0, adjustments.details / 100);
   let sharpened = sharpenLuminance(
     enhanced,
     width,
     height,
-    baseDetails + userDetails,
+    1.2 + detailsNorm * 2.2,
     1
   );
-  sharpened = sharpenLuminance(sharpened, width, height, 0.35 + userDetails * 0.25, 2);
+  sharpened = sharpenLuminance(
+    sharpened,
+    width,
+    height,
+    0.5 + detailsNorm * 0.55,
+    2
+  );
 
   applyLuminanceToRgb(data, luminance, sharpened, pixelCount);
 }

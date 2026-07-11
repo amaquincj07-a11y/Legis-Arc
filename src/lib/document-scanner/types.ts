@@ -38,6 +38,43 @@ export const DEFAULT_ADJUSTMENTS: ScanAdjustments = {
   details: 0,
 };
 
+/** Maps UI slider 0–100 (50 = neutral) to internal -100..100. */
+export function displayToInternal(display: number): number {
+  return (display - 50) * 2;
+}
+
+/**
+ * Tuned default slider values per filter (CamScanner-style clarity targets).
+ * Display scale: Contrast 20 / Brightness 100 / Details 100 for Lighten;
+ * B&W uses high details + moderate contrast for crisp PDF-like text.
+ */
+export const FILTER_DEFAULT_ADJUSTMENTS: Record<
+  ScanFilterPreset,
+  ScanAdjustments
+> = {
+  original: { ...DEFAULT_ADJUSTMENTS },
+  lightning: {
+    contrast: displayToInternal(20),
+    brightness: displayToInternal(100),
+    details: displayToInternal(100),
+  },
+  enhance: {
+    contrast: displayToInternal(65),
+    brightness: displayToInternal(58),
+    details: displayToInternal(92),
+  },
+  "no-shadow": {
+    contrast: displayToInternal(45),
+    brightness: displayToInternal(62),
+    details: displayToInternal(85),
+  },
+  bw: {
+    contrast: displayToInternal(68),
+    brightness: displayToInternal(54),
+    details: displayToInternal(100),
+  },
+};
+
 export const FILTER_LABELS: Record<ScanFilterPreset, string> = {
   original: "Original",
   lightning: "Lighten",
@@ -50,8 +87,8 @@ export function createScanPage(sourceDataUrl: string): ScanPage {
   return {
     id: crypto.randomUUID(),
     sourceDataUrl,
-    filter: "original",
-    adjustments: { ...DEFAULT_ADJUSTMENTS },
+    filter: "bw",
+    adjustments: { ...FILTER_DEFAULT_ADJUSTMENTS.bw },
     rotation: 0,
     crop: null,
   };

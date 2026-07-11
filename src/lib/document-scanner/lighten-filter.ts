@@ -1,5 +1,6 @@
 import type { ScanAdjustments } from "./types";
 import {
+  applyClahe,
   applyLuminanceToRgb,
   boxBlur,
   buildLuminance,
@@ -7,16 +8,16 @@ import {
   downsampleLuminance,
   percentile,
   sharpenLuminance,
+  sigmoidContrast,
   upsampleMap,
 } from "./cv-utils";
 
 /**
  * CamScanner-style Lighten pipeline:
- * 1. Estimate large-scale illumination (shadow map)
- * 2. Divide luminance by illumination (Retinex-style reflectance)
- * 3. Percentile stretch + gamma to whiten paper background
- * 4. Preserve color by scaling RGB channels proportionally
- * 5. Apply user contrast / brightness / details adjustments
+ * 1. Retinex illumination normalization
+ * 2. Percentile stretch + CLAHE for local text contrast
+ * 3. Gamma whitening + sigmoid text/background separation
+ * 4. Multi-scale sharpening driven by Details slider
  */
 export function applyCamScannerLighten(
   imageData: ImageData,
@@ -27,12 +28,8 @@ export function applyCamScannerLighten(
 
   const luminance = buildLuminance(data, pixelCount);
 
-  const blurRadius = Math.max(
-    8,
-    Math.round(Math.min(width, height) / 18)
-  );
-
-  const downsampled = downsampleLuminance(luminance, width, height, 960);
+  const blurRadius = Math.max(10, Math.round(Math.min(width, height) / 16));
+  const downsampled = downsampleLuminance(luminance, width, height, 1024);
   const smallBlur = boxBlur(
     downsampled.data,
     downsampled.width,
@@ -53,34 +50,63 @@ export function applyCamScannerLighten(
 
   const reflectance = new Float32Array(pixelCount);
   for (let p = 0; p < pixelCount; p++) {
-    const illum = Math.max(illumination[p], 12);
-    reflectance[p] = (luminance[p] / illum) * 128;
+    const illum = Math.max(illumination[p], 10);
+    reflectance[p] = (luminance[p] / illum) * 132;
   }
 
-  const low = percentile(reflectance, 0.04);
-  const high = percentile(reflectance, 0.96);
+  const low = percentile(reflectance, 0.025);
+  const high = percentile(reflectance, 0.975);
   const range = Math.max(high - low, 1);
 
-  const contrastScale = 1 + adjustments.contrast / 120;
-  const brightnessOffset = adjustments.brightness * 0.55;
-  const gamma = 0.86 - adjustments.brightness / 600;
-  const safeGamma = Math.max(0.72, Math.min(1.05, gamma));
+  const normalized = new Float32Array(pixelCount);
+  for (let p = 0; p < pixelCount; p++) {
+    normalized[p] = clamp255(((reflectance[p] - low) / range) * 255);
+  }
+
+  const tileSize = Math.max(
+    28,
+    Math.min(64, Math.round(Math.min(width, height) / 18))
+  );
+  const claheStrength = 1.8 + Math.max(0, adjustments.contrast) / 120;
+  let enhanced = applyClahe(normalized, width, height, tileSize, claheStrength);
+
+  const contrastScale = 1 + adjustments.contrast / 100;
+  const brightnessOffset = adjustments.brightness * 0.65;
+  const gamma = 0.82 - adjustments.brightness / 520;
+  const safeGamma = Math.max(0.68, Math.min(1.02, gamma));
+  const sigmoidStrength = 1.4 + Math.max(0, adjustments.contrast) / 55;
 
   const outputLum = new Float32Array(pixelCount);
   for (let p = 0; p < pixelCount; p++) {
-    let normalized = ((reflectance[p] - low) / range) * 255;
-    normalized = 255 * Math.pow(Math.max(0, normalized) / 255, safeGamma);
-    normalized = (normalized - 128) * contrastScale + 128 + brightnessOffset;
+    let value = enhanced[p];
+    value = 255 * Math.pow(Math.max(0, value) / 255, safeGamma);
+    value = (value - 128) * contrastScale + 128 + brightnessOffset;
+    value = sigmoidContrast(value, sigmoidStrength);
 
-    if (normalized > 210) {
-      normalized += (255 - normalized) * 0.35;
+    if (value > 208) {
+      value += (255 - value) * 0.48;
+    } else if (value < 105) {
+      value = clamp255(value * 0.92);
     }
 
-    outputLum[p] = clamp255(normalized);
+    outputLum[p] = clamp255(value);
   }
 
-  const detailsAmount = Math.max(0, adjustments.details / 100) * 1.4;
-  const sharpenedLum = sharpenLuminance(outputLum, width, height, detailsAmount);
+  const detailsNorm = Math.max(0, adjustments.details / 100);
+  let sharpened = sharpenLuminance(
+    outputLum,
+    width,
+    height,
+    1.1 + detailsNorm * 2.4,
+    1
+  );
+  sharpened = sharpenLuminance(
+    sharpened,
+    width,
+    height,
+    0.45 + detailsNorm * 0.85,
+    2
+  );
 
-  applyLuminanceToRgb(data, luminance, sharpenedLum, pixelCount);
+  applyLuminanceToRgb(data, luminance, sharpened, pixelCount);
 }

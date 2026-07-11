@@ -50,31 +50,14 @@ function drawRotatedImage(
   ctx.restore();
 }
 
-function getPresetAdjustments(filter: ScanFilterPreset): ScanAdjustments {
-  switch (filter) {
-    case "lightning":
-      return { contrast: 0, brightness: 0, details: 6 };
-    case "enhance":
-      return { contrast: 0, brightness: 0, details: 10 };
-    case "no-shadow":
-      return { contrast: 0, brightness: 0, details: 6 };
-    case "bw":
-      return { contrast: 0, brightness: 0, details: 8 };
-    default:
-      return { contrast: 0, brightness: 0, details: 0 };
-  }
-}
-
 function applyPixelAdjustments(
   imageData: ImageData,
   filter: ScanFilterPreset,
   adjustments: ScanAdjustments
 ) {
-  const preset = getPresetAdjustments(filter);
-  const contrast =
-    1 + (preset.contrast + adjustments.contrast) / 100;
-  const brightness = preset.brightness + adjustments.brightness;
-  const details = (preset.details + adjustments.details) / 100;
+  const contrast = 1 + adjustments.contrast / 100;
+  const brightness = adjustments.brightness;
+  const details = adjustments.details / 100;
   const data = imageData.data;
   const grayscale = filter === "bw";
 
@@ -146,40 +129,20 @@ export async function renderScanPage(page: ScanPage): Promise<string> {
   );
 
   if (page.filter === "lightning") {
-    const preset = getPresetAdjustments("lightning");
-    applyCamScannerLighten(imageData, {
-      contrast: preset.contrast + page.adjustments.contrast,
-      brightness: preset.brightness + page.adjustments.brightness,
-      details: preset.details + page.adjustments.details,
-    });
+    applyCamScannerLighten(imageData, page.adjustments);
   } else if (page.filter === "enhance") {
-    const preset = getPresetAdjustments("enhance");
-    applyCamScannerEnhance(imageData, {
-      contrast: preset.contrast + page.adjustments.contrast,
-      brightness: preset.brightness + page.adjustments.brightness,
-      details: preset.details + page.adjustments.details,
-    });
+    applyCamScannerEnhance(imageData, page.adjustments);
   } else if (page.filter === "bw") {
-    const preset = getPresetAdjustments("bw");
-    applyCamScannerBw(imageData, {
-      contrast: preset.contrast + page.adjustments.contrast,
-      brightness: preset.brightness + page.adjustments.brightness,
-      details: preset.details + page.adjustments.details,
-    });
+    applyCamScannerBw(imageData, page.adjustments);
   } else if (page.filter === "no-shadow") {
-    const preset = getPresetAdjustments("no-shadow");
-    applyCamScannerNoShadow(imageData, {
-      contrast: preset.contrast + page.adjustments.contrast,
-      brightness: preset.brightness + page.adjustments.brightness,
-      details: preset.details + page.adjustments.details,
-    });
+    applyCamScannerNoShadow(imageData, page.adjustments);
   } else {
     applyPixelAdjustments(imageData, page.filter, page.adjustments);
   }
 
   outputCtx.putImageData(imageData, 0, 0);
 
-  return workingCanvas.toDataURL("image/jpeg", 0.92);
+  return workingCanvas.toDataURL("image/jpeg", 0.95);
 }
 
 export { getDefaultCrop } from "./crop-geometry";

@@ -15,7 +15,7 @@ import {
   renderScanPage,
 } from "@/lib/document-scanner/image-processing";
 import {
-  DEFAULT_ADJUSTMENTS,
+  FILTER_DEFAULT_ADJUSTMENTS,
   FILTER_LABELS,
   type ScanAdjustments,
   type ScanCrop,
@@ -263,7 +263,7 @@ export function ScanEditStep({
                     onClick={() =>
                       updatePage({
                         filter,
-                        adjustments: { ...DEFAULT_ADJUSTMENTS },
+                        adjustments: { ...FILTER_DEFAULT_ADJUSTMENTS[filter] },
                       })
                     }
                     onDoubleClick={() => openAdjustments(filter)}

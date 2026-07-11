@@ -4,14 +4,16 @@ import {
   buildLuminance,
   clamp255,
   downsampleLuminance,
+  medianFilter3x3,
+  morphCloseText,
+  morphOpenText,
   percentile,
-  sharpenLuminance,
+  unsharpMask,
   upsampleMap,
 } from "./cv-utils";
 
 /**
- * Sauvola adaptive threshold — standard document binarization used in scan apps.
- * Handles uneven lighting by comparing each pixel to a local mean/std threshold.
+ * Sauvola adaptive threshold — document binarization with local mean/std.
  */
 function sauvolaBinarize(
   gray: Float32Array,
@@ -36,11 +38,10 @@ function sauvolaBinarize(
   for (let p = 0; p < pixelCount; p++) {
     const variance = Math.max(0, meanSq[p] - mean[p] * mean[p]);
     const std = Math.sqrt(variance);
-    const threshold =
-      mean[p] * (1 + k * (std / r - 1)) - thresholdOffset;
+    const threshold = mean[p] * (1 + k * (std / r - 1)) - thresholdOffset;
     const diff = gray[p] - threshold;
 
-    if (edgeSoftness <= 0.5) {
+    if (edgeSoftness <= 0.35) {
       out[p] = diff >= 0 ? 255 : 0;
     } else {
       out[p] = clamp255(255 / (1 + Math.exp(-diff / edgeSoftness)));
@@ -51,12 +52,12 @@ function sauvolaBinarize(
 }
 
 /**
- * CamScanner-style B&W pipeline:
+ * CamScanner-style B&W pipeline (PDF-like text clarity):
  * 1. Illumination normalization (shadow removal)
- * 2. Global percentile stretch for even tonal range
- * 3. Noise reduction + optional sharpening
- * 4. Sauvola adaptive binarization (clean black text, white paper)
- * 5. User contrast / brightness / details adjustments
+ * 2. Tight percentile stretch
+ * 3. Median denoise + multi-scale unsharp mask
+ * 4. Sauvola adaptive binarization (hard edges at high details)
+ * 5. Morphological open/close to remove speckle and fill letter gaps
  */
 export function applyCamScannerBw(
   imageData: ImageData,
@@ -67,13 +68,13 @@ export function applyCamScannerBw(
 
   const luminance = buildLuminance(data, pixelCount);
 
-  const blurRadius = Math.max(10, Math.round(Math.min(width, height) / 16));
-  const downsampled = downsampleLuminance(luminance, width, height, 1024);
+  const blurRadius = Math.max(12, Math.round(Math.min(width, height) / 14));
+  const downsampled = downsampleLuminance(luminance, width, height, 1280);
   const smallBlur = boxBlur(
     downsampled.data,
     downsampled.width,
     downsampled.height,
-    Math.max(4, Math.round(blurRadius * downsampled.scale))
+    Math.max(5, Math.round(blurRadius * downsampled.scale))
   );
 
   const illumination =
@@ -89,37 +90,37 @@ export function applyCamScannerBw(
 
   const reflectance = new Float32Array(pixelCount);
   for (let p = 0; p < pixelCount; p++) {
-    const illum = Math.max(illumination[p], 10);
-    reflectance[p] = (luminance[p] / illum) * 132;
+    const illum = Math.max(illumination[p], 12);
+    reflectance[p] = (luminance[p] / illum) * 138;
   }
 
-  const low = percentile(reflectance, 0.02);
-  const high = percentile(reflectance, 0.98);
+  const low = percentile(reflectance, 0.006);
+  const high = percentile(reflectance, 0.994);
   const range = Math.max(high - low, 1);
 
-  let gray = new Float32Array(pixelCount);
+  const gray = new Float32Array(pixelCount);
   for (let p = 0; p < pixelCount; p++) {
     gray[p] = clamp255(((reflectance[p] - low) / range) * 255);
   }
 
-  const denoised = boxBlur(gray, width, height, 1);
+  const denoised = medianFilter3x3(gray, width, height);
 
-  const userDetails = Math.max(0, adjustments.details / 100);
-  const prepared =
-    userDetails > 0
-      ? sharpenLuminance(denoised, width, height, userDetails * 1.2, 1)
-      : denoised;
+  const detailsNorm = Math.max(0, adjustments.details / 100);
+  const sharpFine = 2.4 + detailsNorm * 2.6;
+  const sharpCoarse = 0.85 + detailsNorm * 0.95;
+  let prepared = unsharpMask(denoised, width, height, sharpFine, 1);
+  prepared = unsharpMask(prepared, width, height, sharpCoarse, 2);
 
   const windowRadius = Math.max(
-    7,
-    Math.min(22, Math.round(Math.min(width, height) / 32))
+    9,
+    Math.min(28, Math.round(Math.min(width, height) / 28))
   );
-  const k = 0.38 - adjustments.contrast / 350;
-  const safeK = Math.max(0.18, Math.min(0.55, k));
-  const thresholdOffset = adjustments.brightness * 0.4;
-  const edgeSoftness = Math.max(0.5, 5 - userDetails * 3);
+  const k = 0.32 - adjustments.contrast / 320;
+  const safeK = Math.max(0.16, Math.min(0.48, k));
+  const thresholdOffset = adjustments.brightness * 0.55;
+  const edgeSoftness = detailsNorm >= 0.75 ? 0 : Math.max(0.35, 4 - detailsNorm * 4.5);
 
-  const binary = sauvolaBinarize(
+  let binary = sauvolaBinarize(
     prepared,
     width,
     height,
@@ -129,6 +130,11 @@ export function applyCamScannerBw(
     thresholdOffset,
     edgeSoftness
   );
+
+  if (detailsNorm >= 0.4) {
+    binary = morphOpenText(binary, width, height, 1);
+    binary = morphCloseText(binary, width, height, 1);
+  }
 
   for (let p = 0, i = 0; p < pixelCount; p++, i += 4) {
     const value = clamp255(binary[p]);

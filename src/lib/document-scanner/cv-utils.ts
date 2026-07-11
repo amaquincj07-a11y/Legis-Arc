@@ -176,6 +176,117 @@ export function sharpenLuminance(
   return out;
 }
 
+/** Unsharp mask — stronger edge definition for document text. */
+export function unsharpMask(
+  lum: Float32Array,
+  width: number,
+  height: number,
+  amount: number,
+  radius = 1
+): Float32Array {
+  return sharpenLuminance(lum, width, height, amount, radius);
+}
+
+/** 3×3 median filter — removes JPEG speckle while preserving edges. */
+export function medianFilter3x3(
+  src: Float32Array,
+  width: number,
+  height: number
+): Float32Array {
+  const dst = new Float32Array(src.length);
+  const window = new Float32Array(9);
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let idx = 0;
+      for (let ky = -1; ky <= 1; ky++) {
+        for (let kx = -1; kx <= 1; kx++) {
+          window[idx++] =
+            src[clampIndex(y + ky, height - 1) * width + clampIndex(x + kx, width - 1)];
+        }
+      }
+      window.sort();
+      dst[y * width + x] = window[4];
+    }
+  }
+
+  return dst;
+}
+
+function isTextPixel(value: number): boolean {
+  return value < 128;
+}
+
+/** Morphological erosion on black text (removes thin noise). */
+export function morphErodeText(
+  src: Float32Array,
+  width: number,
+  height: number,
+  radius: number
+): Float32Array {
+  const dst = new Float32Array(src.length);
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let allText = true;
+      for (let ky = -radius; ky <= radius && allText; ky++) {
+        for (let kx = -radius; kx <= radius && allText; kx++) {
+          const sample =
+            src[clampIndex(y + ky, height - 1) * width + clampIndex(x + kx, width - 1)];
+          if (!isTextPixel(sample)) allText = false;
+        }
+      }
+      dst[y * width + x] = allText ? 0 : 255;
+    }
+  }
+
+  return dst;
+}
+
+/** Morphological dilation on black text (restores stroke width). */
+export function morphDilateText(
+  src: Float32Array,
+  width: number,
+  height: number,
+  radius: number
+): Float32Array {
+  const dst = new Float32Array(src.length);
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let anyText = false;
+      for (let ky = -radius; ky <= radius && !anyText; ky++) {
+        for (let kx = -radius; kx <= radius && !anyText; kx++) {
+          const sample =
+            src[clampIndex(y + ky, height - 1) * width + clampIndex(x + kx, width - 1)];
+          if (isTextPixel(sample)) anyText = true;
+        }
+      }
+      dst[y * width + x] = anyText ? 0 : 255;
+    }
+  }
+
+  return dst;
+}
+
+export function morphOpenText(
+  src: Float32Array,
+  width: number,
+  height: number,
+  radius: number
+): Float32Array {
+  return morphDilateText(morphErodeText(src, width, height, radius), width, height, radius);
+}
+
+export function morphCloseText(
+  src: Float32Array,
+  width: number,
+  height: number,
+  radius: number
+): Float32Array {
+  return morphErodeText(morphDilateText(src, width, height, radius), width, height, radius);
+}
+
 export function applyLuminanceToRgb(
   data: Uint8ClampedArray,
   originalLum: Float32Array,
