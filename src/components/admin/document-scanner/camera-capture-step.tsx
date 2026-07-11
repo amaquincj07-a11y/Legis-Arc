@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Camera, Loader2 } from "lucide-react";
+import { ArrowLeft, Camera } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -9,7 +9,6 @@ import {
   LEGAL_PAPER_LABEL,
 } from "@/components/admin/document-scanner/camera-document-guide";
 import { Button } from "@/components/ui/button";
-import { correctDocumentPerspective } from "@/lib/document-scanner/perspective-correction";
 
 type CameraCaptureStepProps = {
   onBack: () => void;
@@ -20,7 +19,6 @@ export function CameraCaptureStep({ onBack, onCapture }: CameraCaptureStepProps)
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [ready, setReady] = useState(false);
-  const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -64,9 +62,9 @@ export function CameraCaptureStep({ onBack, onCapture }: CameraCaptureStepProps)
     };
   }, []);
 
-  async function capturePhoto() {
+  function capturePhoto() {
     const video = videoRef.current;
-    if (!video || !ready || processing) return;
+    if (!video || !ready) return;
 
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
@@ -75,26 +73,11 @@ export function CameraCaptureStep({ onBack, onCapture }: CameraCaptureStepProps)
     if (!ctx) return;
 
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const rawDataUrl = canvas.toDataURL("image/jpeg", 0.92);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
 
     streamRef.current?.getTracks().forEach((track) => track.stop());
-    setProcessing(true);
-
-    try {
-      const corrected = await correctDocumentPerspective(rawDataUrl);
-      const perspectiveApplied = corrected !== rawDataUrl;
-      onCapture(corrected);
-      toast.success(
-        perspectiveApplied
-          ? "Photo captured and perspective corrected"
-          : "Photo captured"
-      );
-    } catch {
-      onCapture(rawDataUrl);
-      toast.success("Photo captured");
-    } finally {
-      setProcessing(false);
-    }
+    onCapture(dataUrl);
+    toast.success("Photo captured");
   }
 
   return (
@@ -106,7 +89,6 @@ export function CameraCaptureStep({ onBack, onCapture }: CameraCaptureStepProps)
           size="icon"
           className="shrink-0 text-white hover:bg-white/10"
           onClick={onBack}
-          disabled={processing}
           aria-label="Go back"
         >
           <ArrowLeft className="size-5" />
@@ -135,15 +117,7 @@ export function CameraCaptureStep({ onBack, onCapture }: CameraCaptureStepProps)
               muted
               className="absolute inset-0 size-full object-cover"
             />
-            {ready && !processing && <CameraDocumentGuide />}
-            {processing && (
-              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-black/75">
-                <Loader2 className="size-10 animate-spin text-white" />
-                <p className="text-sm font-medium text-white">
-                  Straightening document...
-                </p>
-              </div>
-            )}
+            {ready && <CameraDocumentGuide />}
           </>
         )}
       </div>
@@ -155,16 +129,12 @@ export function CameraCaptureStep({ onBack, onCapture }: CameraCaptureStepProps)
           </p>
           <button
             type="button"
-            disabled={!ready || Boolean(error) || processing}
-            onClick={() => void capturePhoto()}
+            disabled={!ready || Boolean(error)}
+            onClick={capturePhoto}
             className="flex size-16 items-center justify-center rounded-full border-4 border-white bg-white/10 transition hover:bg-white/20 disabled:opacity-40 sm:size-18"
             aria-label="Capture photo"
           >
-            {processing ? (
-              <Loader2 className="size-7 animate-spin" />
-            ) : (
-              <Camera className="size-7" />
-            )}
+            <Camera className="size-7" />
           </button>
         </div>
       </div>
