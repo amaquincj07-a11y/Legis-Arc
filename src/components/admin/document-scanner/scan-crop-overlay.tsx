@@ -2,195 +2,143 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { ScanCrop } from "@/lib/document-scanner/types";
+import {
+  clampQuad,
+  cornersToPolygon,
+  midpoint,
+  moveCropHandle,
+  type CropHandle,
+  type DocumentCorners,
+} from "@/lib/document-scanner/crop-geometry";
 import { getDefaultCrop } from "@/lib/document-scanner/image-processing";
+import type { ScanCrop } from "@/lib/document-scanner/types";
 
 type ScanCropOverlayProps = {
   crop: ScanCrop;
   onChange: (crop: ScanCrop) => void;
 };
 
-type DragEdge = "left" | "right" | "top" | "bottom";
-
-const MIN_SIZE = 0.12;
-
-function clampCrop(next: ScanCrop): ScanCrop {
-  const width = Math.max(MIN_SIZE, Math.min(1, next.width));
-  const height = Math.max(MIN_SIZE, Math.min(1, next.height));
-  const x = Math.max(0, Math.min(1 - width, next.x));
-  const y = Math.max(0, Math.min(1 - height, next.y));
-  return { x, y, width, height };
-}
+const CORNER_HANDLES: CropHandle[] = ["tl", "tr", "br", "bl"];
+const EDGE_HANDLES: CropHandle[] = ["top", "right", "bottom", "left"];
 
 export function ScanCropOverlay({ crop, onChange }: ScanCropOverlayProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{
-    edge: DragEdge;
+    handle: CropHandle;
     startX: number;
     startY: number;
-    startCrop: ScanCrop;
+    startCorners: DocumentCorners;
   } | null>(null);
 
-  const [localCrop, setLocalCrop] = useState(crop);
+  const [localCorners, setLocalCorners] = useState<DocumentCorners>(crop.corners);
 
   useEffect(() => {
-    setLocalCrop(crop);
-  }, [crop]);
+    setLocalCorners(crop.corners);
+  }, [crop.corners]);
 
-  const commitCrop = useCallback(
-    (next: ScanCrop) => {
-      const clamped = clampCrop(next);
-      setLocalCrop(clamped);
-      onChange(clamped);
+  const commitCorners = useCallback(
+    (next: DocumentCorners) => {
+      const clamped = clampQuad(next);
+      setLocalCorners(clamped);
+      onChange({ corners: clamped });
     },
     [onChange]
   );
 
-  function startDrag(edge: DragEdge, clientX: number, clientY: number) {
-    dragRef.current = {
-      edge,
-      startX: clientX,
-      startY: clientY,
-      startCrop: localCrop,
-    };
-  }
-
-  function moveDrag(clientX: number, clientY: number) {
+  function onPointerMove(event: React.PointerEvent) {
     const drag = dragRef.current;
     const container = containerRef.current;
     if (!drag || !container) return;
 
     const rect = container.getBoundingClientRect();
-    const dx = (clientX - drag.startX) / rect.width;
-    const dy = (clientY - drag.startY) / rect.height;
-    const base = drag.startCrop;
-
-    let next = { ...base };
-
-    switch (drag.edge) {
-      case "left":
-        next = {
-          ...base,
-          x: base.x + dx,
-          width: base.width - dx,
-        };
-        break;
-      case "right":
-        next = {
-          ...base,
-          width: base.width + dx,
-        };
-        break;
-      case "top":
-        next = {
-          ...base,
-          y: base.y + dy,
-          height: base.height - dy,
-        };
-        break;
-      case "bottom":
-        next = {
-          ...base,
-          height: base.height + dy,
-        };
-        break;
-    }
-
-    commitCrop(next);
+    const dx = (event.clientX - drag.startX) / rect.width;
+    const dy = (event.clientY - drag.startY) / rect.height;
+    const next = moveCropHandle(drag.startCorners, drag.handle, dx, dy);
+    commitCorners(next);
   }
 
   function endDrag() {
     dragRef.current = null;
   }
 
-  const left = `${localCrop.x * 100}%`;
-  const top = `${localCrop.y * 100}%`;
-  const width = `${localCrop.width * 100}%`;
-  const height = `${localCrop.height * 100}%`;
-  const right = `${(1 - localCrop.x - localCrop.width) * 100}%`;
-  const bottom = `${(1 - localCrop.y - localCrop.height) * 100}%`;
+  function startDrag(handle: CropHandle, event: React.PointerEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    dragRef.current = {
+      handle,
+      startX: event.clientX,
+      startY: event.clientY,
+      startCorners: localCorners,
+    };
+  }
 
-  const handleProps = (edge: DragEdge) => ({
-    onPointerDown: (event: React.PointerEvent) => {
-      event.preventDefault();
-      event.currentTarget.setPointerCapture(event.pointerId);
-      startDrag(edge, event.clientX, event.clientY);
-    },
-    onPointerMove: (event: React.PointerEvent) => {
-      if (!dragRef.current || dragRef.current.edge !== edge) return;
-      moveDrag(event.clientX, event.clientY);
-    },
-    onPointerUp: (event: React.PointerEvent) => {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-      endDrag();
-    },
-    onPointerCancel: () => endDrag(),
-  });
+  const [tl, tr, br, bl] = localCorners;
+  const topMid = midpoint(tl, tr);
+  const rightMid = midpoint(tr, br);
+  const bottomMid = midpoint(br, bl);
+  const leftMid = midpoint(bl, tl);
+
+  const handlePosition: Record<CropHandle, ScanCrop["corners"][0]> = {
+    tl,
+    tr,
+    br,
+    bl,
+    top: topMid,
+    right: rightMid,
+    bottom: bottomMid,
+    left: leftMid,
+  };
 
   return (
-    <div ref={containerRef} className="absolute inset-0 touch-none">
-      <div className="absolute inset-x-0 top-0 bg-black/55" style={{ height: top }} />
-      <div
-        className="absolute inset-x-0 bottom-0 bg-black/55"
-        style={{ height: bottom }}
-      />
-      <div
-        className="absolute left-0 bg-black/55"
-        style={{ top, height, width: left }}
-      />
-      <div
-        className="absolute right-0 bg-black/55"
-        style={{ top, height, width: right }}
-      />
+    <div
+      ref={containerRef}
+      className="absolute inset-0 touch-none"
+      onPointerMove={onPointerMove}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+    >
+      <svg className="absolute inset-0 size-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <defs>
+          <mask id="crop-mask">
+            <rect width="100" height="100" fill="white" />
+            <polygon points={cornersToPolygon(localCorners)} fill="black" />
+          </mask>
+        </defs>
+        <rect width="100" height="100" fill="rgba(0,0,0,0.55)" mask="url(#crop-mask)" />
+        <polygon
+          points={cornersToPolygon(localCorners)}
+          fill="none"
+          stroke="#2dd4bf"
+          strokeWidth="0.4"
+          vectorEffect="non-scaling-stroke"
+        />
+        <line x1={tl.x * 100} y1={tl.y * 100} x2={tr.x * 100} y2={tr.y * 100} stroke="rgba(255,255,255,0.35)" strokeWidth="0.15" />
+        <line x1={tr.x * 100} y1={tr.y * 100} x2={br.x * 100} y2={br.y * 100} stroke="rgba(255,255,255,0.35)" strokeWidth="0.15" />
+        <line x1={br.x * 100} y1={br.y * 100} x2={bl.x * 100} y2={bl.y * 100} stroke="rgba(255,255,255,0.35)" strokeWidth="0.15" />
+        <line x1={bl.x * 100} y1={bl.y * 100} x2={tl.x * 100} y2={tl.y * 100} stroke="rgba(255,255,255,0.35)" strokeWidth="0.15" />
+      </svg>
 
-      <div
-        className="absolute border-2 border-[#2dd4bf]"
-        style={{ left, top, width, height }}
-      >
-        <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-40">
-          {Array.from({ length: 9 }).map((_, index) => (
-            <div key={index} className="border border-white/50" />
-          ))}
-        </div>
-      </div>
-
-      <div
-        {...handleProps("left")}
-        className="absolute z-10 w-10 cursor-ew-resize"
-        style={{ left, top, height, transform: "translateX(-50%)" }}
-        aria-label="Crop left edge"
-      />
-
-      <div
-        {...handleProps("right")}
-        className="absolute z-10 w-10 cursor-ew-resize"
-        style={{
-          left: `calc(${localCrop.x * 100}% + ${localCrop.width * 100}%)`,
-          top,
-          height,
-          transform: "translateX(-50%)",
-        }}
-        aria-label="Crop right edge"
-      />
-
-      <div
-        {...handleProps("top")}
-        className="absolute z-10 h-10 cursor-ns-resize"
-        style={{ left, top, width, transform: "translateY(-50%)" }}
-        aria-label="Crop top edge"
-      />
-
-      <div
-        {...handleProps("bottom")}
-        className="absolute z-10 h-10 cursor-ns-resize"
-        style={{
-          left,
-          top: `calc(${localCrop.y * 100}% + ${localCrop.height * 100}%)`,
-          width,
-          transform: "translateY(-50%)",
-        }}
-        aria-label="Crop bottom edge"
-      />
+      {[...CORNER_HANDLES, ...EDGE_HANDLES].map((handle) => {
+        const point = handlePosition[handle];
+        const isCorner = CORNER_HANDLES.includes(handle);
+        return (
+          <div
+            key={handle}
+            onPointerDown={(event) => startDrag(handle, event)}
+            className={`absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#2dd4bf] bg-white shadow-md ${
+              isCorner ? "size-5 cursor-grab active:cursor-grabbing" : "size-4 cursor-grab active:cursor-grabbing"
+            } ${handle === "left" || handle === "right" ? "cursor-ew-resize" : ""} ${
+              handle === "top" || handle === "bottom" ? "cursor-ns-resize" : ""
+            }`}
+            style={{
+              left: `${point.x * 100}%`,
+              top: `${point.y * 100}%`,
+            }}
+            aria-label={`Adjust crop ${handle}`}
+          />
+        );
+      })}
     </div>
   );
 }

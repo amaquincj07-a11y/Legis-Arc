@@ -1,3 +1,11 @@
+import {
+  computeWarpOutputSize,
+  warpPerspectiveImageData,
+} from "./document-detection";
+import {
+  normalizedCornersToPixels,
+  orderCorners,
+} from "./crop-geometry";
 import type { ScanPage } from "./types";
 
 function loadImage(dataUrl: string): Promise<HTMLImageElement> {
@@ -59,30 +67,25 @@ export async function bakeCropIntoSource(
   if (!rotationCtx) throw new Error("Canvas not supported");
 
   drawRotatedImage(rotationCtx, img, page.rotation);
+  const source = rotationCtx.getImageData(
+    0,
+    0,
+    rotationCanvas.width,
+    rotationCanvas.height
+  );
 
-  const crop = page.crop;
-  const sx = crop.x * rotationCanvas.width;
-  const sy = crop.y * rotationCanvas.height;
-  const sw = crop.width * rotationCanvas.width;
-  const sh = crop.height * rotationCanvas.height;
+  const pixelCorners = normalizedCornersToPixels(
+    orderCorners(page.crop.corners),
+    source.width,
+    source.height
+  );
+  const { width, height } = computeWarpOutputSize(pixelCorners);
+  const warped = warpPerspectiveImageData(source, pixelCorners, width, height);
 
   const cropCanvas = document.createElement("canvas");
-  const cropCtx = cropCanvas.getContext("2d");
-  if (!cropCtx) throw new Error("Canvas not supported");
-
-  cropCanvas.width = Math.max(1, Math.round(sw));
-  cropCanvas.height = Math.max(1, Math.round(sh));
-  cropCtx.drawImage(
-    rotationCanvas,
-    sx,
-    sy,
-    sw,
-    sh,
-    0,
-    0,
-    cropCanvas.width,
-    cropCanvas.height
-  );
+  cropCanvas.width = width;
+  cropCanvas.height = height;
+  cropCanvas.getContext("2d")?.putImageData(warped, 0, 0);
 
   return {
     sourceDataUrl: cropCanvas.toDataURL("image/jpeg", 0.92),

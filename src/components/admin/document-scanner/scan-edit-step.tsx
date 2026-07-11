@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, Check, Crop, Plus, RotateCw, X } from "lucide-react";
+import { ArrowLeft, Check, Crop, RotateCw, X } from "lucide-react";
 
 import { ScanAdjustmentPanel } from "@/components/admin/document-scanner/scan-adjustment-panel";
 import { ScanCropOverlay } from "@/components/admin/document-scanner/scan-crop-overlay";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { bakeCropIntoSource, renderRotatedSource } from "@/lib/document-scanner/crop-utils";
+import { pixelCornersToNormalized } from "@/lib/document-scanner/crop-geometry";
+import { detectDocumentCornersFromImageData } from "@/lib/document-scanner/perspective-correction";
 import {
   getDefaultCrop,
   renderScanPage,
@@ -109,9 +111,45 @@ export function ScanEditStep({
     setDraftAdjustments(page.adjustments);
   }
 
-  function enterCropMode() {
-    setDraftCrop(page.crop ?? getDefaultCrop());
+  async function enterCropMode() {
     setCropMode(true);
+    if (page.crop) {
+      setDraftCrop(page.crop);
+      return;
+    }
+
+    try {
+      const url = await renderRotatedSource(page);
+      const img = new Image();
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = reject;
+        img.src = url;
+      });
+
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        setDraftCrop(getDefaultCrop());
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const corners = detectDocumentCornersFromImageData(imageData);
+
+      if (corners && corners.length === 4) {
+        setDraftCrop({
+          corners: pixelCornersToNormalized(corners, canvas.width, canvas.height),
+        });
+      } else {
+        setDraftCrop(getDefaultCrop());
+      }
+    } catch {
+      setDraftCrop(getDefaultCrop());
+    }
   }
 
   function cancelCrop() {
@@ -137,8 +175,8 @@ export function ScanEditStep({
   const panelMode = adjustingFilter !== null || cropMode;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[#101B29] text-white">
-      <header className="flex items-center justify-between px-4 py-3">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#101B29] text-white">
+      <header className="flex shrink-0 items-center justify-between px-4 py-2.5">
         <Button
           type="button"
           variant="ghost"
@@ -153,21 +191,22 @@ export function ScanEditStep({
         {!panelMode && (
           <Button
             type="button"
-            className="rounded-full bg-[#cbab53] px-4 text-sm font-semibold text-slate-900 hover:bg-[#b89745]"
+            size="icon"
+            className="size-10 rounded-full bg-[#cbab53] text-slate-900 hover:bg-[#b89745]"
             onClick={onAdd}
+            aria-label="Confirm page"
           >
-            <Plus className="size-4" />
-            Add
+            <Check className="size-5 stroke-[2.5]" />
           </Button>
         )}
       </header>
 
-      <div className="relative flex flex-1 items-center justify-center overflow-hidden px-4">
-        <div className="relative inline-block max-w-full">
+      <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden px-4">
+        <div className="relative inline-block max-h-full max-w-full">
           <img
             src={previewUrl}
             alt="Scanned page preview"
-            className="block max-h-[58dvh] max-w-full rounded-xl object-contain shadow-2xl"
+            className="block max-h-full max-w-full rounded-xl object-contain shadow-2xl"
           />
           {cropMode && (
             <ScanCropOverlay crop={draftCrop} onChange={setDraftCrop} />
@@ -175,7 +214,7 @@ export function ScanEditStep({
         </div>
       </div>
 
-      <div className="pt-2">
+      <div className="shrink-0 pt-1">
         {adjustingFilter !== null ? (
           <ScanAdjustmentPanel
             adjustments={draftAdjustments}
@@ -186,7 +225,7 @@ export function ScanEditStep({
         ) : cropMode ? (
           <div className="bg-black pb-[max(1rem,env(safe-area-inset-bottom))] pt-4">
             <p className="mb-4 text-center text-xs text-white/60">
-              Drag any edge to crop the document
+              Drag edges or corners independently to adjust the document bounds
             </p>
             <div className="flex items-center justify-between px-5 pb-2">
               <button
@@ -211,9 +250,9 @@ export function ScanEditStep({
             </div>
           </div>
         ) : (
-          <div className="space-y-3 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-            <div className="space-y-2">
-              <p className="text-center text-[11px] text-white/60">
+          <div className="space-y-2 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <div className="space-y-1.5">
+              <p className="text-center text-[10px] text-white/60 sm:text-[11px]">
                 Double-tap a filter to fine-tune contrast, brightness, and details
               </p>
               <div className="flex gap-2 overflow-x-auto pb-1">
@@ -245,7 +284,7 @@ export function ScanEditStep({
               <Button
                 type="button"
                 variant="secondary"
-                className="h-11 rounded-xl bg-white/10 text-white hover:bg-white/15"
+                className="h-10 rounded-xl bg-white/10 text-white hover:bg-white/15 sm:h-11"
                 onClick={onRetake}
               >
                 Retake
@@ -253,7 +292,7 @@ export function ScanEditStep({
               <Button
                 type="button"
                 variant="secondary"
-                className="h-11 rounded-xl bg-white/10 text-white hover:bg-white/15"
+                className="h-10 rounded-xl bg-white/10 text-white hover:bg-white/15 sm:h-11"
                 onClick={() =>
                   updatePage({ rotation: (page.rotation + 90) % 360 })
                 }
@@ -264,8 +303,8 @@ export function ScanEditStep({
               <Button
                 type="button"
                 variant="secondary"
-                className="h-11 rounded-xl bg-white/10 text-white hover:bg-white/15"
-                onClick={enterCropMode}
+                className="h-10 rounded-xl bg-white/10 text-white hover:bg-white/15 sm:h-11"
+                onClick={() => void enterCropMode()}
               >
                 <Crop className="size-4" />
                 Crop

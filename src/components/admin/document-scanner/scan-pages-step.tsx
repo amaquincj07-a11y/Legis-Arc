@@ -33,7 +33,7 @@ export function ScanPagesStep({
   }, [pages]);
 
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-100">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-slate-100">
       <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-white px-4 py-3">
         <Button
           type="button"

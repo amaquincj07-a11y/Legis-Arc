@@ -5,17 +5,20 @@ export type ScanFilterPreset =
   | "no-shadow"
   | "bw";
 
+export type ScanPoint = {
+  x: number;
+  y: number;
+};
+
 export type ScanAdjustments = {
   contrast: number;
   brightness: number;
   details: number;
 };
 
+/** Quadrilateral crop — corners ordered tl, tr, br, bl (normalized 0–1). */
 export type ScanCrop = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  corners: [ScanPoint, ScanPoint, ScanPoint, ScanPoint];
 };
 
 export type ScanPage = {

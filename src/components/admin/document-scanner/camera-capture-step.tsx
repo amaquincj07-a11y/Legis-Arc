@@ -4,8 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Camera, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { CameraDetectionOverlay } from "@/components/admin/document-scanner/camera-detection-overlay";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { correctDocumentPerspective } from "@/lib/document-scanner/perspective-correction";
+import type { ScanPoint } from "@/lib/document-scanner/types";
 
 type CameraCaptureStepProps = {
   onBack: () => void;
@@ -15,8 +18,10 @@ type CameraCaptureStepProps = {
 export function CameraCaptureStep({ onBack, onCapture }: CameraCaptureStepProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const detectedCornersRef = useRef<ScanPoint[] | null>(null);
   const [ready, setReady] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [detected, setDetected] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -77,7 +82,8 @@ export function CameraCaptureStep({ onBack, onCapture }: CameraCaptureStepProps)
     setProcessing(true);
 
     try {
-      const corrected = await correctDocumentPerspective(rawDataUrl);
+      const corners = detectedCornersRef.current;
+      const corrected = await correctDocumentPerspective(rawDataUrl, corners);
       const perspectiveApplied = corrected !== rawDataUrl;
       onCapture(corrected);
       toast.success(
@@ -94,7 +100,7 @@ export function CameraCaptureStep({ onBack, onCapture }: CameraCaptureStepProps)
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-black text-white">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-black text-white">
       <header className="flex items-center gap-3 px-4 py-3">
         <Button
           type="button"
@@ -107,12 +113,29 @@ export function CameraCaptureStep({ onBack, onCapture }: CameraCaptureStepProps)
         >
           <ArrowLeft className="size-5" />
         </Button>
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold">Scan document</p>
-          <p className="text-xs text-white/70">
-            Align the page inside the frame — perspective auto-corrects on capture
+          <p
+            className={cn(
+              "text-xs",
+              detected ? "text-[#2dd4bf]" : "text-amber-300"
+            )}
+          >
+            {detected
+              ? "Document detected — ready to capture"
+              : "Align all four corners inside the frame"}
           </p>
         </div>
+        <span
+          className={cn(
+            "shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide",
+            detected
+              ? "bg-[#2dd4bf]/20 text-[#2dd4bf]"
+              : "bg-amber-400/20 text-amber-300"
+          )}
+        >
+          {detected ? "Detected" : "Searching"}
+        </span>
       </header>
 
       <div className="relative flex flex-1 items-center justify-center overflow-hidden px-4 pb-6">
@@ -121,14 +144,24 @@ export function CameraCaptureStep({ onBack, onCapture }: CameraCaptureStepProps)
             {error}
           </div>
         ) : (
-          <>
+          <div className="relative w-full max-w-3xl">
             <video
               ref={videoRef}
               playsInline
               muted
-              className="max-h-full w-full rounded-2xl object-contain"
+              className="max-h-[62dvh] w-full rounded-2xl object-contain"
             />
-            <div className="pointer-events-none absolute inset-8 rounded-2xl border-2 border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
+            <CameraDetectionOverlay
+              videoRef={videoRef}
+              onDetectedChange={setDetected}
+              onCornersChange={(corners) => {
+                detectedCornersRef.current = corners;
+              }}
+              enabled={ready && !processing && !error}
+            />
+            {!detected && ready && !processing && (
+              <div className="pointer-events-none absolute inset-8 rounded-2xl border-2 border-dashed border-white/50" />
+            )}
             {processing && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl bg-black/70">
                 <Loader2 className="size-10 animate-spin text-[#2dd4bf]" />
@@ -137,17 +170,23 @@ export function CameraCaptureStep({ onBack, onCapture }: CameraCaptureStepProps)
                 </p>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
 
       <div className="border-t border-white/10 px-4 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-        <div className="mx-auto flex max-w-md items-center justify-center">
+        <div className="mx-auto flex max-w-md flex-col items-center gap-3">
+          <p className="text-center text-[11px] text-white/60">
+            Drag crop edges and corners after capture to fine-tune the document bounds
+          </p>
           <button
             type="button"
             disabled={!ready || Boolean(error) || processing}
             onClick={() => void capturePhoto()}
-            className="flex size-18 items-center justify-center rounded-full border-4 border-white bg-white/10 transition hover:bg-white/20 disabled:opacity-40"
+            className={cn(
+              "flex size-18 items-center justify-center rounded-full border-4 bg-white/10 transition hover:bg-white/20 disabled:opacity-40",
+              detected ? "border-[#2dd4bf]" : "border-white"
+            )}
             aria-label="Capture photo"
           >
             {processing ? (

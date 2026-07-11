@@ -1,10 +1,14 @@
 import { applyCamScannerBw } from "./bw-filter";
+import { getDefaultCrop, normalizedCornersToPixels, orderCorners } from "./crop-geometry";
+import {
+  computeWarpOutputSize,
+  warpPerspectiveImageData,
+} from "./document-detection";
 import { applyCamScannerEnhance } from "./enhance-filter";
 import { applyCamScannerLighten } from "./lighten-filter";
 import { applyCamScannerNoShadow } from "./no-shadow-filter";
 import type {
   ScanAdjustments,
-  ScanCrop,
   ScanFilterPreset,
   ScanPage,
 } from "./types";
@@ -110,29 +114,24 @@ export async function renderScanPage(page: ScanPage): Promise<string> {
 
   let workingCanvas = rotationCanvas;
   if (page.crop) {
-    const cropCanvas = document.createElement("canvas");
-    const cropCtx = cropCanvas.getContext("2d");
-    if (!cropCtx) throw new Error("Canvas not supported");
-
-    const crop = page.crop;
-    const sx = crop.x * workingCanvas.width;
-    const sy = crop.y * workingCanvas.height;
-    const sw = crop.width * workingCanvas.width;
-    const sh = crop.height * workingCanvas.height;
-
-    cropCanvas.width = Math.max(1, Math.round(sw));
-    cropCanvas.height = Math.max(1, Math.round(sh));
-    cropCtx.drawImage(
-      workingCanvas,
-      sx,
-      sy,
-      sw,
-      sh,
+    const source = rotationCtx.getImageData(
       0,
       0,
-      cropCanvas.width,
-      cropCanvas.height
+      rotationCanvas.width,
+      rotationCanvas.height
     );
+    const pixelCorners = normalizedCornersToPixels(
+      orderCorners(page.crop.corners),
+      source.width,
+      source.height
+    );
+    const { width, height } = computeWarpOutputSize(pixelCorners);
+    const warped = warpPerspectiveImageData(source, pixelCorners, width, height);
+
+    const cropCanvas = document.createElement("canvas");
+    cropCanvas.width = width;
+    cropCanvas.height = height;
+    cropCanvas.getContext("2d")?.putImageData(warped, 0, 0);
     workingCanvas = cropCanvas;
   }
 
@@ -183,6 +182,4 @@ export async function renderScanPage(page: ScanPage): Promise<string> {
   return workingCanvas.toDataURL("image/jpeg", 0.92);
 }
 
-export function getDefaultCrop(): ScanCrop {
-  return { x: 0.05, y: 0.05, width: 0.9, height: 0.9 };
-}
+export { getDefaultCrop } from "./crop-geometry";
