@@ -9,6 +9,7 @@ import {
   LEGAL_PAPER_LABEL,
 } from "@/components/admin/document-scanner/camera-document-guide";
 import { Button } from "@/components/ui/button";
+import { captureVideoCroppedToGuide } from "@/lib/document-scanner/guide-crop";
 
 type CameraCaptureStepProps = {
   onBack: () => void;
@@ -17,6 +18,7 @@ type CameraCaptureStepProps = {
 
 export function CameraCaptureStep({ onBack, onCapture }: CameraCaptureStepProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const guideRef = useRef<HTMLDivElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,16 +66,23 @@ export function CameraCaptureStep({ onBack, onCapture }: CameraCaptureStepProps)
 
   function capturePhoto() {
     const video = videoRef.current;
+    const guide = guideRef.current;
     if (!video || !ready) return;
 
-    const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const cropped = guide
+      ? captureVideoCroppedToGuide(video, guide)
+      : null;
 
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+    let dataUrl = cropped;
+    if (!dataUrl) {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+    }
 
     streamRef.current?.getTracks().forEach((track) => track.stop());
     onCapture(dataUrl);
@@ -117,7 +126,7 @@ export function CameraCaptureStep({ onBack, onCapture }: CameraCaptureStepProps)
               muted
               className="absolute inset-0 size-full object-cover"
             />
-            {ready && <CameraDocumentGuide />}
+            {ready && <CameraDocumentGuide ref={guideRef} />}
           </>
         )}
       </div>
@@ -125,7 +134,7 @@ export function CameraCaptureStep({ onBack, onCapture }: CameraCaptureStepProps)
       <div className="shrink-0 border-t border-white/10 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <div className="mx-auto flex max-w-md flex-col items-center gap-2">
           <p className="text-center text-[10px] text-white/55 sm:text-[11px]">
-            Fill the dashed frame with your document, then tap capture
+            Fill the dashed frame with your document — only the area inside the guide is saved
           </p>
           <button
             type="button"
