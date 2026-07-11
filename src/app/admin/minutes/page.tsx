@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format, getYear, getMonth } from "date-fns";
 import {
-  Plus,
   ChevronRight,
   Eye,
   Pencil,
@@ -23,6 +22,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { AdminUploadTrigger } from "@/components/admin/admin-upload-trigger";
 import {
   AdminActionsMenu,
   type AdminActionItem,
@@ -193,12 +193,14 @@ export default function MinutesPage() {
         <AdminPageHeader
           title="Session Minutes"
           description="Browse and manage session minutes by year and month"
-          action={{
-            label: "Upload Minutes",
-            href: "/admin/minutes/new",
-            icon: Plus,
-          }}
-        />
+        >
+          <AdminUploadTrigger
+            label="Upload Minutes"
+            documentLabel="Session Minutes"
+            uploadHref="/admin/minutes/new"
+            scanHref="/admin/minutes/scan"
+          />
+        </AdminPageHeader>
         <Card>
           <CardContent className="flex h-32 items-center justify-center">
             <p className="text-sm text-muted-foreground">
@@ -215,12 +217,14 @@ export default function MinutesPage() {
       <AdminPageHeader
         title="Session Minutes"
         description="Browse and manage session minutes by year and month"
-        action={{
-          label: "Upload Minutes",
-          href: "/admin/minutes/new",
-          icon: Plus,
-        }}
-      />
+      >
+        <AdminUploadTrigger
+          label="Upload Minutes"
+          documentLabel="Session Minutes"
+          uploadHref="/admin/minutes/new"
+          scanHref="/admin/minutes/scan"
+        />
+      </AdminPageHeader>
 
       <div className="space-y-3">
         {sortedYears.map((year) => {

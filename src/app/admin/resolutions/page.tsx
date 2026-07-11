@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Plus, Pencil, Download, Eye, Trash2 } from "lucide-react";
+import { Pencil, Download, Eye, Trash2 } from "lucide-react";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { AdminUploadTrigger } from "@/components/admin/admin-upload-trigger";
 import { AdminFilterBar } from "@/components/admin/admin-filter-bar";
 import { AdminPagination } from "@/components/admin/admin-pagination";
 import {
@@ -158,12 +159,13 @@ export default function ResolutionsPage() {
       <AdminPageHeader
         title="Resolutions"
         description="Manage and track all municipal resolutions"
-        action={{
-          label: "Upload New",
-          href: "/admin/resolutions/new",
-          icon: Plus,
-        }}
-      />
+      >
+        <AdminUploadTrigger
+          documentLabel="Resolution"
+          uploadHref="/admin/resolutions/new"
+          scanHref="/admin/resolutions/scan"
+        />
+      </AdminPageHeader>
 
       <Card className="overflow-hidden border border-slate-200/90 shadow-sm shadow-slate-900/5">
         <CardHeader className="border-b border-slate-200/80 bg-slate-50/80 p-4 sm:pb-4">
