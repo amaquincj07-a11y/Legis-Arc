@@ -83,13 +83,17 @@ export function PublicHeader() {
           compact ? "py-2 md:py-2.5" : "py-2.5 md:py-4 lg:py-5"
         )}
       >
-        <div className="relative mx-auto flex w-full max-w-7xl items-center px-4 sm:px-6 lg:px-8">
-          <BrandLogo compact={compact} className="relative z-10 shrink-0" />
+        <div className="relative mx-auto flex w-full max-w-7xl items-center justify-between gap-2 px-4 sm:px-6 lg:px-8">
+          <BrandLogo compact={compact} className="shrink-0" />
 
-          <div className="pointer-events-none absolute inset-x-4 flex justify-center sm:inset-x-6 lg:inset-x-8">
-            <div className="pointer-events-auto flex min-w-0 max-w-[calc(100%-7rem)] justify-center sm:max-w-none">
+          <PlaceFilterMobileTrigger
+            theme="header"
+            className="min-w-0 max-w-[min(11.5rem,52vw)] shrink-0 sm:hidden"
+          />
+
+          <div className="pointer-events-none absolute inset-x-4 hidden justify-center sm:inset-x-6 sm:flex lg:inset-x-8">
+            <div className="pointer-events-auto">
               <PlaceFilterBar theme="header" />
-              <PlaceFilterMobileTrigger theme="header" />
             </div>
           </div>
         </div>
