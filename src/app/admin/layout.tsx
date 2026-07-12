@@ -24,6 +24,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { AuthGate } from "@/components/auth-gate";
 import { ADMIN_NAV_ITEMS, ROLE_LABELS } from "@/lib/constants";
 import {
   Sidebar,
@@ -288,14 +289,16 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider>
-      <AdminSidebar />
-      <SidebarInset>
-        <AdminHeader />
-        <main className="relative flex-1 overflow-auto p-3 sm:p-4 md:p-6">
-          {children}
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+    <AuthGate portal="lgu">
+      <SidebarProvider>
+        <AdminSidebar />
+        <SidebarInset>
+          <AdminHeader />
+          <main className="relative flex-1 overflow-auto p-3 sm:p-4 md:p-6">
+            {children}
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
+    </AuthGate>
   );
 }

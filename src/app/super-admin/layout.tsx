@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { AuthGate } from "@/components/auth-gate";
 import {
   Sidebar,
   SidebarContent,
@@ -248,14 +249,18 @@ export default function SuperAdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SuperAdminLGUProvider>
-      <SidebarProvider>
-        <SuperAdminSidebar />
-        <SidebarInset>
-          <SuperAdminHeader />
-          <main className="flex-1 overflow-auto p-3 sm:p-4 md:p-6">{children}</main>
-        </SidebarInset>
-      </SidebarProvider>
-    </SuperAdminLGUProvider>
+    <AuthGate portal="company">
+      <SuperAdminLGUProvider>
+        <SidebarProvider>
+          <SuperAdminSidebar />
+          <SidebarInset>
+            <SuperAdminHeader />
+            <main className="flex-1 overflow-auto p-3 sm:p-4 md:p-6">
+              {children}
+            </main>
+          </SidebarInset>
+        </SidebarProvider>
+      </SuperAdminLGUProvider>
+    </AuthGate>
   );
 }

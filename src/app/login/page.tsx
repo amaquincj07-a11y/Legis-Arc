@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Landmark, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +9,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Form,
@@ -19,6 +20,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useAuth } from "@/lib/auth-context";
+import { AdminPageLoaderCentered } from "@/components/admin/admin-page-loader";
+import type { AccountPortal } from "@/lib/types";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Enter a valid email address"),
@@ -27,9 +30,44 @@ const loginSchema = z.object({
 
 type LoginValues = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+function resolvePostLoginPath(
+  portal: AccountPortal,
+  fallback: string,
+  nextParam: string | null
+) {
+  if (!nextParam || !nextParam.startsWith("/") || nextParam.startsWith("//")) {
+    return fallback;
+  }
+
+  const normalized =
+    nextParam.endsWith("/") && nextParam.length > 1
+      ? nextParam.slice(0, -1)
+      : nextParam;
+
+  if (portal === "lgu" && (normalized === "/admin" || normalized.startsWith("/admin/"))) {
+    return nextParam;
+  }
+
+  if (
+    portal === "company" &&
+    (normalized === "/super-admin" || normalized.startsWith("/super-admin/"))
+  ) {
+    return nextParam;
+  }
+
+  return fallback;
+}
+
+function LoginForm() {
   const router = useRouter();
-  const { login } = useAuth();
+  const searchParams = useSearchParams();
+  const {
+    login,
+    isAuthenticated,
+    isTabUnlocked,
+    isLoading: authLoading,
+    portal,
+  } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginValues>({
@@ -39,6 +77,24 @@ export default function LoginPage() {
       password: "",
     },
   });
+
+  useEffect(() => {
+    // Stay on login until this tab has unlocked via credentials.
+    if (authLoading || !isAuthenticated || !portal || !isTabUnlocked) return;
+
+    const fallback =
+      portal === "company" ? "/super-admin/dashboard" : "/admin/dashboard";
+    router.replace(
+      resolvePostLoginPath(portal, fallback, searchParams.get("next"))
+    );
+  }, [
+    authLoading,
+    isAuthenticated,
+    isTabUnlocked,
+    portal,
+    router,
+    searchParams,
+  ]);
 
   async function onSubmit(values: LoginValues) {
     setIsLoading(true);
@@ -56,8 +112,20 @@ export default function LoginPage() {
     toast.success("Welcome back!", {
       description: "Redirecting to dashboard...",
     });
-    router.push(result.redirectTo);
+
+    // isTabUnlocked is already true in context — navigate after unlock.
+    router.replace(
+      resolvePostLoginPath(
+        result.portal,
+        result.redirectTo,
+        searchParams.get("next")
+      )
+    );
     setIsLoading(false);
+  }
+
+  if (authLoading || (isAuthenticated && isTabUnlocked)) {
+    return <AdminPageLoaderCentered className="min-h-screen" />;
   }
 
   return (
@@ -121,8 +189,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
+                      <PasswordInput
                         placeholder="Enter your password"
                         autoComplete="current-password"
                         disabled={isLoading}
@@ -159,5 +226,13 @@ export default function LoginPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<AdminPageLoaderCentered className="min-h-screen" />}>
+      <LoginForm />
+    </Suspense>
   );
 }
