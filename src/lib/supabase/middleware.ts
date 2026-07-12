@@ -19,7 +19,7 @@ function isSuperAdminPath(pathname: string) {
 }
 
 function isLoginPath(pathname: string) {
-  return pathname === "/login";
+  return pathname === "/login" || pathname.startsWith("/login/");
 }
 
 function redirectWithCookies(
