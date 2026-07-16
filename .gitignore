@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+/client/node_modules
+/server/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -12,13 +14,19 @@
 
 # testing
 /coverage
+/client/coverage
+/server/coverage
 
 # next.js
 /.next/
 /out/
+/client/.next/
+/client/out/
 
 # production
 /build
+/client/build
+/server/dist
 
 # misc
 .DS_Store
@@ -30,12 +38,29 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files — never commit real secrets
+.env
+.env.*
+.env.local
+.env.*.local
+!.env.example
+!client/.env.example
+!server/.env.example
+
+# Uploaded PDFs / images (local disk storage)
+/server/uploads/**
+!/server/uploads/.gitkeep
+
+# OS / editor
+Thumbs.db
+Desktop.ini
 
 # vercel
 .vercel
+/client/.vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+/client/next-env.d.ts
+/server/**/*.tsbuildinfo

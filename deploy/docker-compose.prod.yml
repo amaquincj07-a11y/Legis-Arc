@@ -1,0 +1,86 @@
+# Production-ish stack for a DigitalOcean Droplet.
+# Usage (from repo root):
+#   docker compose -f deploy/docker-compose.prod.yml --env-file .env up -d --build
+#
+# Put secrets in repo-root `.env`. Prefer STORAGE_DRIVER=spaces in production.
+# Terminate TLS with host nginx (see deploy/nginx.conf) or a DO load balancer.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-legisarc}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-legisarc}
+    volumes:
+      - legisarc_pgdata:/var/lib/postgresql/data
+      - ../server/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-legisarc} -d ${POSTGRES_DB:-legisarc}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - legisarc
+
+  api:
+    build:
+      context: ../server
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      FRONTEND_URL: ${FRONTEND_URL:?Set FRONTEND_URL}
+      CORS_ORIGIN: ${CORS_ORIGIN:-${FRONTEND_URL}}
+      API_PUBLIC_URL: ${API_PUBLIC_URL:?Set API_PUBLIC_URL}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-spaces}
+      SPACES_ENDPOINT: ${SPACES_ENDPOINT:-}
+      SPACES_REGION: ${SPACES_REGION:-}
+      SPACES_BUCKET: ${SPACES_BUCKET:-}
+      SPACES_KEY: ${SPACES_KEY:-}
+      SPACES_SECRET: ${SPACES_SECRET:-}
+      SPACES_CDN_URL: ${SPACES_CDN_URL:-}
+      SPACES_PUBLIC_URL: ${SPACES_PUBLIC_URL:-}
+    volumes:
+      # Only needed when STORAGE_DRIVER=local
+      - legisarc_uploads:/app/uploads
+    ports:
+      - "4000:4000"
+    networks:
+      - legisarc
+
+  web:
+    build:
+      context: ../client
+      dockerfile: Dockerfile
+      args:
+        JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?Set NEXT_PUBLIC_API_URL}
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+    ports:
+      - "3000:3000"
+    networks:
+      - legisarc
+
+volumes:
+  legisarc_pgdata:
+  legisarc_uploads:
+
+networks:
+  legisarc:
+    driver: bridge

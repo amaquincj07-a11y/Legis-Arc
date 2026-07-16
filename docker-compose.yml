@@ -1,0 +1,40 @@
+# Local PostgreSQL for LegisArc (DigitalOcean-style self-hosted DB)
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: legisarc-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-legisarc}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-legisarc_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-legisarc}
+    volumes:
+      - legisarc_pgdata:/var/lib/postgresql/data
+      - ./server/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./server/db/seed-lgu.sql:/docker-entrypoint-initdb.d/02-seed-lgu.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U legisarc -d legisarc"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: legisarc-minio
+    restart: unless-stopped
+    profiles: ["storage"]
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: legisarc
+      MINIO_ROOT_PASSWORD: legisarc_dev_password
+    volumes:
+      - legisarc_minio:/data
+
+volumes:
+  legisarc_pgdata:
+  legisarc_minio:
