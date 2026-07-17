@@ -81,11 +81,15 @@ if (storageDriver === "spaces") {
   }
 }
 
-const spacesPublicBase = (
-  raw.SPACES_CDN_URL?.trim() ||
-  raw.SPACES_PUBLIC_URL?.trim() ||
-  ""
-).replace(/\/+$/, "");
+function normalizeHttpBaseUrl(value: string): string {
+  // Remove ALL whitespace — a space after "https://" becomes "%20" in the host
+  // and breaks PDF/image URLs with ERR_NAME_NOT_RESOLVED.
+  return value.trim().replace(/\s+/g, "").replace(/\/+$/, "");
+}
+
+const spacesPublicBase = normalizeHttpBaseUrl(
+  raw.SPACES_CDN_URL || raw.SPACES_PUBLIC_URL || ""
+);
 
 export const env = {
   port: raw.PORT,

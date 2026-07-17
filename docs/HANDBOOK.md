@@ -101,6 +101,16 @@ LegisArc/
 | `SPACES_SECRET` | Secret shown **once** at key creation |
 | `SPACES_CDN_URL` | `https://legisarc-files.sgp1.cdn.digitaloceanspaces.com` |
 
+**No spaces in Spaces URLs.** A typo like `https:// legisarc-files...` (space after `://`) becomes `https://%20legisarc-files...` in the browser and PDFs fail with `ERR_NAME_NOT_RESOLVED`. On the Droplet, confirm:
+
+```bash
+grep SPACES_CDN_URL /opt/legisarc/.env
+# must be exactly (no space after https://):
+# SPACES_CDN_URL=https://legisarc-files.sgp1.cdn.digitaloceanspaces.com
+```
+
+Then restart the API: `docker compose -f deploy/docker-compose.prod.yml --env-file .env up -d api`
+
 Objects are uploaded **without** per-object ACLs. Ensure the Space allows public reads via file listing set to **Public** and/or a bucket policy (`s3:GetObject` for `Principal: "*"`).
 
 ### Docker Compose also needs
@@ -233,6 +243,64 @@ One-liner after SSH (when `safe.directory` is already set):
 ```bash
 cd /opt/legisarc && git pull && docker compose -f deploy/docker-compose.prod.yml --env-file .env up -d --build
 ```
+
+### Droplet access & deploy troubleshooting
+
+Use this when SSH fails, the Web Console asks for a password, or a rebuild looks “stuck.”
+
+#### DigitalOcean Web Console vs Recovery Console
+
+| Control | When to use |
+|---------|-------------|
+| **Web Console** (top-right on the Droplet page) | Normal browser terminal into the running Droplet. Prefer this when local SSH fails. |
+| **Recovery Console** / recovery “Launch Console” (Settings) | Only if the Droplet will not boot or Web Console cannot reach it. Requires password auth / recovery ISO. |
+
+**Login:** username is `root`.
+
+**If it asks for a password:** Droplets created with SSH keys often have no remembered root password. On the Droplet **Settings** page, use **Reset root password**. DigitalOcean emails a temporary password to the account email. Open **Web Console**, log in as `root`, paste the emailed password, then set a new one if prompted.
+
+Resetting the root password does **not** remove SSH keys. After the server is healthy again, key-based `ssh` from your PC should still work.
+
+#### SSH: “Server accepts key” then connection closes
+
+Typical `ssh -v` ending:
+
+```text
+debug1: Server accepts key: ... id_ed25519 ...
+Connection closed by 129.212.235.172 port 22
+```
+
+Meaning: network and host key are fine; your public key matches; the session dies **after** auth. Common cause on this Droplet size: **disk nearly full** (often leftover layers from a cancelled `docker compose … --build`).
+
+From **Web Console**:
+
+```bash
+df -h
+docker system df
+
+# If disk is nearly full:
+docker builder prune -af
+docker image prune -af
+df -h
+
+# Optional: why SSH dropped
+journalctl -u ssh -n 50 --no-pager
+```
+
+Then retry from your PC:
+
+```bash
+ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes root@129.212.235.172
+```
+
+(On Windows PowerShell, use `$env:USERPROFILE\.ssh\id_ed25519`.)
+
+Cancelling a remote deploy mid-build does **not** revoke SSH keys. It can fill the disk and make new SSH sessions fail until you prune Docker.
+
+#### Docker rebuild looks “frozen”
+
+- **~5–20 minutes** quiet at `Creating an optimized production build` → often normal (**LL-001**).
+- **~30+ minutes / ~1 hour** still there, or Web Console idle-disconnects → **not** normal; treat as RAM thrash (**LL-002**): reopen console, check `free -h` / OOM, add swap, stop `web`/`api` during rebuild.
 
 ### nginx routing (important)
 
@@ -443,9 +511,16 @@ docker compose -f deploy/docker-compose.prod.yml --env-file .env logs -f web
 curl -sS http://127.0.0.1:4000/api/health
 curl -sS -I http://127.0.0.1:3000/
 
+# Disk / Docker cleanup (Web Console if SSH drops after key accept)
+df -h
+docker builder prune -af
+docker image prune -af
+
 # nginx (only if nginx.conf changed)
 sudo nginx -t && sudo systemctl reload nginx
 ```
+
+> More detail: **§6 → Droplet access & deploy troubleshooting**. Lessons: **§16**.
 
 ---
 
@@ -456,6 +531,122 @@ sudo nginx -t && sudo systemctl reload nginx
 3. Firewall: only **22**, **80**, **443** public — not Postgres `5432` or `3000`/`4000`.  
 4. Each developer: own SSH key + GitHub access; share secrets via a vault.  
 5. Rotate Spaces keys if ever leaked in chat or screenshots.
+
+---
+
+## 16. Lessons learned
+
+Operational notes from real deploys. Use the blank template below when adding a new entry so the format stays consistent.
+
+### How to add a new lesson
+
+1. Copy the **Blank template**.
+2. Paste it under **Logged lessons** with the next ID (`LL-002`, `LL-003`, …).
+3. Fill every field; keep **Status** as `Open` until the team agrees the note is accurate, then set `Closed`.
+4. Link related handbook sections in **See also** when useful.
+
+### Blank template
+
+```markdown
+### LL-XXX — Short title
+
+| Field | Content |
+|-------|---------|
+| **Date** | YYYY-MM-DD |
+| **Area** | Deploy / Docker / SSH / Spaces / DB / Auth / Other |
+| **Status** | Open \| Closed |
+| **Symptom** | What you saw (exact messages if possible) |
+| **Context** | Where it happened (Droplet size, command, environment) |
+| **Root cause** | Why it happened |
+| **Resolution** | What fixed it or what to do |
+| **Lesson** | One-sentence takeaway for next time |
+| **See also** | Handbook §… / file paths |
+
+**Notes (optional):**
+- Extra detail, commands, or screenshots references
+```
+
+### Logged lessons
+
+### LL-001 — Docker rebuild looks frozen on Next.js `npm run build`
+
+| Field | Content |
+|-------|---------|
+| **Date** | 2026-07-18 |
+| **Area** | Deploy / Docker |
+| **Status** | Closed |
+| **Symptom** | `docker compose … up -d --build` sits a long time on something like `[+] Building … (28/32)` → `[web build 5/5] RUN npm run build` → `Creating an optimized production build ...` with almost no new log lines. Easy to assume the process is hung. |
+| **Context** | Production Droplet **Basic / 1 vCPU / 2 GB RAM / 50 GB disk** (SGP1). Command: `docker compose -f deploy/docker-compose.prod.yml --env-file .env up -d --build` (Web Console or SSH). Next.js middleware→proxy deprecation warning may appear and is unrelated. |
+| **Root cause** | The **Next.js production compile** (`npm run build` inside the `web` image) is CPU- and memory-heavy. On a small Droplet it is the slowest compose step and prints little progress while bundling. |
+| **Resolution** | Quiet progress for **about 5–20 minutes** can still be normal. If it exceeds **~30 minutes** with no advance past `Creating an optimized production build`, treat it as **LL-002** (memory thrash / OOM), not “keep waiting forever.” |
+| **Lesson** | Short quiet spells during Next.js compile are normal; **hour-long** builds on 2 GB are not — escalate to LL-002. |
+| **See also** | LL-002; §6 Production; `deploy/docker-compose.prod.yml`; `client/Dockerfile` |
+
+**Notes:**
+- Prefer verifying `npm run build` on a local PC first so Droplet time is mostly image rebuild, not surprise compile errors.
+- Web Console idle timeout does **not** stop Docker BuildKit — reopen the console and check whether the build is still running.
+
+### LL-002 — Next.js Docker build runs ~1 hour / Web Console times out (2 GB Droplet)
+
+| Field | Content |
+|-------|---------|
+| **Date** | 2026-07-18 |
+| **Area** | Deploy / Docker |
+| **Status** | Closed |
+| **Symptom** | Build stuck on `[web build] RUN npm run build` for **~1 hour**; DigitalOcean **Web Console** disconnects from idle timeout while the build still appears unfinished. Site may stay on old containers. |
+| **Context** | Same 1 vCPU / 2 GB Droplet. Stack during build often includes **Postgres + api + old web still running**, plus Docker BuildKit compiling Next.js 16 (`react-pdf`, Radix, Framer Motion, etc.). Physical RAM is insufficient for compile + running stack. |
+| **Root cause** | **Memory pressure / OOM thrashing** (or silent `Killed` by the kernel). Console timeout is only a UI disconnect — not the cause. Without swap, Node can thrash for a very long time or die without a clear Next.js error in the compose output. |
+| **Resolution** | Reopen Web Console and diagnose, then free memory + add swap, then rebuild: see commands in **Notes**. Also ship Dockerfile/`next.config` memory mitigations (`NODE_OPTIONS=--max-old-space-size=1536`, `webpackMemoryOptimizations`). Longer-term: resize Droplet (≥4 GB) or build images on a stronger machine and deploy prebuilt images. |
+| **Lesson** | On a **2 GB** Droplet, an hour-long Next.js Docker compile means the host is **starving for RAM** — stop waiting, add swap / free memory / resize, then rebuild. |
+| **See also** | LL-001; `client/Dockerfile`; `client/next.config.ts` |
+
+**Notes — run in Web Console now:**
+
+```bash
+# 1) Is the build still alive? Any OOM?
+free -h
+df -h
+dmesg -T | grep -iE 'oom|killed process' | tail -20
+ps aux --sort=-%mem | head -15
+
+# 2) Stop a stuck build and reclaim disk
+cd /opt/legisarc
+docker compose -f deploy/docker-compose.prod.yml --env-file .env stop web || true
+docker builder prune -af
+docker image prune -af
+
+# 3) Add 4 GB swap if none (persists until reboot unless fstab added)
+sudo fallocate -l 4G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=4096
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+free -h
+
+# Optional persist across reboot:
+# echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+# 4) Rebuild with more headroom (stop web first so RAM is free)
+docker compose -f deploy/docker-compose.prod.yml --env-file .env stop web api
+docker compose -f deploy/docker-compose.prod.yml --env-file .env up -d --build
+docker compose -f deploy/docker-compose.prod.yml --env-file .env ps
+curl -sS http://127.0.0.1:4000/api/health
+```
+
+Push the latest `client/Dockerfile` + `next.config.ts` memory fixes to GitHub **before** step 4 if those commits are not on the Droplet yet (`git pull`).
+
+### LL-003 — PDF viewer `ERR_NAME_NOT_RESOLVED` with `%20` in Spaces CDN host
+
+| Field | Content |
+|-------|---------|
+| **Date** | 2026-07-18 |
+| **Area** | Spaces / PDF |
+| **Status** | Closed |
+| **Symptom** | Browser DevTools: `GET https://%20legisarc-files.sgp1.cdn.digitaloceanspaces.com/.../file.pdf net::ERR_NAME_NOT_RESOLVED` |
+| **Context** | Production PDF/image viewer after Spaces CDN is configured. |
+| **Root cause** | `SPACES_CDN_URL` (or `SPACES_PUBLIC_URL`) contained a **space** (often after `https://`). That becomes `%20` in the hostname, so DNS cannot resolve it. |
+| **Resolution** | On Droplet `.env`, set exactly `SPACES_CDN_URL=https://legisarc-files.sgp1.cdn.digitaloceanspaces.com` (no spaces). Restart API. Code also strips whitespace from Spaces base URLs when building public links. |
+| **Lesson** | If PDF URLs show `%20` right after `https://`, fix the Spaces CDN env value — it is not a CORS or missing-file problem. |
+| **See also** | §6 Spaces env; `server/src/config/env.ts`; `server/src/lib/storage.ts` |
 
 ---
 

@@ -29,6 +29,8 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "25mb",
     },
+    // Helps `next build` on small Droplets (1–2 GB RAM).
+    webpackMemoryOptimizations: true,
   },
   turbopack: {
     resolveAlias: {

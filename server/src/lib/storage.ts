@@ -17,14 +17,17 @@ export function toPublicStorageUrl(
   storagePath: string | null | undefined
 ): string {
   if (!storagePath) return "";
-  if (/^https?:\/\//i.test(storagePath)) return storagePath;
-  const cleaned = storagePath.replace(/^\/+/, "");
+  // Guard against accidental spaces in env-built or stored URLs.
+  const normalized = storagePath.trim().replace(/\s+/g, "");
+  if (/^https?:\/\//i.test(normalized)) return normalized;
+  const cleaned = normalized.replace(/^\/+/, "");
 
   if (env.storageDriver === "spaces") {
-    return `${env.spaces.publicBaseUrl}/${cleaned}`;
+    const base = env.spaces.publicBaseUrl.replace(/\s+/g, "").replace(/\/+$/, "");
+    return `${base}/${cleaned}`;
   }
 
-  return `${env.apiPublicUrl}/uploads/${cleaned}`;
+  return `${env.apiPublicUrl.replace(/\/+$/, "")}/uploads/${cleaned}`;
 }
 
 export function absoluteLocalPath(relativePath: string): string {
