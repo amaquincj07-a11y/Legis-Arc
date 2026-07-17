@@ -1,7 +1,6 @@
 "use server";
 
 import { apiGetPublic, publicPlacePath } from "@/lib/api/client";
-import { getApiBaseUrl } from "@/lib/api/config";
 import {
   mapCommitteeRowToCommittee,
   type CommitteeRow,
@@ -21,13 +20,6 @@ export type SBChartData = {
   committees: Committee[];
 };
 
-function toUploadsUrl(storagePath: string | null | undefined): string {
-  if (!storagePath) return "";
-  if (/^https?:\/\//i.test(storagePath)) return storagePath;
-  const cleaned = storagePath.replace(/^\/+/, "");
-  return `${getApiBaseUrl()}/uploads/${cleaned}`;
-}
-
 export async function fetchPublicSBChartAction(
   province: string,
   municipality: string
@@ -40,10 +32,7 @@ export async function fetchPublicSBChartAction(
     }>(path);
 
     const members = data.members.map((row) =>
-      mapSBMemberRowToMember(
-        row,
-        row.imageUrl ?? toUploadsUrl(row.image_storage_path)
-      )
+      mapSBMemberRowToMember(row, row.imageUrl?.trim() || "")
     );
     const memberById = new Map(members.map((member) => [member.id, member]));
 

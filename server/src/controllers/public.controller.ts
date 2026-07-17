@@ -260,7 +260,13 @@ export const publicController = {
       ),
     ]);
 
-    return ok(res, { members, committees });
+    return ok(res, {
+      members: members.map((m) => ({
+        ...m,
+        imageUrl: toPublicFileUrl(m.image_storage_path),
+      })),
+      committees,
+    });
   },
 
   async recordDownload(req: Request, res: Response) {

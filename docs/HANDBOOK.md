@@ -676,6 +676,20 @@ Push the latest `client/Dockerfile` + `next.config.ts` memory fixes to GitHub **
 | **Lesson** | A resolving CDN hostname is not enough — Spaces must grant **public GetObject** (ACL or bucket policy) for browser PDF viewers. |
 | **See also** | §6 Spaces public access; `server/src/lib/spaces.ts`; `server/db/make-spaces-objects-public.mjs` |
 
+### LL-005 — Public SB Chart images use `http://api:4000/uploads/...` (mixed content)
+
+| Field | Content |
+|-------|---------|
+| **Date** | 2026-07-18 |
+| **Area** | Public / SB Chart / Spaces |
+| **Status** | Closed |
+| **Symptom** | Admin SB member photos work; public `/sbchart` fails with Mixed Content / `ERR_NAME_NOT_RESOLVED` for `http://api:4000/uploads/...`. |
+| **Context** | Droplet Docker: Next `INTERNAL_API_URL=http://api:4000`. Public SB chart API returned storage paths without `imageUrl`. |
+| **Root cause** | Client fallback built image URLs with `getApiBaseUrl()` on the server, which prefers `INTERNAL_API_URL` — a Docker hostname the browser cannot resolve (and is HTTP on an HTTPS page). |
+| **Resolution** | Public `sb-chart` API returns Spaces CDN `imageUrl` via `toPublicFileUrl`; client uses that only (no Docker-internal URL synthesis). |
+| **Lesson** | Never expose `INTERNAL_API_URL` / `http://api:…` in HTML sent to browsers — public asset URLs must come from Spaces CDN or `NEXT_PUBLIC_API_URL`. |
+| **See also** | `server/src/controllers/public.controller.ts`; `client/src/lib/public-sb-chart-actions.ts`; `client/src/lib/api/config.ts` |
+
 ---
 
 *This handbook reflects the LegisArc state after the Express/Postgres migration, Spaces dual-storage work, and the legisarc.net DigitalOcean launch.*
