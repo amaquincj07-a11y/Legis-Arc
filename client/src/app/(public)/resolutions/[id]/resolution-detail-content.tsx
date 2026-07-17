@@ -14,6 +14,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { PdfViewerDynamic } from "@/components/public/pdf-viewer-dynamic";
+import { CertifiedCopyNotice } from "@/components/public/certified-copy-notice";
 import { fetchPublicResolutionByIdAction } from "@/lib/public-resolution-actions";
 import { usePlaceFilter } from "@/lib/place-filter-context";
 import { formatResolutionNumber } from "@/lib/utils";
@@ -33,7 +34,11 @@ export function ResolutionDetailContent({ id }: { id: string }) {
       setNotFound(false);
       setDoc(null);
 
-      const result = await fetchPublicResolutionByIdAction(id, province, municipality);
+      const result = await fetchPublicResolutionByIdAction(
+        province,
+        municipality,
+        id
+      );
 
       if (cancelled) return;
 
@@ -107,12 +112,16 @@ export function ResolutionDetailContent({ id }: { id: string }) {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <Link href="/resolutions">
-          <Button variant="ghost" size="sm" className="mb-6 gap-2 text-muted-foreground">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Resolutions
-          </Button>
-        </Link>
+        <div className="mb-6 flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <Link href="/resolutions" className="self-start">
+            <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Resolutions
+            </Button>
+          </Link>
+          <CertifiedCopyNotice />
+          <div className="hidden w-[140px] sm:block" aria-hidden />
+        </div>
 
         <Card className="overflow-hidden border border-border">
           <PdfViewerDynamic

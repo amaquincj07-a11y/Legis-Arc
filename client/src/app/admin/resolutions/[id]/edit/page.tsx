@@ -34,6 +34,10 @@ import {
   fetchResolutionByIdAction,
   updateResolutionAction,
 } from "@/lib/resolution-actions";
+import {
+  ADMIN_CACHE_KEYS,
+  invalidateAdminDocumentCaches,
+} from "@/lib/admin-query-cache";
 import { getSeriesYearOptions } from "@/lib/constants";
 import { formatResolutionNumber } from "@/lib/utils";
 import { EditPdfDocumentField } from "@/components/admin/edit-pdf-document-field";
@@ -139,6 +143,7 @@ export default function EditResolutionPage({
     setSubmitting(false);
 
     if (result.success) {
+      invalidateAdminDocumentCaches(ADMIN_CACHE_KEYS.resolutions);
       toast.success("Resolution updated successfully");
       router.push("/admin/resolutions");
     } else {

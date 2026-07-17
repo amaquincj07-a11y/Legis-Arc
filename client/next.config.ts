@@ -25,6 +25,10 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ["lucide-react"],
+    // Default is 1MB — SB member photos / PDF uploads exceed that and hang in prod.
+    serverActions: {
+      bodySizeLimit: "25mb",
+    },
   },
   turbopack: {
     resolveAlias: {

@@ -93,13 +93,19 @@ export const dashboardController = {
 export const activityController = {
   async list(req: Request, res: Response) {
     const auth = requireLgu(req);
+    // All LGU staff actions for this account; only mutation actions for document/org modules.
     const rows = await queryAll<ActivityLogRow>(
       `SELECT id, lgu_id, user_id, user_name, action, module,
               entity_id, entity_title, details, created_at
        FROM lgu_activity_logs
        WHERE lgu_id = $1
+         AND action IN ('upload', 'edit', 'delete', 'publish')
+         AND module IN (
+           'ordinances', 'resolutions', 'minutes',
+           'categories', 'sb-members', 'cso', 'committees'
+         )
        ORDER BY created_at DESC
-       LIMIT 100`,
+       LIMIT 50`,
       [auth.profile.lgu_id]
     );
     return ok(res, rows);

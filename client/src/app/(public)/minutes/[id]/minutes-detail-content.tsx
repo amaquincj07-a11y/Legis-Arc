@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -15,13 +14,11 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { PdfViewerDynamic } from "@/components/public/pdf-viewer-dynamic";
+import { CertifiedCopyNotice } from "@/components/public/certified-copy-notice";
 import { fetchPublicSessionMinutesByIdAction } from "@/lib/public-minutes-actions";
 import { usePlaceFilter } from "@/lib/place-filter-context";
+import { formatSessionDateDisplay } from "@/lib/session-date";
 import type { SessionMinutes } from "@/lib/types";
-
-function toSessionDate(value: Date | string): Date {
-  return value instanceof Date ? value : new Date(value);
-}
 
 export function MinutesDetailContent({ id }: { id: string }) {
   const { province, municipality, municipalityName } = usePlaceFilter();
@@ -38,9 +35,9 @@ export function MinutesDetailContent({ id }: { id: string }) {
       setSession(null);
 
       const result = await fetchPublicSessionMinutesByIdAction(
-        id,
         province,
-        municipality
+        municipality,
+        id
       );
 
       if (cancelled) return;
@@ -87,8 +84,7 @@ export function MinutesDetailContent({ id }: { id: string }) {
     );
   }
 
-  const sessionDate = toSessionDate(session.sessionDate);
-  const formattedDate = format(sessionDate, "MMMM d, yyyy");
+  const formattedDate = formatSessionDateDisplay(session.sessionDate);
 
   return (
     <div className="min-h-[70vh]">
@@ -117,12 +113,16 @@ export function MinutesDetailContent({ id }: { id: string }) {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <Link href="/minutes">
-          <Button variant="ghost" size="sm" className="mb-6 gap-2 text-muted-foreground">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Minutes
-          </Button>
-        </Link>
+        <div className="mb-6 flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <Link href="/minutes" className="self-start">
+            <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Minutes
+            </Button>
+          </Link>
+          <CertifiedCopyNotice />
+          <div className="hidden w-[140px] sm:block" aria-hidden />
+        </div>
 
         <Card className="overflow-hidden border border-border">
           <PdfViewerDynamic

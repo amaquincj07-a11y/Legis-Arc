@@ -3,7 +3,6 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { format, getYear, getMonth } from "date-fns";
 import {
   ChevronRight,
   Eye,
@@ -38,6 +37,13 @@ import {
 import { ADMIN_CACHE_KEYS, invalidateAdminCache } from "@/lib/admin-query-cache";
 import { openMinutesPdf } from "@/lib/admin-document-pdf";
 import { useAdminQuery } from "@/hooks/use-admin-query";
+import {
+  compareSessionDatesDesc,
+  formatSessionDateDisplay,
+  formatSessionDateInput,
+  sessionDateMonthIndex,
+  sessionDateYear,
+} from "@/lib/session-date";
 import type { SessionMinutes } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -73,8 +79,8 @@ export default function MinutesPage() {
   const grouped = useMemo(() => {
     const result: GroupedMinutes = {};
     for (const min of sessions) {
-      const year = getYear(min.sessionDate);
-      const month = getMonth(min.sessionDate);
+      const year = sessionDateYear(min.sessionDate);
+      const month = sessionDateMonthIndex(min.sessionDate);
       if (!result[year]) result[year] = {};
       if (!result[year][month]) result[year][month] = [];
       result[year][month].push(min);
@@ -100,17 +106,20 @@ export default function MinutesPage() {
   }, [sortedYears, grouped, openYears.size]);
 
   async function confirmDelete() {
-    if (!deleteTarget) return;
-    const result = await deleteSessionMinutesAction(deleteTarget.id);
+    const target = deleteTarget;
+    if (!target) return;
+    const result = await deleteSessionMinutesAction(target.id);
     if (result.success) {
-      setSessions((prev) => prev.filter((s) => s.id !== deleteTarget.id));
+      setSessions((prev) => prev.filter((s) => s.id !== target.id));
       invalidateAdminCache(ADMIN_CACHE_KEYS.dashboard);
+      invalidateAdminCache(ADMIN_CACHE_KEYS.activity);
       toast.success(
-        `Session minutes for ${format(deleteTarget.sessionDate, "MMMM d, yyyy")} deleted`
+        `Session minutes for ${formatSessionDateDisplay(target.sessionDate)} deleted`
       );
       setDeleteTarget(null);
     } else {
       toast.error(result.error);
+      throw new Error(result.error);
     }
   }
 
@@ -145,8 +154,9 @@ export default function MinutesPage() {
         onClick: () =>
           void openMinutesPdf(
             session.id,
-            `minutes-${format(session.sessionDate, "yyyy-MM-dd")}`,
-            "download"
+            `minutes-${formatSessionDateInput(session.sessionDate)}`,
+            "download",
+            session.pdfUrl
           ),
       },
       {
@@ -155,8 +165,9 @@ export default function MinutesPage() {
         onClick: () =>
           void openMinutesPdf(
             session.id,
-            `minutes-${format(session.sessionDate, "yyyy-MM-dd")}`,
-            "view"
+            `minutes-${formatSessionDateInput(session.sessionDate)}`,
+            "view",
+            session.pdfUrl
           ),
       },
       createPublishVisibilityAction(session, async () => {
@@ -167,6 +178,7 @@ export default function MinutesPage() {
               item.id === session.id ? result.data : item
             )
           );
+          invalidateAdminCache(ADMIN_CACHE_KEYS.activity);
           toast.success(
             result.data.isPublic && result.data.status === "published"
               ? "Session minutes published to public portal"
@@ -253,7 +265,7 @@ export default function MinutesPage() {
                       const monthKey = `${year}-${month}`;
                       const monthSessions = grouped[year][month].sort(
                         (a, b) =>
-                          b.sessionDate.getTime() - a.sessionDate.getTime()
+                          compareSessionDatesDesc(a.sessionDate, b.sessionDate)
                       );
 
                       return (
@@ -287,9 +299,8 @@ export default function MinutesPage() {
                                   <div className="min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center gap-2">
                                       <span className="text-sm font-medium">
-                                        {format(
-                                          session.sessionDate,
-                                          "MMMM d, yyyy"
+                                        {formatSessionDateDisplay(
+                                          session.sessionDate
                                         )}
                                       </span>
                                       <Badge
@@ -310,7 +321,7 @@ export default function MinutesPage() {
                                       />
                                     </div>
                                     <p className="mt-0.5 text-sm text-muted-foreground">
-                                      {format(
+                                      {formatSessionDateDisplay(
                                         session.sessionDate,
                                         "EEEE, MMMM d, yyyy"
                                       )}
@@ -352,7 +363,7 @@ export default function MinutesPage() {
         title="Delete session minutes?"
         description={
           deleteTarget
-            ? `Minutes for ${format(deleteTarget.sessionDate, "MMMM d, yyyy")} (${deleteTarget.sessionType}) will be permanently removed.`
+            ? `Minutes for ${formatSessionDateDisplay(deleteTarget.sessionDate)} (${deleteTarget.sessionType}) will be permanently removed.`
             : ""
         }
         onConfirm={confirmDelete}

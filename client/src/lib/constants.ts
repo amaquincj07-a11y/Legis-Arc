@@ -272,6 +272,12 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     roles: ["sys_admin", "sb_secretary"],
   },
   {
+    title: "Support",
+    href: "/admin/support",
+    icon: "LifeBuoy",
+    roles: ["sys_admin", "sb_secretary", "sb_member", "digitization_assistant"],
+  },
+  {
     title: "Settings",
     href: "/admin/settings",
     icon: "Settings",

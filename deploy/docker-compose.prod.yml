@@ -71,6 +71,8 @@ services:
       NODE_ENV: production
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      # Server Actions / RSC → Express on the Docker network (avoids nginx hairpin hangs on uploads)
+      INTERNAL_API_URL: ${INTERNAL_API_URL:-http://api:4000}
       FRONTEND_URL: ${FRONTEND_URL}
     ports:
       - "3000:3000"

@@ -42,9 +42,12 @@ function mapAccountStatus(
 }
 
 function mapPaymentStatus(
+  accountStatus: LGUClientStatus,
   start: string | null,
   end: string | null
 ): LGUPaymentStatus {
+  // Trial accounts must never show as Paid.
+  if (accountStatus === "trial") return "unpaid";
   return start && end ? "paid" : "unpaid";
 }
 
@@ -61,6 +64,7 @@ export async function fetchLGUBillingOverviewAction(): Promise<
       "/api/admin/billing/overview",
       token
     );
+    const accountStatus = mapAccountStatus(row.status);
     const endDate = row.subscription_end_date
       ? new Date(row.subscription_end_date)
       : null;
@@ -73,10 +77,11 @@ export async function fetchLGUBillingOverviewAction(): Promise<
       success: true,
       data: {
         paymentStatus: mapPaymentStatus(
+          accountStatus,
           row.subscription_start_date,
           row.subscription_end_date
         ),
-        accountStatus: mapAccountStatus(row.status),
+        accountStatus,
         subscriptionPlan: SUBSCRIPTION_PLAN_LABEL,
         subscriptionAmount: Number(row.subscription_amount ?? 0),
         expiresOn: endDate,

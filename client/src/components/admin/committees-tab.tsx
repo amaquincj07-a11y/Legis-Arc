@@ -39,7 +39,7 @@ import {
   fetchCommitteesPageDataAction,
   updateCommitteeAction,
 } from "@/lib/committee-actions";
-import { ADMIN_CACHE_KEYS } from "@/lib/admin-query-cache";
+import { ADMIN_CACHE_KEYS, invalidateAdminCache } from "@/lib/admin-query-cache";
 import { useAdminQuery } from "@/hooks/use-admin-query";
 import { formatSBMemberDisplayName } from "@/lib/utils";
 import type { Committee, SBMember } from "@/lib/types";
@@ -258,6 +258,7 @@ export function CommitteesTab() {
       toast.success("Committee added");
     }
 
+    invalidateAdminCache(ADMIN_CACHE_KEYS.activity);
     closeDialog();
   }
 
@@ -277,6 +278,7 @@ export function CommitteesTab() {
       ...current,
       committees: current.committees.filter((c) => c.id !== deleteTarget.id),
     }));
+    invalidateAdminCache(ADMIN_CACHE_KEYS.activity);
     toast.success("Committee removed");
     setDeleteTarget(null);
   }

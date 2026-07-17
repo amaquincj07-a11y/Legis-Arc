@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,7 +17,7 @@ type ConfirmDeleteDialogProps = {
   title?: string;
   description: string;
   confirmLabel?: string;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
 };
 
 export function ConfirmDeleteDialog({
@@ -27,8 +28,27 @@ export function ConfirmDeleteDialog({
   confirmLabel = "Delete",
   onConfirm,
 }: ConfirmDeleteDialogProps) {
+  const [pending, setPending] = useState(false);
+
+  async function handleConfirm() {
+    if (pending) return;
+    setPending(true);
+    try {
+      await onConfirm();
+      onOpenChange(false);
+    } finally {
+      setPending(false);
+    }
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (pending) return;
+        onOpenChange(next);
+      }}
+    >
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -38,6 +58,7 @@ export function ConfirmDeleteDialog({
           <Button
             type="button"
             variant="outline"
+            disabled={pending}
             onClick={() => onOpenChange(false)}
           >
             Cancel
@@ -45,12 +66,10 @@ export function ConfirmDeleteDialog({
           <Button
             type="button"
             variant="destructive"
-            onClick={() => {
-              onConfirm();
-              onOpenChange(false);
-            }}
+            disabled={pending}
+            onClick={() => void handleConfirm()}
           >
-            {confirmLabel}
+            {pending ? "Deleting..." : confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

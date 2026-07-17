@@ -21,10 +21,12 @@ export async function fetchPublicOrdinancesAction(
 ): Promise<ActionResult<LegislativeDocument[]>> {
   try {
     const path = publicPlacePath(province, municipality, "/ordinances");
-    const rows = await apiGetPublic<OrdinanceRow[]>(path);
+    const rows = await apiGetPublic<(OrdinanceRow & { pdfUrl?: string })[]>(path);
     return {
       success: true,
-      data: rows.map((row) => mapOrdinanceRowToDocument(row, "")),
+      data: rows.map((row) =>
+        mapOrdinanceRowToDocument(row, row.pdfUrl ?? "")
+      ),
     };
   } catch (error) {
     return {

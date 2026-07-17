@@ -89,11 +89,15 @@ export default function CategoriesPage() {
 
     if (editingCategory) {
       setCategories((prev) =>
-        prev.map((c) => (c.id === editingCategory.id ? result.data : c))
+        prev
+          .map((c) => (c.id === editingCategory.id ? result.data : c))
+          .toSorted((a, b) => a.name.localeCompare(b.name))
       );
       toast.success("Category updated");
     } else {
-      setCategories((prev) => [...prev, result.data]);
+      setCategories((prev) =>
+        [...prev, result.data].toSorted((a, b) => a.name.localeCompare(b.name))
+      );
       toast.success("Category added");
     }
 
@@ -101,6 +105,7 @@ export default function CategoriesPage() {
     setCategoryName("");
     setEditingCategory(null);
     invalidateAdminCache(ADMIN_CACHE_KEYS.categories);
+    invalidateAdminCache(ADMIN_CACHE_KEYS.activity);
   }
 
   async function toggleActive(id: string, nextActive: boolean) {
@@ -114,25 +119,31 @@ export default function CategoriesPage() {
       prev.map((c) => (c.id === id ? result.data : c))
     );
     invalidateAdminCache(ADMIN_CACHE_KEYS.categories);
+    invalidateAdminCache(ADMIN_CACHE_KEYS.activity);
     toast.success(nextActive ? "Category enabled" : "Category disabled");
   }
 
   async function confirmDelete() {
-    if (!deleteTarget) return;
+    const target = deleteTarget;
+    if (!target) return;
 
     setDeleting(true);
-    const result = await deleteCategoryAction(deleteTarget.id);
-    setDeleting(false);
+    try {
+      const result = await deleteCategoryAction(target.id);
 
-    if (!result.success) {
-      toast.error(result.error);
-      return;
+      if (!result.success) {
+        toast.error(result.error);
+        throw new Error(result.error);
+      }
+
+      setCategories((prev) => prev.filter((c) => c.id !== target.id));
+      invalidateAdminCache(ADMIN_CACHE_KEYS.categories);
+      invalidateAdminCache(ADMIN_CACHE_KEYS.activity);
+      toast.success("Category deleted");
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
     }
-
-    setCategories((prev) => prev.filter((c) => c.id !== deleteTarget.id));
-    invalidateAdminCache(ADMIN_CACHE_KEYS.categories);
-    toast.success("Category deleted");
-    setDeleteTarget(null);
   }
 
   return (
@@ -358,7 +369,7 @@ export default function CategoriesPage() {
             ? `"${deleteTarget.name}" will be permanently removed from your LGU's category list. Other LGU accounts are not affected. Existing documents that used this category will keep their current label.`
             : ""
         }
-        onConfirm={() => void confirmDelete()}
+        onConfirm={confirmDelete}
       />
     </div>
   );

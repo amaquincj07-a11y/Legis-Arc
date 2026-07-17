@@ -2,16 +2,8 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
-import { ZoomIn, ZoomOut, Maximize2, Minimize2, Download, Stamp } from "lucide-react";
+import { ZoomIn, ZoomOut, Maximize2, Minimize2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { DocumentDownloadDialog } from "@/components/public/document-download-dialog";
 import type { PublicDocumentDownloadContext } from "@/lib/types";
 
@@ -30,17 +22,14 @@ export function PdfViewer({ pdfUrl, title, downloadContext }: PdfViewerProps) {
   const [numPages, setNumPages] = useState<number>(0);
   const [scale, setScale] = useState(1.0);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
-  const [showCertifiedReminder, setShowCertifiedReminder] = useState(false);
 
   const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
-    setLoading(false);
   }, []);
 
   const onDocumentLoadError = useCallback(() => {
-    setLoading(false);
+    setNumPages(0);
   }, []);
 
   const zoomIn = () => setScale((s) => Math.min(2.5, s + 0.25));
@@ -77,15 +66,6 @@ export function PdfViewer({ pdfUrl, title, downloadContext }: PdfViewerProps) {
           >
             <Download className="mr-1 h-4 w-4" />
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="ml-2 flex items-center"
-            onClick={() => setShowCertifiedReminder(true)}
-          >
-            <Stamp className="mr-1 h-4 w-4" />
-            Certified Copy
-          </Button>
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={zoomOut} disabled={scale <= 0.5}>
             <ZoomOut className="h-4 w-4" />
           </Button>
@@ -109,26 +89,6 @@ export function PdfViewer({ pdfUrl, title, downloadContext }: PdfViewerProps) {
           downloadFileName={title}
         />
       ) : null}
-
-      <Dialog open={showCertifiedReminder} onOpenChange={setShowCertifiedReminder}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Request Certified Copy</DialogTitle>
-            <DialogDescription asChild>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                Certified copies require an official signature and seal and cannot be
-                issued through this platform. Please visit the Sangguniang Bayan Office
-                to process your request.
-              </p>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button type="button" onClick={() => setShowCertifiedReminder(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <div
         className={

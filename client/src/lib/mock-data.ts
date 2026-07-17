@@ -689,7 +689,7 @@ function _min(
   return {
     id: `min-${_minCounter}`,
     documentType: "minutes",
-    sessionDate: new Date(year, month - 1, day),
+    sessionDate: `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
     sessionType,
     status: st,
     isPublic: pub,

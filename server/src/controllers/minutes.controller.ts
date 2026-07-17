@@ -14,11 +14,34 @@ import {
   deleteUploadedFile,
 } from "../lib/upload.js";
 import { recordActivity, bumpDocumentCount } from "../lib/activity.js";
+import { toDateOnlyString } from "../lib/date-only.js";
 
 const MINUTES_COLUMNS = `
   id, lgu_id, session_date, session_type, pdf_storage_path, status,
   is_public, created_by, created_at, updated_at
 `;
+
+/** Keep calendar dates as YYYY-MM-DD (no timezone shift). */
+function normalizeSessionDate(raw: unknown): string {
+  try {
+    return toDateOnlyString(raw);
+  } catch {
+    throw new AppError("Session date must be a valid date (YYYY-MM-DD)", 400);
+  }
+}
+
+function serializeMinutesRow<T extends { session_date: unknown; pdf_storage_path?: string | null }>(
+  row: T,
+  pdfUrl?: string
+) {
+  return {
+    ...row,
+    session_date: toDateOnlyString(row.session_date),
+    ...(pdfUrl !== undefined
+      ? { pdfUrl }
+      : { pdfUrl: toPublicFileUrl(row.pdf_storage_path) }),
+  };
+}
 
 export const minutesController = {
   async list(req: Request, res: Response) {
@@ -33,7 +56,10 @@ export const minutesController = {
       [auth.profile.lgu_id]
     );
 
-    return ok(res, rows);
+    return ok(
+      res,
+      rows.map((row) => serializeMinutesRow(row))
+    );
   },
 
   async getById(req: Request, res: Response) {
@@ -49,10 +75,7 @@ export const minutesController = {
 
     if (!row) throw new NotFoundError("Session minutes not found");
 
-    return ok(res, {
-      ...row,
-      pdfUrl: toPublicFileUrl(row.pdf_storage_path),
-    });
+    return ok(res, serializeMinutesRow(row));
   },
 
   async create(req: Request, res: Response) {
@@ -78,6 +101,8 @@ export const minutesController = {
       throw new AppError("Session type must be 'regular' or 'special'", 400);
     }
 
+    const normalizedSessionDate = normalizeSessionDate(sessionDate);
+
     const pdfPath = relativePathFromFile(
       auth.profile.lgu_id,
       "minutes",
@@ -93,7 +118,7 @@ export const minutesController = {
         RETURNING id`,
         [
           auth.profile.lgu_id,
-          sessionDate,
+          normalizedSessionDate,
           sessionType,
           pdfPath,
           "published",
@@ -115,8 +140,8 @@ export const minutesController = {
         action: "upload",
         module: "minutes",
         entityId: result.id,
-        entityTitle: `${sessionType} session on ${sessionDate}`,
-        details: `Created ${sessionType} session minutes for ${sessionDate}`,
+        entityTitle: `${sessionType} session on ${normalizedSessionDate}`,
+        details: `Created ${sessionType} session minutes for ${normalizedSessionDate}`,
       });
 
       return ok(res, { id: result.id });
@@ -171,6 +196,10 @@ export const minutesController = {
     }
 
     try {
+      const normalizedSessionDate = sessionDate
+        ? normalizeSessionDate(sessionDate)
+        : null;
+
       await query(
         `UPDATE session_minutes
          SET session_date = COALESCE($1, session_date),
@@ -179,7 +208,7 @@ export const minutesController = {
              updated_at = NOW()
          WHERE lgu_id = $4 AND id = $5`,
         [
-          sessionDate || null,
+          normalizedSessionDate,
           sessionType || null,
           newPdfPath,
           auth.profile.lgu_id,
@@ -192,6 +221,8 @@ export const minutesController = {
         await deleteUploadedFile(oldPdfPath);
       }
 
+      const dateLabel = normalizedSessionDate ?? existing.session_date;
+
       // Record activity
       await recordActivity({
         lguId: auth.profile.lgu_id,
@@ -200,8 +231,8 @@ export const minutesController = {
         action: "edit",
         module: "minutes",
         entityId: id,
-        entityTitle: `${sessionType || existing.session_type} session on ${sessionDate || existing.session_date}`,
-        details: `Updated session minutes for ${sessionDate || existing.session_date}`,
+        entityTitle: `${sessionType || existing.session_type} session on ${dateLabel}`,
+        details: `Updated session minutes for ${dateLabel}`,
       });
 
       return ok(res, { id });
@@ -259,8 +290,8 @@ export const minutesController = {
       action: "delete",
       module: "minutes",
       entityId: id,
-      entityTitle: `${minutes.session_type} session on ${minutes.session_date}`,
-      details: `Deleted session minutes for ${minutes.session_date}`,
+      entityTitle: `${minutes.session_type} session on ${toDateOnlyString(minutes.session_date)}`,
+      details: `Deleted session minutes for ${toDateOnlyString(minutes.session_date)}`,
     });
 
     return ok(res, { success: true });
@@ -288,12 +319,15 @@ export const minutesController = {
     const newStatus = newIsPublic ? "published" : "draft";
 
     // Toggle is_public and update status
-    await query(
+    const updated = await queryOne<SessionMinutesRow>(
       `UPDATE session_minutes
        SET is_public = $1, status = $2, updated_at = NOW()
-       WHERE lgu_id = $3 AND id = $4`,
+       WHERE lgu_id = $3 AND id = $4
+       RETURNING ${MINUTES_COLUMNS}`,
       [newIsPublic, newStatus, auth.profile.lgu_id, id]
     );
+
+    if (!updated) throw new AppError("Failed to update publish status", 500);
 
     // Record activity
     await recordActivity({
@@ -303,12 +337,12 @@ export const minutesController = {
       action: "publish",
       module: "minutes",
       entityId: id,
-      entityTitle: `${minutes.session_type} session on ${minutes.session_date}`,
+      entityTitle: `${minutes.session_type} session on ${toDateOnlyString(minutes.session_date)}`,
       details: newIsPublic
-        ? `Published session minutes for ${minutes.session_date}`
-        : `Unpublished session minutes for ${minutes.session_date}`,
+        ? `Published session minutes for ${toDateOnlyString(minutes.session_date)}`
+        : `Unpublished session minutes for ${toDateOnlyString(minutes.session_date)}`,
     });
 
-    return ok(res, { is_public: newIsPublic, status: newStatus });
+    return ok(res, serializeMinutesRow(updated));
   },
 };

@@ -27,6 +27,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createSessionMinutesAction } from "@/lib/minutes-actions";
+import {
+  ADMIN_CACHE_KEYS,
+  invalidateAdminDocumentCaches,
+} from "@/lib/admin-query-cache";
 
 const formSchema = z.object({
   sessionDate: z.string().min(1, "Session date is required"),
@@ -59,6 +63,7 @@ export default function MinutesScanPage() {
 
     const result = await createSessionMinutesAction(formData);
     if (result.success) {
+      invalidateAdminDocumentCaches(ADMIN_CACHE_KEYS.minutes);
       toast.success("Scanned session minutes uploaded successfully");
       return true;
     }

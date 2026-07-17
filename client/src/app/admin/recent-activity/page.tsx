@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Download, Search, X, Loader2 } from "lucide-react";
@@ -24,12 +24,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AdminPagination } from "@/components/admin/admin-pagination";
 import { fetchLGUActivityLogsAction } from "@/lib/activity-actions";
 import { ADMIN_CACHE_KEYS } from "@/lib/admin-query-cache";
 import { useAdminQuery } from "@/hooks/use-admin-query";
-import type { AuditLogEntry } from "@/lib/types";
+import { formatActivityModuleLabel } from "@/lib/mappers/activity-log-mapper";
 
 const ACTION_OPTIONS = ["upload", "edit", "delete", "publish"] as const;
+const ITEMS_PER_PAGE = 10;
+const MAX_ACTIVITY_LOGS = 50;
 
 const actionVariant: Record<string, string> = {
   upload: "border-transparent bg-blue-100 text-blue-700",
@@ -47,7 +50,7 @@ function escapeCsvCell(value: string) {
 }
 
 export default function RecentActivityPage() {
-  const { data, loading } = useAdminQuery(
+  const { data, loading, error } = useAdminQuery(
     ADMIN_CACHE_KEYS.activity,
     fetchLGUActivityLogsAction
   );
@@ -57,6 +60,7 @@ export default function RecentActivityPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const uniqueUsers = useMemo(
     () => [...new Set(logs.map((log) => log.userName))].sort(),
@@ -69,10 +73,14 @@ export default function RecentActivityPage() {
         userFilter === "all" || log.userName === userFilter;
       const matchesAction =
         actionFilter === "all" || log.action === actionFilter;
+      const moduleLabel = log.module
+        ? formatActivityModuleLabel(log.module)
+        : "";
       const matchesSearch =
         !search ||
-        log.details.toLowerCase().includes(search.toLowerCase()) ||
-        (log.documentTitle ?? "").toLowerCase().includes(search.toLowerCase());
+        (log.documentTitle ?? "").toLowerCase().includes(search.toLowerCase()) ||
+        moduleLabel.toLowerCase().includes(search.toLowerCase()) ||
+        log.userName.toLowerCase().includes(search.toLowerCase());
 
       let matchesDate = true;
       if (dateFrom) {
@@ -87,6 +95,17 @@ export default function RecentActivityPage() {
       return matchesUser && matchesAction && matchesSearch && matchesDate;
     });
   }, [logs, userFilter, actionFilter, dateFrom, dateTo, search]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [userFilter, actionFilter, dateFrom, dateTo, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginated = useMemo(() => {
+    const start = (safePage - 1) * ITEMS_PER_PAGE;
+    return filtered.slice(start, start + ITEMS_PER_PAGE);
+  }, [filtered, safePage]);
 
   const hasActiveFilters =
     search ||
@@ -109,13 +128,13 @@ export default function RecentActivityPage() {
       return;
     }
 
-    const headers = ["Date/Time", "User", "Action", "Document", "Details"];
+    const headers = ["Date/Time", "User", "Action", "Module", "Document"];
     const rows = filtered.map((log) => [
       format(log.timestamp, "yyyy-MM-dd HH:mm:ss"),
       log.userName,
       log.action,
+      log.module ? formatActivityModuleLabel(log.module) : "",
       log.documentTitle ?? "",
-      log.details,
     ]);
 
     const csv = [headers, ...rows]
@@ -149,8 +168,8 @@ export default function RecentActivityPage() {
             Recent Activity
           </h1>
           <p className="text-sm text-muted-foreground">
-            Activity from ordinances, resolutions, minutes, committees, CSO, SB
-            members, and categories — read-only records
+            Upload, edit, publish, and delete actions by all LGU users. Keeps
+            the latest {MAX_ACTIVITY_LOGS} entries (oldest removed first).
           </p>
         </div>
         <Button variant="outline" onClick={handleExportCSV}>
@@ -159,6 +178,12 @@ export default function RecentActivityPage() {
         </Button>
       </div>
 
+      {error ? (
+        <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </p>
+      ) : null}
+
       <Card>
         <CardHeader className="pb-4">
           <div className="flex flex-col gap-4">
@@ -166,7 +191,7 @@ export default function RecentActivityPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Search logs..."
+                  placeholder="Search by user, module, or document..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-9"
@@ -234,12 +259,12 @@ export default function RecentActivityPage() {
                 <TableHead className="pl-6">Date / Time</TableHead>
                 <TableHead>User</TableHead>
                 <TableHead>Action</TableHead>
+                <TableHead>Module</TableHead>
                 <TableHead>Document</TableHead>
-                <TableHead className="hidden lg:table-cell">Details</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.length === 0 ? (
+              {paginated.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="h-32 text-center">
                     <p className="text-muted-foreground">
@@ -248,7 +273,7 @@ export default function RecentActivityPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filtered.map((log) => (
+                paginated.map((log) => (
                   <TableRow key={log.id}>
                     <TableCell className="pl-6 whitespace-nowrap text-muted-foreground">
                       {format(log.timestamp, "MMM d, yyyy h:mm a")}
@@ -265,19 +290,29 @@ export default function RecentActivityPage() {
                         {formatActionLabel(log.action)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="max-w-[240px] truncate">
+                    <TableCell className="text-muted-foreground">
+                      {log.module
+                        ? formatActivityModuleLabel(log.module)
+                        : "—"}
+                    </TableCell>
+                    <TableCell className="max-w-[280px] truncate">
                       {log.documentTitle ?? (
                         <span className="text-muted-foreground">—</span>
                       )}
-                    </TableCell>
-                    <TableCell className="hidden max-w-[200px] truncate text-muted-foreground lg:table-cell">
-                      {log.details}
                     </TableCell>
                   </TableRow>
                 ))
               )}
             </TableBody>
           </Table>
+
+          <AdminPagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            totalItems={filtered.length}
+            itemsPerPage={ITEMS_PER_PAGE}
+            onPageChange={setCurrentPage}
+          />
         </CardContent>
       </Card>
     </div>

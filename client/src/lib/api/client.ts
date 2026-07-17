@@ -149,6 +149,10 @@ export async function apiFormAuth<T>(
   method: "POST" | "PATCH" = "POST"
 ): Promise<T> {
   let response: Response;
+  const controller = new AbortController();
+  // Uploads can be slow on Spaces; fail clearly instead of endless Save spinner.
+  const timeoutMs = 120_000;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   try {
     response = await fetch(apiUrl(path), {
       method,
@@ -157,12 +161,21 @@ export async function apiFormAuth<T>(
       },
       body: formData,
       cache: "no-store",
+      signal: controller.signal,
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new ApiError(
+        "Upload timed out. Check API connectivity and Spaces credentials.",
+        0
+      );
+    }
     throw new ApiError(
       "Cannot reach LegisArc API. Is the server running on NEXT_PUBLIC_API_URL?",
       0
     );
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   let payload: ApiResult<T> | null = null;

@@ -74,6 +74,7 @@ export async function createSBMemberAction(
       "POST"
     );
     revalidatePath("/admin/sb-members");
+    revalidatePath("/admin/committees");
     revalidatePath("/sbchart");
     return { success: true, data: mapMember(row) };
   } catch (error) {
@@ -104,6 +105,7 @@ export async function updateSBMemberAction(
       "PATCH"
     );
     revalidatePath("/admin/sb-members");
+    revalidatePath("/admin/committees");
     revalidatePath("/sbchart");
     return { success: true, data: mapMember(row) };
   } catch (error) {
@@ -128,6 +130,7 @@ export async function deleteSBMemberAction(
   try {
     await apiDeleteAuth(`/api/admin/sb-members/${id}`, token);
     revalidatePath("/admin/sb-members");
+    revalidatePath("/admin/committees");
     revalidatePath("/sbchart");
     return { success: true, data: null };
   } catch (error) {

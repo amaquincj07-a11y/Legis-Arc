@@ -19,10 +19,15 @@ export async function fetchResolutionsAction(): Promise<
   }
 
   try {
-    const rows = await apiGetAuth<ResolutionRow[]>("/api/admin/resolutions", token);
+    const rows = await apiGetAuth<(ResolutionRow & { pdfUrl?: string })[]>(
+      "/api/admin/resolutions",
+      token
+    );
     return {
       success: true,
-      data: rows.map((row) => mapResolutionRowToDocument(row, "")),
+      data: rows.map((row) =>
+        mapResolutionRowToDocument(row, row.pdfUrl ?? "")
+      ),
     };
   } catch (error) {
     return {

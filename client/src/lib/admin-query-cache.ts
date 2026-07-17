@@ -50,6 +50,18 @@ export function invalidateAdminCache(key?: string) {
   cache.clear();
 }
 
+/** Clear list + dashboard caches so create/edit appear immediately after navigation. */
+export function invalidateAdminDocumentCaches(
+  listKey:
+    | typeof ADMIN_CACHE_KEYS.ordinances
+    | typeof ADMIN_CACHE_KEYS.resolutions
+    | typeof ADMIN_CACHE_KEYS.minutes
+) {
+  invalidateAdminCache(listKey);
+  invalidateAdminCache(ADMIN_CACHE_KEYS.dashboard);
+  invalidateAdminCache(ADMIN_CACHE_KEYS.activity);
+}
+
 export function patchCachedAdminData<T>(
   key: string,
   updater: (current: T) => T

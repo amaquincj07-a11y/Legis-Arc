@@ -14,10 +14,12 @@ export async function fetchPublicResolutionsAction(
 ): Promise<ActionResult<LegislativeDocument[]>> {
   try {
     const path = publicPlacePath(province, municipality, "/resolutions");
-    const rows = await apiGetPublic<ResolutionRow[]>(path);
+    const rows = await apiGetPublic<(ResolutionRow & { pdfUrl?: string })[]>(path);
     return {
       success: true,
-      data: rows.map((row) => mapResolutionRowToDocument(row, "")),
+      data: rows.map((row) =>
+        mapResolutionRowToDocument(row, row.pdfUrl ?? "")
+      ),
     };
   } catch (error) {
     return {

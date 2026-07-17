@@ -49,7 +49,7 @@ import {
   fetchCSOOrganizationsAction,
   updateCSOOrganizationAction,
 } from "@/lib/cso-actions";
-import { ADMIN_CACHE_KEYS } from "@/lib/admin-query-cache";
+import { ADMIN_CACHE_KEYS, invalidateAdminCache } from "@/lib/admin-query-cache";
 import { useAdminQuery } from "@/hooks/use-admin-query";
 import { CSO_YEAR_TERMS } from "@/lib/constants";
 import type { CSOOrganization } from "@/lib/types";
@@ -154,16 +154,18 @@ export default function AdminCSOPage() {
   }
 
   async function confirmDelete() {
-    if (!deleteTarget) return;
+    const target = deleteTarget;
+    if (!target) return;
 
-    const result = await deleteCSOOrganizationAction(deleteTarget.id);
+    const result = await deleteCSOOrganizationAction(target.id);
 
     if (!result.success) {
       toast.error(result.error);
-      return;
+      throw new Error(result.error);
     }
 
-    setOrganizations((prev) => prev.filter((o) => o.id !== deleteTarget.id));
+    setOrganizations((prev) => prev.filter((o) => o.id !== target.id));
+    invalidateAdminCache(ADMIN_CACHE_KEYS.activity);
     toast.success("CSO removed");
     setDeleteTarget(null);
   }
@@ -223,6 +225,7 @@ export default function AdminCSOPage() {
       setCurrentPage(1);
     }
 
+    invalidateAdminCache(ADMIN_CACHE_KEYS.activity);
     closeDialog();
   }
 
@@ -631,7 +634,7 @@ export default function AdminCSOPage() {
             ? `"${deleteTarget.name}" will be permanently removed from the directory.`
             : ""
         }
-        onConfirm={() => void confirmDelete()}
+        onConfirm={confirmDelete}
       />
     </div>
   );

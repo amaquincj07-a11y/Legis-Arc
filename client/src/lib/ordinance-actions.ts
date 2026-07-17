@@ -19,10 +19,15 @@ export async function fetchOrdinancesAction(): Promise<
   }
 
   try {
-    const rows = await apiGetAuth<OrdinanceRow[]>("/api/admin/ordinances", token);
+    const rows = await apiGetAuth<(OrdinanceRow & { pdfUrl?: string })[]>(
+      "/api/admin/ordinances",
+      token
+    );
     return {
       success: true,
-      data: rows.map((row) => mapOrdinanceRowToDocument(row, "")),
+      data: rows.map((row) =>
+        mapOrdinanceRowToDocument(row, row.pdfUrl ?? "")
+      ),
     };
   } catch (error) {
     return {

@@ -34,7 +34,13 @@ export const resolutionsController = {
       [auth.profile.lgu_id]
     );
 
-    return ok(res, rows);
+    return ok(
+      res,
+      rows.map((row) => ({
+        ...row,
+        pdfUrl: toPublicFileUrl(row.pdf_storage_path),
+      }))
+    );
   },
 
   async getById(req: Request, res: Response) {
@@ -300,12 +306,15 @@ export const resolutionsController = {
     const newStatus = newIsPublic ? "published" : "draft";
 
     // Toggle is_public and update status
-    await query(
+    const updated = await queryOne<ResolutionRow>(
       `UPDATE resolutions
        SET is_public = $1, status = $2, updated_at = NOW()
-       WHERE lgu_id = $3 AND id = $4`,
+       WHERE lgu_id = $3 AND id = $4
+       RETURNING ${RESOLUTION_COLUMNS}`,
       [newIsPublic, newStatus, auth.profile.lgu_id, id]
     );
+
+    if (!updated) throw new AppError("Failed to update publish status", 500);
 
     // Record activity
     await recordActivity({
@@ -321,6 +330,9 @@ export const resolutionsController = {
         : `Unpublished resolution ${resolution.resolution_number}`,
     });
 
-    return ok(res, { is_public: newIsPublic, status: newStatus });
+    return ok(res, {
+      ...updated,
+      pdfUrl: toPublicFileUrl(updated.pdf_storage_path),
+    });
   },
 };

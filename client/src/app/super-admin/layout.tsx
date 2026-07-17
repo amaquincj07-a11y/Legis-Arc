@@ -63,10 +63,12 @@ function useBreadcrumbs() {
   let path = "";
   for (const segment of segments) {
     path += `/${segment}`;
+    const href =
+      path === "/super-admin" ? "/super-admin/dashboard" : path;
     const label = segment
       .replaceAll("-", " ")
       .replaceAll(/\b\w/g, (c) => c.toUpperCase());
-    crumbs.push({ label, href: path });
+    crumbs.push({ label, href });
   }
 
   return crumbs;

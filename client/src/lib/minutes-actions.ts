@@ -27,13 +27,15 @@ export async function fetchSessionMinutesAction(): Promise<
   }
 
   try {
-    const rows = await apiGetAuth<SessionMinutesRow[]>(
+    const rows = await apiGetAuth<(SessionMinutesRow & { pdfUrl?: string })[]>(
       "/api/admin/minutes",
       token
     );
     return {
       success: true,
-      data: rows.map((row) => mapSessionMinutesRowToDocument(row, "")),
+      data: rows.map((row) =>
+        mapSessionMinutesRowToDocument(row, row.pdfUrl ?? "")
+      ),
     };
   } catch (error) {
     return {

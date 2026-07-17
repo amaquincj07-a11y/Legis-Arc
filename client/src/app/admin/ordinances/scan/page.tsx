@@ -31,6 +31,10 @@ import {
 import { useActiveCategories } from "@/hooks/use-active-categories";
 import { createOrdinanceAction } from "@/lib/ordinance-actions";
 import {
+  ADMIN_CACHE_KEYS,
+  invalidateAdminDocumentCaches,
+} from "@/lib/admin-query-cache";
+import {
   APPROPRIATION_ORDINANCE_CATEGORY,
   getSeriesYearOptions,
 } from "@/lib/constants";
@@ -95,6 +99,7 @@ export default function OrdinanceScanPage() {
 
     const result = await createOrdinanceAction(formData);
     if (result.success) {
+      invalidateAdminDocumentCaches(ADMIN_CACHE_KEYS.ordinances);
       toast.success("Scanned ordinance uploaded successfully");
       return true;
     }

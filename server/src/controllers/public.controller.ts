@@ -12,6 +12,7 @@ import type { CommitteeRow } from "../models/committee.js";
 import { ok } from "../utils/api-response.js";
 import { AppError, NotFoundError } from "../utils/errors.js";
 import { decodePlaceParam } from "../utils/place.js";
+import { toDateOnlyString } from "../lib/date-only.js";
 
 const LGU_COLUMNS = `
   id, province, municipality, status, subscription_amount,
@@ -72,7 +73,13 @@ export const publicController = {
       [lguId]
     );
 
-    return ok(res, rows);
+    return ok(
+      res,
+      rows.map((row) => ({
+        ...row,
+        pdfUrl: toPublicFileUrl(row.pdf_storage_path),
+      }))
+    );
   },
 
   async getOrdinance(req: Request, res: Response) {
@@ -115,7 +122,13 @@ export const publicController = {
       [lguId]
     );
 
-    return ok(res, rows);
+    return ok(
+      res,
+      rows.map((row) => ({
+        ...row,
+        pdfUrl: toPublicFileUrl(row.pdf_storage_path),
+      }))
+    );
   },
 
   async getResolution(req: Request, res: Response) {
@@ -157,7 +170,14 @@ export const publicController = {
       [lguId]
     );
 
-    return ok(res, rows);
+    return ok(
+      res,
+      rows.map((row) => ({
+        ...row,
+        session_date: toDateOnlyString(row.session_date),
+        pdfUrl: toPublicFileUrl(row.pdf_storage_path),
+      }))
+    );
   },
 
   async getMinutes(req: Request, res: Response) {
@@ -179,6 +199,7 @@ export const publicController = {
 
     return ok(res, {
       ...row,
+      session_date: toDateOnlyString(row.session_date),
       pdfUrl: toPublicFileUrl(row.pdf_storage_path),
     });
   },
@@ -193,7 +214,7 @@ export const publicController = {
       `SELECT id, lgu_id, name, is_active, sort_order, created_by, created_at, updated_at
        FROM document_categories
        WHERE lgu_id = $1 AND is_active = true
-       ORDER BY sort_order ASC`,
+       ORDER BY LOWER(name) ASC`,
       [lguId]
     );
 

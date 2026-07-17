@@ -58,7 +58,8 @@ export interface LegislativeDocument {
 export interface SessionMinutes {
   id: string;
   documentType: "minutes";
-  sessionDate: Date;
+  /** Calendar day as YYYY-MM-DD (timezone-safe). */
+  sessionDate: string;
   sessionType: SessionType;
   status: DocumentStatus;
   isPublic: boolean;
@@ -112,6 +113,7 @@ export interface AuditLogEntry {
   userId: string;
   userName: string;
   action: string;
+  module?: string;
   documentId?: string;
   documentTitle?: string;
   details: string;

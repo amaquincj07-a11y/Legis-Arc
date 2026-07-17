@@ -30,6 +30,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createSessionMinutesAction } from "@/lib/minutes-actions";
+import {
+  ADMIN_CACHE_KEYS,
+  invalidateAdminDocumentCaches,
+} from "@/lib/admin-query-cache";
 import { MAX_FILE_SIZE } from "@/lib/constants";
 
 const formSchema = z.object({
@@ -83,6 +87,7 @@ export default function NewMinutesPage() {
     setSubmitting(false);
 
     if (result.success) {
+      invalidateAdminDocumentCaches(ADMIN_CACHE_KEYS.minutes);
       toast.success("Minutes saved successfully");
       router.push("/admin/minutes");
     } else {

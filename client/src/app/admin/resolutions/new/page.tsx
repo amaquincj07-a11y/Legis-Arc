@@ -31,6 +31,10 @@ import {
 } from "@/components/ui/select";
 import { useActiveCategories } from "@/hooks/use-active-categories";
 import { createResolutionAction } from "@/lib/resolution-actions";
+import {
+  ADMIN_CACHE_KEYS,
+  invalidateAdminDocumentCaches,
+} from "@/lib/admin-query-cache";
 import { MAX_FILE_SIZE, getSeriesYearOptions } from "@/lib/constants";
 
 const currentYear = new Date().getFullYear();
@@ -97,6 +101,7 @@ export default function NewResolutionPage() {
     setSubmitting(false);
 
     if (result.success) {
+      invalidateAdminDocumentCaches(ADMIN_CACHE_KEYS.resolutions);
       toast.success("Resolution saved successfully");
       router.push("/admin/resolutions");
     } else {

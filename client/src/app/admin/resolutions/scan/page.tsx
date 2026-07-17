@@ -31,6 +31,10 @@ import {
 import { useActiveCategories } from "@/hooks/use-active-categories";
 import { getSeriesYearOptions } from "@/lib/constants";
 import { createResolutionAction } from "@/lib/resolution-actions";
+import {
+  ADMIN_CACHE_KEYS,
+  invalidateAdminDocumentCaches,
+} from "@/lib/admin-query-cache";
 
 const currentYear = new Date().getFullYear();
 const yearOptions = getSeriesYearOptions(currentYear);
@@ -77,6 +81,7 @@ export default function ResolutionScanPage() {
 
     const result = await createResolutionAction(formData);
     if (result.success) {
+      invalidateAdminDocumentCaches(ADMIN_CACHE_KEYS.resolutions);
       toast.success("Scanned resolution uploaded successfully");
       return true;
     }

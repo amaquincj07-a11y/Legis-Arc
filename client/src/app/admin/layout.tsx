@@ -21,6 +21,7 @@ import {
   Landmark,
   LogOut,
   CreditCard,
+  LifeBuoy,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
@@ -70,6 +71,7 @@ const iconMap: Record<string, LucideIcon> = {
   Shield,
   Settings,
   CreditCard,
+  LifeBuoy,
 };
 
 function getInitials(name: string) {
@@ -89,10 +91,12 @@ function useBreadcrumbs() {
   let path = "";
   for (const segment of segments) {
     path += `/${segment}`;
+    // `/admin` itself has no page — point breadcrumb at the dashboard.
+    const href = path === "/admin" ? "/admin/dashboard" : path;
     const label = segment
       .replaceAll("-", " ")
       .replaceAll(/\b\w/g, (c) => c.toUpperCase());
-    crumbs.push({ label, href: path });
+    crumbs.push({ label, href });
   }
 
   return crumbs;

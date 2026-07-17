@@ -90,12 +90,14 @@ export default function ResolutionsPage() {
       {
         label: "Download PDF",
         icon: Download,
-        onClick: () => void openResolutionPdf(doc.id, doc.title, "download"),
+        onClick: () =>
+          void openResolutionPdf(doc.id, doc.title, "download", doc.pdfUrl),
       },
       {
         label: "View PDF",
         icon: Eye,
-        onClick: () => void openResolutionPdf(doc.id, doc.title, "view"),
+        onClick: () =>
+          void openResolutionPdf(doc.id, doc.title, "view", doc.pdfUrl),
       },
       createPublishVisibilityAction(doc, async () => {
         const result = await toggleResolutionPublishAction(doc.id);
@@ -103,6 +105,7 @@ export default function ResolutionsPage() {
           setDocuments((prev) =>
             prev.map((item) => (item.id === doc.id ? result.data : item))
           );
+          invalidateAdminCache(ADMIN_CACHE_KEYS.activity);
           toast.success(
             result.data.isPublic && result.data.status === "published"
               ? "Resolution published to public portal"
@@ -124,17 +127,18 @@ export default function ResolutionsPage() {
   );
 
   async function confirmDelete() {
-    if (!deleteTarget) return;
-    const result = await deleteResolutionAction(deleteTarget.id);
+    const target = deleteTarget;
+    if (!target) return;
+    const result = await deleteResolutionAction(target.id);
     if (result.success) {
-      setDocuments((prev) => prev.filter((d) => d.id !== deleteTarget.id));
+      setDocuments((prev) => prev.filter((d) => d.id !== target.id));
       invalidateAdminCache(ADMIN_CACHE_KEYS.dashboard);
-      toast.success(
-        `Resolution ${formatResolutionNumber(deleteTarget)} deleted`
-      );
+      invalidateAdminCache(ADMIN_CACHE_KEYS.activity);
+      toast.success(`Resolution ${formatResolutionNumber(target)} deleted`);
       setDeleteTarget(null);
     } else {
       toast.error(result.error);
+      throw new Error(result.error);
     }
   }
 

@@ -3,6 +3,7 @@ import { query, queryAll, queryOne } from "../lib/db.js";
 import type { CategoryRow } from "../models/category.js";
 import { ok } from "../utils/api-response.js";
 import { AppError, NotFoundError, UnauthorizedError } from "../utils/errors.js";
+import { recordActivity } from "../lib/activity.js";
 
 const CATEGORY_COLUMNS = `
   id, lgu_id, name, is_active, sort_order, created_by, created_at, updated_at
@@ -19,14 +20,14 @@ export const categoriesController = {
           `SELECT ${CATEGORY_COLUMNS}
            FROM document_categories
            WHERE lgu_id = $1 AND is_active = true
-           ORDER BY sort_order ASC`,
+           ORDER BY LOWER(name) ASC`,
           [auth.profile.lgu_id]
         )
       : await queryAll<CategoryRow>(
           `SELECT ${CATEGORY_COLUMNS}
            FROM document_categories
            WHERE lgu_id = $1
-           ORDER BY sort_order ASC`,
+           ORDER BY LOWER(name) ASC`,
           [auth.profile.lgu_id]
         );
 
@@ -35,7 +36,9 @@ export const categoriesController = {
 
   async create(req: Request, res: Response) {
     const auth = req.auth;
-    if (!auth?.profile.lgu_id) throw new UnauthorizedError();
+    if (!auth?.profile.lgu_id || !auth?.profile.id) {
+      throw new UnauthorizedError();
+    }
 
     const { name } = req.body;
     if (!name || typeof name !== "string" || !name.trim()) {
@@ -48,26 +51,40 @@ export const categoriesController = {
     );
 
     const sortOrder = (maxSortOrder?.max ?? -1) + 1;
+    const trimmedName = name.trim();
 
     const row = await queryOne<CategoryRow>(
       `INSERT INTO document_categories (lgu_id, name, is_active, sort_order, created_by)
        VALUES ($1, $2, true, $3, $4)
        RETURNING ${CATEGORY_COLUMNS}`,
-      [auth.profile.lgu_id, name.trim(), sortOrder, auth.profile.id]
+      [auth.profile.lgu_id, trimmedName, sortOrder, auth.profile.id]
     );
+
+    await recordActivity({
+      lguId: auth.profile.lgu_id,
+      userId: auth.profile.id,
+      userName: auth.profile.full_name ?? "Unknown",
+      action: "upload",
+      module: "categories",
+      entityId: row?.id,
+      entityTitle: trimmedName,
+      details: `Created category: ${trimmedName}`,
+    });
 
     return ok(res, row);
   },
 
   async update(req: Request, res: Response) {
     const auth = req.auth;
-    if (!auth?.profile.lgu_id) throw new UnauthorizedError();
+    if (!auth?.profile.lgu_id || !auth?.profile.id) {
+      throw new UnauthorizedError();
+    }
 
     const { id } = req.params;
     const { name, isActive } = req.body;
 
     const existing = await queryOne<CategoryRow>(
-      `SELECT id FROM document_categories WHERE id = $1 AND lgu_id = $2`,
+      `SELECT ${CATEGORY_COLUMNS} FROM document_categories WHERE id = $1 AND lgu_id = $2`,
       [id, auth.profile.lgu_id]
     );
 
@@ -76,7 +93,7 @@ export const categoriesController = {
     }
 
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramIndex = 1;
 
     if (name !== undefined && typeof name === "string" && name.trim()) {
@@ -103,17 +120,37 @@ export const categoriesController = {
       values
     );
 
+    const details =
+      isActive !== undefined && typeof isActive === "boolean"
+        ? isActive
+          ? `Enabled category: ${row?.name ?? existing.name}`
+          : `Disabled category: ${row?.name ?? existing.name}`
+        : `Updated category: ${row?.name ?? existing.name}`;
+
+    await recordActivity({
+      lguId: auth.profile.lgu_id,
+      userId: auth.profile.id,
+      userName: auth.profile.full_name ?? "Unknown",
+      action: "edit",
+      module: "categories",
+      entityId: id,
+      entityTitle: row?.name ?? existing.name,
+      details,
+    });
+
     return ok(res, row);
   },
 
   async remove(req: Request, res: Response) {
     const auth = req.auth;
-    if (!auth?.profile.lgu_id) throw new UnauthorizedError();
+    if (!auth?.profile.lgu_id || !auth?.profile.id) {
+      throw new UnauthorizedError();
+    }
 
     const { id } = req.params;
 
     const existing = await queryOne<CategoryRow>(
-      `SELECT id FROM document_categories WHERE id = $1 AND lgu_id = $2`,
+      `SELECT ${CATEGORY_COLUMNS} FROM document_categories WHERE id = $1 AND lgu_id = $2`,
       [id, auth.profile.lgu_id]
     );
 
@@ -125,6 +162,17 @@ export const categoriesController = {
       `DELETE FROM document_categories WHERE id = $1 AND lgu_id = $2`,
       [id, auth.profile.lgu_id]
     );
+
+    await recordActivity({
+      lguId: auth.profile.lgu_id,
+      userId: auth.profile.id,
+      userName: auth.profile.full_name ?? "Unknown",
+      action: "delete",
+      module: "categories",
+      entityId: id,
+      entityTitle: existing.name,
+      details: `Deleted category: ${existing.name}`,
+    });
 
     return ok(res, { success: true });
   },

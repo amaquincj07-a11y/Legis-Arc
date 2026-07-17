@@ -17,10 +17,14 @@ export async function fetchPublicSessionMinutesAction(
 ): Promise<ActionResult<SessionMinutes[]>> {
   try {
     const path = publicPlacePath(province, municipality, "/minutes");
-    const rows = await apiGetPublic<SessionMinutesRow[]>(path);
+    const rows = await apiGetPublic<(SessionMinutesRow & { pdfUrl?: string })[]>(
+      path
+    );
     return {
       success: true,
-      data: rows.map((row) => mapSessionMinutesRowToDocument(row, "")),
+      data: rows.map((row) =>
+        mapSessionMinutesRowToDocument(row, row.pdfUrl ?? "")
+      ),
     };
   } catch (error) {
     return {

@@ -7,7 +7,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -35,6 +34,14 @@ import {
   fetchSessionMinutesByIdAction,
   updateSessionMinutesAction,
 } from "@/lib/minutes-actions";
+import {
+  ADMIN_CACHE_KEYS,
+  invalidateAdminDocumentCaches,
+} from "@/lib/admin-query-cache";
+import {
+  formatSessionDateDisplay,
+  formatSessionDateInput,
+} from "@/lib/session-date";
 
 const formSchema = z.object({
   sessionDate: z.string().min(1, "Session date is required"),
@@ -70,14 +77,12 @@ export default function EditMinutesPage({
     async function load() {
       const result = await fetchSessionMinutesByIdAction(id);
       if (result.success) {
-        const sessionDate = result.data.sessionDate;
-        setSessionDateLabel(format(sessionDate, "MMMM d, yyyy"));
-        setExistingPdfFileName(
-          `minutes-${format(sessionDate, "yyyy-MM-dd")}.pdf`
-        );
+        const sessionDate = formatSessionDateInput(result.data.sessionDate);
+        setSessionDateLabel(formatSessionDateDisplay(sessionDate));
+        setExistingPdfFileName(`minutes-${sessionDate}.pdf`);
         setHasExistingPdf(Boolean(result.data.pdfUrl));
         form.reset({
-          sessionDate: format(result.data.sessionDate, "yyyy-MM-dd"),
+          sessionDate,
           sessionType: result.data.sessionType,
         });
       } else {
@@ -123,6 +128,7 @@ export default function EditMinutesPage({
     setSubmitting(false);
 
     if (result.success) {
+      invalidateAdminDocumentCaches(ADMIN_CACHE_KEYS.minutes);
       toast.success("Minutes updated successfully");
       router.push("/admin/minutes");
     } else {

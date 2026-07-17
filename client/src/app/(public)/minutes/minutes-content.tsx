@@ -3,7 +3,6 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { format, getYear, getMonth } from "date-fns";
 import {
   ChevronRight,
   Eye,
@@ -16,6 +15,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { fetchPublicSessionMinutesAction } from "@/lib/public-minutes-actions";
 import { usePlaceFilter } from "@/lib/place-filter-context";
+import {
+  compareSessionDatesDesc,
+  formatSessionDateDisplay,
+  sessionDateMonthIndex,
+  sessionDateYear,
+} from "@/lib/session-date";
 import type { SessionMinutes } from "@/lib/types";
 
 const MONTH_NAMES = [
@@ -34,10 +39,6 @@ const MONTH_NAMES = [
 ];
 
 type GroupedMinutes = Record<number, Record<number, SessionMinutes[]>>;
-
-function toSessionDate(value: Date | string): Date {
-  return value instanceof Date ? value : new Date(value);
-}
 
 export function MinutesContent() {
   const router = useRouter();
@@ -79,9 +80,8 @@ export function MinutesContent() {
   const grouped = useMemo(() => {
     const groupedMinutes: GroupedMinutes = {};
     minutes.forEach((minute) => {
-      const sessionDate = toSessionDate(minute.sessionDate);
-      const year = getYear(sessionDate);
-      const month = getMonth(sessionDate);
+      const year = sessionDateYear(minute.sessionDate);
+      const month = sessionDateMonthIndex(minute.sessionDate);
 
       if (!groupedMinutes[year]) {
         groupedMinutes[year] = {};
@@ -98,10 +98,8 @@ export function MinutesContent() {
       const yearNum = Number(year);
       Object.keys(groupedMinutes[yearNum]).forEach((month) => {
         const monthNum = Number(month);
-        groupedMinutes[yearNum][monthNum].sort(
-          (a, b) =>
-            toSessionDate(b.sessionDate).getTime() -
-            toSessionDate(a.sessionDate).getTime()
+        groupedMinutes[yearNum][monthNum].sort((a, b) =>
+          compareSessionDatesDesc(a.sessionDate, b.sessionDate)
         );
       });
     });
@@ -271,7 +269,14 @@ export function MinutesContent() {
                             {isMonthOpen && (
                               <div className="divide-y divide-border/50 bg-muted/10">
                                 {sessions.map((session) => {
-                                  const sessionDate = toSessionDate(session.sessionDate);
+                                  const dayLabel = formatSessionDateDisplay(
+                                    session.sessionDate,
+                                    "dd"
+                                  );
+                                  const monthLabel = formatSessionDateDisplay(
+                                    session.sessionDate,
+                                    "MMM"
+                                  );
                                   return (
                                     <div
                                       key={session.id}
@@ -280,10 +285,10 @@ export function MinutesContent() {
                                     >
                                       <div className="hidden h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg border border-border/60 bg-white text-center shadow-sm sm:flex">
                                         <span className="font-[family-name:var(--font-garamond)] text-sm font-bold leading-none text-[#3998eb]">
-                                          {format(sessionDate, "dd")}
+                                          {dayLabel}
                                         </span>
                                         <span className="font-[family-name:var(--font-garamond)] mt-0.5 text-[10px] uppercase leading-none text-muted-foreground">
-                                          {format(sessionDate, "MMM")}
+                                          {monthLabel}
                                         </span>
                                       </div>
 
@@ -304,10 +309,13 @@ export function MinutesContent() {
                                         </div>
                                         <h4 className="font-[family-name:var(--font-garamond)] text-sm font-medium text-foreground transition-colors group-hover:text-[#3998eb] sm:text-base">
                                           Session Minutes —{" "}
-                                          {format(sessionDate, "MMMM d, yyyy")}
+                                          {formatSessionDateDisplay(session.sessionDate)}
                                         </h4>
                                         <p className="font-[family-name:var(--font-garamond)] mt-0.5 text-xs text-muted-foreground sm:text-sm">
-                                          {format(sessionDate, "EEEE")}
+                                          {formatSessionDateDisplay(
+                                            session.sessionDate,
+                                            "EEEE"
+                                          )}
                                         </p>
                                       </div>
 

@@ -87,6 +87,7 @@ LegisArc/
 | `CORS_ORIGIN` | `http://localhost:3000` | `https://legisarc.net` |
 | `API_PUBLIC_URL` | `http://localhost:4000` | `https://legisarc.net` |
 | `NEXT_PUBLIC_API_URL` | `http://localhost:4000` | `https://legisarc.net` |
+| `INTERNAL_API_URL` | _(omit locally)_ | `http://api:4000` (Docker Compose sets this for `web`) |
 
 ### Spaces (production)
 
@@ -99,6 +100,8 @@ LegisArc/
 | `SPACES_KEY` | Access Key from DO Spaces → Access Keys |
 | `SPACES_SECRET` | Secret shown **once** at key creation |
 | `SPACES_CDN_URL` | `https://legisarc-files.sgp1.cdn.digitaloceanspaces.com` |
+
+Objects are uploaded **without** per-object ACLs. Ensure the Space allows public reads via file listing set to **Public** and/or a bucket policy (`s3:GetObject` for `Principal: "*"`).
 
 ### Docker Compose also needs
 
@@ -170,15 +173,66 @@ npm run dev            # client :3000 + server :4000
 
 App path on server: **`/opt/legisarc`**
 
-### Deploy / rebuild
+### Updating code → production (standard workflow)
+
+There is **no CI/CD yet**. Every release is: verify locally → push to GitHub → rebuild on the Droplet.
+
+**Important:** Local `npm run build` does **not** upload anything to production. It only proves the code compiles. Production images are built again on the Droplet by Docker Compose.
+
+#### A. On your PC (before deploy)
 
 ```bash
+# 1. From the repo root — catch TypeScript / build errors early
+npm run build
+
+# 2. Review what will be committed (never stage .env or secrets)
+git status
+git diff
+
+# 3. Commit and push to GitHub
+git add .
+git commit -m "Short description of the change"
+git push
+```
+
+Notes:
+
+- Prefer a clear commit message (what changed and why).
+- After the branch already tracks `origin`, plain `git push` is enough. Use `git push -u origin main` only the first time you set upstream.
+- Do **not** commit `.env`, `client/.env.local`, passwords, or Spaces keys (they are gitignored).
+- If `npm run build` fails, fix it before pushing.
+
+#### B. On the Droplet (deploy)
+
+```bash
+ssh root@129.212.235.172
+
 cd /opt/legisarc
+
+# If Git says "dubious ownership", trust this directory once:
+# git config --global --add safe.directory /opt/legisarc
+
 git pull
 docker compose -f deploy/docker-compose.prod.yml --env-file .env up -d --build
 ```
 
 Always pass **`--env-file .env`** for compose commands that need `POSTGRES_PASSWORD`.
+
+#### C. Smoke-check after rebuild
+
+```bash
+docker compose -f deploy/docker-compose.prod.yml --env-file .env ps
+curl -sS http://127.0.0.1:4000/api/health
+curl -sS -I http://127.0.0.1:3000/
+```
+
+Then hard-refresh https://legisarc.net in the browser (`Ctrl+Shift+R`).
+
+One-liner after SSH (when `safe.directory` is already set):
+
+```bash
+cd /opt/legisarc && git pull && docker compose -f deploy/docker-compose.prod.yml --env-file .env up -d --build
+```
 
 ### nginx routing (important)
 
@@ -368,11 +422,18 @@ To hash a new plaintext password locally or in the api container, use bcrypt (co
 ## 14. Quick command cheat sheet
 
 ```bash
-# SSH
-ssh root@YOUR_DROPLET_IP
+# --- Local (PC): verify → commit → push ---
+npm run build
+git add .
+git commit -m "Describe the change"
+git push
 
-# App dir
+# --- Production (Droplet): pull → rebuild ---
+ssh root@129.212.235.172
 cd /opt/legisarc
+# git config --global --add safe.directory /opt/legisarc   # once, if needed
+git pull
+docker compose -f deploy/docker-compose.prod.yml --env-file .env up -d --build
 
 # Logs
 docker compose -f deploy/docker-compose.prod.yml --env-file .env logs -f api
@@ -382,11 +443,7 @@ docker compose -f deploy/docker-compose.prod.yml --env-file .env logs -f web
 curl -sS http://127.0.0.1:4000/api/health
 curl -sS -I http://127.0.0.1:3000/
 
-# Rebuild after code pull
-git pull
-docker compose -f deploy/docker-compose.prod.yml --env-file .env up -d --build
-
-# nginx
+# nginx (only if nginx.conf changed)
 sudo nginx -t && sudo systemctl reload nginx
 ```
 

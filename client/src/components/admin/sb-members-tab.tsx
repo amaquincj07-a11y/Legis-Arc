@@ -31,7 +31,7 @@ import {
   fetchSBMembersAction,
   updateSBMemberAction,
 } from "@/lib/sb-member-actions";
-import { ADMIN_CACHE_KEYS } from "@/lib/admin-query-cache";
+import { ADMIN_CACHE_KEYS, invalidateAdminCache } from "@/lib/admin-query-cache";
 import { useAdminQuery } from "@/hooks/use-admin-query";
 import { SB_MEMBER_POSITION_SLOTS } from "@/lib/constants";
 import type { SBMember, SBMemberPositionSlot } from "@/lib/types";
@@ -206,32 +206,40 @@ export function SBMembersTab() {
     }
 
     setSaving(true);
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("positionSlot", positionSlot);
-    if (imageFile) {
-      formData.append("image", imageFile);
-    }
-
-    const result = editingMember
-      ? await updateSBMemberAction(editingMember.id, formData)
-      : await createSBMemberAction(formData);
-
-    setSaving(false);
-
-    if (result.success) {
-      if (editingMember) {
-        setMembers((prev) =>
-          prev.map((m) => (m.id === editingMember.id ? result.data : m))
-        );
-        toast.success("SB member updated");
-      } else {
-        setMembers((prev) => [...prev, result.data]);
-        toast.success("SB member added");
+    try {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("positionSlot", positionSlot);
+      if (imageFile) {
+        formData.append("image", imageFile);
       }
-      closeDialog();
-    } else {
-      toast.error(result.error);
+
+      const result = editingMember
+        ? await updateSBMemberAction(editingMember.id, formData)
+        : await createSBMemberAction(formData);
+
+      if (result.success) {
+        if (editingMember) {
+          setMembers((prev) =>
+            prev.map((m) => (m.id === editingMember.id ? result.data : m))
+          );
+          toast.success("SB member updated");
+        } else {
+          setMembers((prev) => [...prev, result.data]);
+          toast.success("SB member added");
+        }
+        invalidateAdminCache(ADMIN_CACHE_KEYS.committees);
+        invalidateAdminCache(ADMIN_CACHE_KEYS.activity);
+        closeDialog();
+      } else {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to save SB member."
+      );
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -240,6 +248,8 @@ export function SBMembersTab() {
     const result = await deleteSBMemberAction(deleteTarget.id);
     if (result.success) {
       setMembers((prev) => prev.filter((m) => m.id !== deleteTarget.id));
+      invalidateAdminCache(ADMIN_CACHE_KEYS.committees);
+      invalidateAdminCache(ADMIN_CACHE_KEYS.activity);
       toast.success("SB member removed");
       setDeleteTarget(null);
     } else {
