@@ -25,11 +25,11 @@ const ebGaramond = EB_Garamond({
 
 export const metadata: Metadata = {
   title: {
-    default: "Sangguniang Bayan ng Panglao - Legislative Records",
-    template: "%s | SB Panglao",
+    default: "LegisArc",
+    template: "%s | LegisArc",
   },
   description:
-    "Legislative Records Management & Public Transparency Platform for the Sangguniang Bayan of Panglao, Bohol",
+    "Legislative Records Management & Public Transparency Platform for Local Government Units",
 };
 
 export default function RootLayout({

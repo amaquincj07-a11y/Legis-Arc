@@ -130,7 +130,7 @@ function LoginForm() {
 
   return (
     <AuthCardShell
-      title="LegisDoc Platform"
+      title="LegisArc Platform"
       description="Sign in to your dashboard"
       footer={
         <p className="text-center text-xs text-muted-foreground">
