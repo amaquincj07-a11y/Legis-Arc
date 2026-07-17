@@ -32,6 +32,11 @@ const envSchema = z.object({
   SPACES_CDN_URL: z.string().optional(),
   /** Fallback public base if CDN not set: https://bucket.region.digitaloceanspaces.com */
   SPACES_PUBLIC_URL: z.string().optional(),
+  /**
+   * Object ACL on upload. DigitalOcean Spaces: use `public-read` so CDN URLs work.
+   * Set `none` only if you rely solely on a bucket policy (and ACL headers must be omitted).
+   */
+  SPACES_OBJECT_ACL: z.enum(["public-read", "private", "none"]).default("public-read"),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -109,5 +114,6 @@ export const env = {
     key: raw.SPACES_KEY?.trim() || "",
     secret: raw.SPACES_SECRET?.trim() || "",
     publicBaseUrl: spacesPublicBase,
+    objectAcl: raw.SPACES_OBJECT_ACL === "none" ? undefined : raw.SPACES_OBJECT_ACL,
   },
 };

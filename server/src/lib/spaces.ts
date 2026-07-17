@@ -1,5 +1,6 @@
 import {
   DeleteObjectCommand,
+  PutObjectAclCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -32,9 +33,8 @@ export async function spacesPutObject(input: {
   contentType: string;
 }): Promise<void> {
   const s3 = getSpacesClient();
-  // Do not send ACL — modern Spaces/S3 buckets with Object Ownership
-  // "Bucket owner enforced" reject PutObject with ACL.
-  // Public reads come from the bucket policy / CDN settings instead.
+  // DigitalOcean Spaces supports canned ACLs. Without public-read, browser
+  // PDF/image URLs return AccessDenied even when the CDN host resolves.
   await s3.send(
     new PutObjectCommand({
       Bucket: env.spaces.bucket,
@@ -42,6 +42,20 @@ export async function spacesPutObject(input: {
       Body: input.body,
       ContentType: input.contentType,
       CacheControl: "public, max-age=31536000, immutable",
+      ...(env.spaces.objectAcl ? { ACL: env.spaces.objectAcl } : {}),
+    }),
+    { abortSignal: AbortSignal.timeout(SPACES_REQUEST_TIMEOUT_MS) }
+  );
+}
+
+/** Make an existing object publicly readable (fixes AccessDenied on older uploads). */
+export async function spacesMakePublic(key: string): Promise<void> {
+  const s3 = getSpacesClient();
+  await s3.send(
+    new PutObjectAclCommand({
+      Bucket: env.spaces.bucket,
+      Key: key,
+      ACL: "public-read",
     }),
     { abortSignal: AbortSignal.timeout(SPACES_REQUEST_TIMEOUT_MS) }
   );

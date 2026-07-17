@@ -111,7 +111,21 @@ grep SPACES_CDN_URL /opt/legisarc/.env
 
 Then restart the API: `docker compose -f deploy/docker-compose.prod.yml --env-file .env up -d api`
 
-Objects are uploaded **without** per-object ACLs. Ensure the Space allows public reads via file listing set to **Public** and/or a bucket policy (`s3:GetObject` for `Principal: "*"`).
+**Public file access (required for PDF / SB member images):** DigitalOcean objects are **private by default**. LegisArc uploads with `ACL: public-read` (`SPACES_OBJECT_ACL=public-read`). If the browser shows XML `AccessDenied` on the CDN URL:
+
+1. Redeploy/restart API with public-read uploads enabled (default).
+2. Make **existing** private objects public:
+
+```bash
+# From repo root (Spaces env must be in `.env`)
+node server/db/make-spaces-objects-public.mjs
+```
+
+Or in the DigitalOcean panel: Space → select files → **Manage Permissions** → **Public**.
+
+3. Spaces **CORS**: Origins `https://legisarc.net` and `https://www.legisarc.net`; Methods **GET**, **HEAD**; Headers `*`.
+
+Optional: apply a Space-wide public-read **bucket policy** (API/s3cmd) so all objects are readable even without per-object ACL.
 
 ### Docker Compose also needs
 
@@ -647,6 +661,20 @@ Push the latest `client/Dockerfile` + `next.config.ts` memory fixes to GitHub **
 | **Resolution** | On Droplet `.env`, set exactly `SPACES_CDN_URL=https://legisarc-files.sgp1.cdn.digitaloceanspaces.com` (no spaces). Restart API. Code also strips whitespace from Spaces base URLs when building public links. |
 | **Lesson** | If PDF URLs show `%20` right after `https://`, fix the Spaces CDN env value — it is not a CORS or missing-file problem. |
 | **See also** | §6 Spaces env; `server/src/config/env.ts`; `server/src/lib/storage.ts` |
+
+### LL-004 — Spaces PDF/image URL returns XML `AccessDenied`
+
+| Field | Content |
+|-------|---------|
+| **Date** | 2026-07-18 |
+| **Area** | Spaces / PDF |
+| **Status** | Closed |
+| **Symptom** | Opening a PDF/image CDN URL shows `<Error><Code>AccessDenied</Code><BucketName>legisarc-files</BucketName>…` instead of the file. |
+| **Context** | After Spaces host URL was fixed; uploads succeed but public view fails for ordinances, resolutions, minutes, SB members. |
+| **Root cause** | Objects in DigitalOcean Spaces are **private by default**. Uploads that omit `ACL: public-read` (or a public bucket policy) are not readable anonymously via CDN. |
+| **Resolution** | Upload with `public-read` ACL again; run `node server/db/make-spaces-objects-public.mjs` for existing keys; confirm Spaces CORS GET/HEAD for the site origin. |
+| **Lesson** | A resolving CDN hostname is not enough — Spaces must grant **public GetObject** (ACL or bucket policy) for browser PDF viewers. |
+| **See also** | §6 Spaces public access; `server/src/lib/spaces.ts`; `server/db/make-spaces-objects-public.mjs` |
 
 ---
 
