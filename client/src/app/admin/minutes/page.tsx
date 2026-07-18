@@ -328,7 +328,10 @@ export default function MinutesPage() {
                                     </p>
                                   </div>
 
-                                  <AdminActionsMenu items={getSessionActions(session)} />
+                                  <AdminActionsMenu
+                                    items={getSessionActions(session)}
+                                    trigger="pdf"
+                                  />
                                 </div>
                               ))}
                             </div>

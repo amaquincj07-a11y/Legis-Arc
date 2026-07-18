@@ -6,18 +6,34 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatOrdinanceNumber(doc: LegislativeDocument): string {
-  const fullNumber = doc.approvedNumber || doc.proposedNumber;
-  const [year, num] = fullNumber.split("-");
-  const prefix = doc.ordinanceKind === "appropriation" ? "APPROPRIATION ORD" : "MUNICIPAL ORD";
-  return `${prefix} No. ${num}-${year}`;
+function splitSeriesNumber(doc: LegislativeDocument): {
+  num: string;
+  year: string;
+} {
+  const fullNumber = (doc.approvedNumber || doc.proposedNumber || "").trim();
+  if (!fullNumber) {
+    return { num: "", year: String(doc.seriesYear || "") };
+  }
+  const [yearPart, numPart] = fullNumber.split("-");
+  if (!numPart) {
+    return { num: "", year: yearPart || String(doc.seriesYear || "") };
+  }
+  return { num: numPart, year: yearPart };
 }
 
+/** e.g. MUN_ORD No 06-S 2025 / APP_ORD No 01-S 2025 */
+export function formatOrdinanceNumber(doc: LegislativeDocument): string {
+  const { num, year } = splitSeriesNumber(doc);
+  const prefix = doc.ordinanceKind === "appropriation" ? "APP_ORD" : "MUN_ORD";
+  if (!num) return year ? `${prefix} No __-S ${year}` : prefix;
+  return `${prefix} No ${num}-S ${year}`;
+}
+
+/** e.g. RES No 12-S. 2025 */
 export function formatResolutionNumber(doc: LegislativeDocument): string {
-  const fullNumber = doc.approvedNumber || doc.proposedNumber;
-  const [year, num] = fullNumber.split("-");
-  if (!num) return String(year ?? doc.seriesYear);
-  return `${num}-${year}`;
+  const { num, year } = splitSeriesNumber(doc);
+  if (!num) return year ? `RES No __-S. ${year}` : "RES";
+  return `RES No ${num}-S. ${year}`;
 }
 
 export function formatSBMemberDisplayName(member: {

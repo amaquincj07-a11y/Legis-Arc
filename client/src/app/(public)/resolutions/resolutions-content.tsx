@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { FileText, Eye, Search, SlidersHorizontal, X, Loader2 } from "lucide-react";
+import { FileText, Search, SlidersHorizontal, X, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { PdfFileIcon } from "@/components/admin/pdf-file-icon";
 import { fetchPublicOrdinanceCategoriesAction } from "@/lib/public-ordinance-actions";
 import { fetchPublicResolutionsAction } from "@/lib/public-resolution-actions";
 import { usePlaceFilter } from "@/lib/place-filter-context";
@@ -352,16 +353,17 @@ export function ResolutionsContent() {
                           <div className="flex items-center justify-center gap-2">
                             <button
                               type="button"
-                              className="group relative flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-[#cbab53]/80 hover:bg-[#cbab53]/5 hover:text-[#cbab53]"
+                              className="group relative flex size-11 items-center justify-center rounded-lg p-0 transition hover:bg-slate-100/80 sm:size-10"
                               onClick={() => {
                                 router.push(`/resolutions/${doc.id}`);
                               }}
                               title="View Document"
+                              aria-label="View Document"
                             >
-                              <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-md transition group-hover:opacity-100">
+                              <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-md transition group-hover:opacity-100">
                                 View Document
                               </span>
-                              <Eye className="size-4" />
+                              <PdfFileIcon className="size-10 sm:size-9" />
                             </button>
                           </div>
                         </td>

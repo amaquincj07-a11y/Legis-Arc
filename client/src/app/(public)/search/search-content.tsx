@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { mockOrdinances, mockResolutions, mockCategories } from "@/lib/mock-data";
-import { formatOrdinanceNumber } from "@/lib/utils";
+import { formatOrdinanceNumber, formatResolutionNumber } from "@/lib/utils";
 import type { LegislativeDocument } from "@/lib/types";
 
 const ALL_PUBLIC_DOCS = [...mockOrdinances, ...mockResolutions].filter(
@@ -363,11 +363,10 @@ function ResultTableRow({ doc }: { doc: LegislativeDocument }) {
       : `/resolutions/${doc.id}`;
   const typeLabel =
     doc.documentType === "ordinance" ? "Ordinance" : "Resolution";
-  const fullNumber = doc.approvedNumber || doc.proposedNumber;
-  const [year, num] = fullNumber.split("-");
-  const formattedNumber = doc.documentType === "ordinance"
-    ? formatOrdinanceNumber(doc)
-    : `${num}-${year}`;
+  const formattedNumber =
+    doc.documentType === "ordinance"
+      ? formatOrdinanceNumber(doc)
+      : formatResolutionNumber(doc);
 
   return (
     <tr className="hover:bg-gray-50 border-b border-gray-200">

@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { PdfFileIcon } from "@/components/admin/pdf-file-icon";
 import { cn } from "@/lib/utils";
 
 export type AdminActionItem = {
@@ -26,11 +27,14 @@ export type AdminActionItem = {
 type AdminActionsMenuProps = {
   items: AdminActionItem[];
   align?: "start" | "end";
+  /** `pdf` = document-style trigger for ordinance/resolution lists */
+  trigger?: "default" | "pdf";
 };
 
 export function AdminActionsMenu({
   items,
   align = "end",
+  trigger = "default",
 }: AdminActionsMenuProps) {
   const visibleItems = items.filter((item) => !item.hidden);
 
@@ -39,16 +43,28 @@ export function AdminActionsMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-10 min-w-10 gap-1.5 rounded-full border-slate-200 px-3 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 sm:h-8 sm:min-w-0"
-          aria-label="Row actions"
-        >
-          <MoreHorizontal className="size-4" />
-          <span className="hidden sm:inline">Actions</span>
-        </Button>
+        {trigger === "pdf" ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-11 shrink-0 rounded-lg p-0 hover:bg-slate-100/80 sm:size-10 [&_svg]:size-auto"
+            aria-label="Document actions"
+          >
+            <PdfFileIcon className="size-10 sm:size-9" />
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-10 min-w-10 gap-1.5 rounded-full border-slate-200 px-3 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 sm:h-8 sm:min-w-0"
+            aria-label="Row actions"
+          >
+            <MoreHorizontal className="size-4" />
+            <span className="hidden sm:inline">Actions</span>
+          </Button>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align={align} className="w-48">
         {visibleItems.map((item, index) => {

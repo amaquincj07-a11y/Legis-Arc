@@ -283,7 +283,10 @@ export default function ResolutionsPage() {
                           />
                         </td>
                         <td className="border border-gray-300 px-4 py-2 text-center">
-                          <AdminActionsMenu items={getRowActions(doc)} />
+                          <AdminActionsMenu
+                            items={getRowActions(doc)}
+                            trigger="pdf"
+                          />
                         </td>
                       </tr>
                     );

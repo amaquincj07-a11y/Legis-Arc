@@ -33,9 +33,9 @@ export function OrdinanceKindField({
         </Label>
         <p className="text-xs leading-relaxed text-muted-foreground">
           Turn on for annual or supplemental budget ordinances. They will appear
-          as <span className="font-medium">APPROPRIATION ORD</span> on the list.
-          Other Budget ordinances stay as{" "}
-          <span className="font-medium">MUNICIPAL ORD</span>.
+          as <span className="font-medium">APP_ORD</span> on the list. Other
+          Budget ordinances stay as <span className="font-medium">MUN_ORD</span>
+          .
         </p>
       </div>
     </div>

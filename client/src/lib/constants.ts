@@ -223,7 +223,7 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     roles: ["sb_secretary", "sb_member", "digitization_assistant"],
   },
   {
-    title: "Minutes",
+    title: "Sessions",
     href: "/admin/minutes",
     icon: "BookOpen",
     roles: ["sb_secretary"],
@@ -293,7 +293,7 @@ export const PUBLIC_NAV_ITEMS = [
   { title: "SB Chart", href: PUBLIC_SBCHART_PATH },
   { title: "Ordinances", href: "/ordinances" },
   { title: "Resolutions", href: "/resolutions" },
-  { title: "Minutes", href: "/minutes" },
+  { title: "Sessions", href: "/minutes" },
   { title: "CSO", href: "/cso" },
 ];
 

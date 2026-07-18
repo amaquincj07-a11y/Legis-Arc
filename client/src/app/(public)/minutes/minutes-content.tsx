@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   ChevronRight,
-  Eye,
   CalendarDays,
   Calendar,
   Loader2,
@@ -13,6 +12,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PdfFileIcon } from "@/components/admin/pdf-file-icon";
 import { fetchPublicSessionMinutesAction } from "@/lib/public-minutes-actions";
 import { usePlaceFilter } from "@/lib/place-filter-context";
 import {
@@ -322,14 +322,15 @@ export function MinutesContent() {
                                       <div className="flex shrink-0 items-center gap-1">
                                         <button
                                           type="button"
-                                          className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[#3998eb]/10 hover:text-[#3998eb] sm:h-9 sm:w-9"
+                                          className="group relative flex size-11 items-center justify-center rounded-lg p-0 transition hover:bg-slate-100/80 sm:size-10"
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             router.push(`/minutes/${session.id}`);
                                           }}
                                           title="View Document"
+                                          aria-label="View Document"
                                         >
-                                          <Eye className="h-4 w-4" />
+                                          <PdfFileIcon className="size-10 sm:size-9" />
                                         </button>
                                         <ChevronRight className="hidden h-4 w-4 text-muted-foreground/40 sm:block" />
                                       </div>
