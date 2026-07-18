@@ -4,12 +4,14 @@ import { useRef, useState } from "react";
 import { FileText, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
+import { AdminPdfPreviewDynamic } from "@/components/admin/admin-pdf-preview-dynamic";
 import { Button } from "@/components/ui/button";
 import { MAX_FILE_SIZE } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 type EditPdfDocumentFieldProps = {
   existingFileName: string;
+  existingPdfUrl?: string;
   hasExistingDocument?: boolean;
   value: File | null;
   onChange: (file: File | null) => void;
@@ -22,6 +24,7 @@ function formatFileSize(bytes: number): string {
 
 export function EditPdfDocumentField({
   existingFileName,
+  existingPdfUrl,
   hasExistingDocument = true,
   value,
   onChange,
@@ -69,6 +72,12 @@ export function EditPdfDocumentField({
 
   const showExistingDocument =
     hasExistingDocument && !value && !isReplacing;
+
+  const previewSource = value
+    ? value
+    : showExistingDocument && existingPdfUrl?.trim()
+      ? existingPdfUrl.trim()
+      : null;
 
   return (
     <div className={cn("space-y-3", className)}>
@@ -151,6 +160,13 @@ export function EditPdfDocumentField({
           </button>
         </div>
       )}
+
+      {previewSource ? (
+        <AdminPdfPreviewDynamic
+          source={previewSource}
+          title={value ? value.name : existingFileName}
+        />
+      ) : null}
 
       <input
         ref={fileInputRef}

@@ -7,13 +7,10 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import {
   Form,
   FormControl,
@@ -41,6 +38,7 @@ import {
 import { getSeriesYearOptions } from "@/lib/constants";
 import { formatResolutionNumber } from "@/lib/utils";
 import { EditPdfDocumentField } from "@/components/admin/edit-pdf-document-field";
+import { AdminFormPageHeader } from "@/components/admin/admin-form-page-header";
 import type { LegislativeDocument } from "@/lib/types";
 
 const currentYear = new Date().getFullYear();
@@ -153,24 +151,24 @@ export default function EditResolutionPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/admin/resolutions">
-            <ArrowLeft className="size-4" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Edit Resolution {formatResolutionNumber(doc)}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Update the document details below
-          </p>
-        </div>
-      </div>
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <AdminFormPageHeader
+            backHref="/admin/resolutions"
+            title={`Edit Resolution ${formatResolutionNumber(doc)}`}
+            description="Update the document details below"
+            actions={
+              <>
+                <Button type="button" variant="outline" asChild>
+                  <Link href="/admin/resolutions">Cancel</Link>
+                </Button>
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? "Saving..." : "Save Changes"}
+                </Button>
+              </>
+            }
+          />
+
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Document Information</CardTitle>
@@ -291,23 +289,13 @@ export default function EditResolutionPage({
             <CardContent>
               <EditPdfDocumentField
                 existingFileName={`Resolution ${formatResolutionNumber(doc)}.pdf`}
+                existingPdfUrl={doc.pdfUrl}
                 hasExistingDocument={Boolean(doc.pdfUrl)}
                 value={pdfFile}
                 onChange={setPdfFile}
               />
             </CardContent>
           </Card>
-
-          <Separator />
-
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" asChild>
-              <Link href="/admin/resolutions">Cancel</Link>
-            </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
         </form>
       </Form>
     </div>

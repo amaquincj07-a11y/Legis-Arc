@@ -7,13 +7,11 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, FileText, X } from "lucide-react";
+import { Upload, FileText, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { AdminFormActions } from "@/components/admin/admin-form-actions";
 import {
   Form,
   FormControl,
@@ -34,6 +32,8 @@ import {
   ADMIN_CACHE_KEYS,
   invalidateAdminDocumentCaches,
 } from "@/lib/admin-query-cache";
+import { AdminPdfPreviewDynamic } from "@/components/admin/admin-pdf-preview-dynamic";
+import { AdminFormPageHeader } from "@/components/admin/admin-form-page-header";
 import { MAX_FILE_SIZE } from "@/lib/constants";
 
 const formSchema = z.object({
@@ -97,24 +97,24 @@ export default function NewMinutesPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/admin/minutes">
-            <ArrowLeft className="size-4" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Upload New Minutes
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Fill in the session details and upload the PDF document
-          </p>
-        </div>
-      </div>
-
       <Form {...form}>
         <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
+          <AdminFormPageHeader
+            backHref="/admin/minutes"
+            title="Upload New Minutes"
+            description="Fill in the session details and upload the PDF document"
+            actions={
+              <>
+                <Button type="button" variant="outline" asChild>
+                  <Link href="/admin/minutes">Cancel</Link>
+                </Button>
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? "Saving..." : "Save"}
+                </Button>
+              </>
+            }
+          />
+
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Session Information</CardTitle>
@@ -166,7 +166,7 @@ export default function NewMinutesPage() {
             <CardHeader>
               <CardTitle className="text-base">PDF Document</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
               {pdfFile ? (
                 <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-4">
                   <FileText className="size-8 text-destructive/80" />
@@ -205,6 +205,9 @@ export default function NewMinutesPage() {
                   </div>
                 </button>
               )}
+              {pdfFile ? (
+                <AdminPdfPreviewDynamic source={pdfFile} title={pdfFile.name} />
+              ) : null}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -214,18 +217,6 @@ export default function NewMinutesPage() {
               />
             </CardContent>
           </Card>
-
-          <Separator />
-
-          <AdminFormActions>
-            <Button
-              type="submit"
-              className="w-full sm:w-auto"
-              disabled={submitting}
-            >
-              {submitting ? "Saving..." : "Save"}
-            </Button>
-          </AdminFormActions>
         </form>
       </Form>
     </div>

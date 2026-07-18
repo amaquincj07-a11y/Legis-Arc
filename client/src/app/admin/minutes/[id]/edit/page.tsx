@@ -7,14 +7,11 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { AdminFormActions } from "@/components/admin/admin-form-actions";
 import { EditPdfDocumentField } from "@/components/admin/edit-pdf-document-field";
+import { AdminFormPageHeader } from "@/components/admin/admin-form-page-header";
 import {
   Form,
   FormControl,
@@ -60,6 +57,7 @@ export default function EditMinutesPage({
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [sessionDateLabel, setSessionDateLabel] = useState("");
   const [existingPdfFileName, setExistingPdfFileName] = useState("");
+  const [existingPdfUrl, setExistingPdfUrl] = useState("");
   const [hasExistingPdf, setHasExistingPdf] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -80,7 +78,8 @@ export default function EditMinutesPage({
         const sessionDate = formatSessionDateInput(result.data.sessionDate);
         setSessionDateLabel(formatSessionDateDisplay(sessionDate));
         setExistingPdfFileName(`minutes-${sessionDate}.pdf`);
-        setHasExistingPdf(Boolean(result.data.pdfUrl));
+        setExistingPdfUrl(result.data.pdfUrl?.trim() ?? "");
+        setHasExistingPdf(Boolean(result.data.pdfUrl?.trim()));
         form.reset({
           sessionDate,
           sessionType: result.data.sessionType,
@@ -138,24 +137,24 @@ export default function EditMinutesPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/admin/minutes">
-            <ArrowLeft className="size-4" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Edit Minutes — {sessionDateLabel}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Update the session details below
-          </p>
-        </div>
-      </div>
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <AdminFormPageHeader
+            backHref="/admin/minutes"
+            title={`Edit Minutes — ${sessionDateLabel}`}
+            description="Update the session details below"
+            actions={
+              <>
+                <Button type="button" variant="outline" asChild>
+                  <Link href="/admin/minutes">Cancel</Link>
+                </Button>
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? "Saving..." : "Save Changes"}
+                </Button>
+              </>
+            }
+          />
+
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Session Information</CardTitle>
@@ -211,32 +210,13 @@ export default function EditMinutesPage({
             <CardContent>
               <EditPdfDocumentField
                 existingFileName={existingPdfFileName}
+                existingPdfUrl={existingPdfUrl}
                 hasExistingDocument={hasExistingPdf}
                 value={pdfFile}
                 onChange={setPdfFile}
               />
             </CardContent>
           </Card>
-
-          <Separator />
-
-          <AdminFormActions>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full sm:w-auto"
-              asChild
-            >
-              <Link href="/admin/minutes">Cancel</Link>
-            </Button>
-            <Button
-              type="submit"
-              className="w-full sm:w-auto"
-              disabled={submitting}
-            >
-              {submitting ? "Saving..." : "Save Changes"}
-            </Button>
-          </AdminFormActions>
         </form>
       </Form>
     </div>
