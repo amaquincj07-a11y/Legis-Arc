@@ -1,7 +1,10 @@
 import { type NextRequest } from "next/server";
 import { updateSession } from "@/lib/auth-middleware";
+import { redirectLegacyPublicPlace } from "@/lib/public-place-redirect";
 
 export async function middleware(request: NextRequest) {
+  const placeRedirect = redirectLegacyPublicPlace(request);
+  if (placeRedirect) return placeRedirect;
   return updateSession(request);
 }
 

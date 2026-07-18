@@ -9,13 +9,31 @@ import {
   PlaceFilterBar,
   PlaceFilterMobileTrigger,
 } from "@/components/public/place-filter-bar";
+import { useLguHref } from "@/hooks/use-lgu-href";
+import { parseLguPath } from "@/lib/lgu-path";
 import { cn } from "@/lib/utils";
 
 const NAV_LINK_BASE =
   "font-semibold uppercase tracking-wide text-navy transition-colors hover:text-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2";
 
+function navSectionFromHref(href: string): string {
+  if (href === PUBLIC_HOME_PATH || href === "/" || href === "") return "";
+  return href.startsWith("/") ? href : `/${href}`;
+}
+
 function isNavActive(pathname: string, href: string) {
-  if (href === PUBLIC_HOME_PATH) {
+  const section = navSectionFromHref(href);
+  const lgu = parseLguPath(pathname);
+
+  if (section === "") {
+    if (lgu) {
+      return (
+        !lgu.rest ||
+        lgu.rest === "/" ||
+        lgu.rest === "/home" ||
+        lgu.rest === "/portal"
+      );
+    }
     return (
       pathname === PUBLIC_HOME_PATH ||
       pathname === `${PUBLIC_HOME_PATH}/` ||
@@ -25,7 +43,11 @@ function isNavActive(pathname: string, href: string) {
       pathname === ""
     );
   }
+
   if (href === PUBLIC_SBCHART_PATH) {
+    if (lgu) {
+      return lgu.rest === "/sbchart" || lgu.rest.startsWith("/sbchart/");
+    }
     return (
       pathname === PUBLIC_SBCHART_PATH ||
       pathname === `${PUBLIC_SBCHART_PATH}/` ||
@@ -33,11 +55,16 @@ function isNavActive(pathname: string, href: string) {
       pathname === "/about/"
     );
   }
-  return pathname.startsWith(href);
+
+  if (lgu) {
+    return lgu.rest === section || lgu.rest.startsWith(`${section}/`);
+  }
+  return pathname === section || pathname.startsWith(`${section}/`);
 }
 
 export function PublicHeader() {
   const pathname = usePathname();
+  const { href: lguHref } = useLguHref();
   const [compact, setCompact] = useState(false);
   const [scrollHints, setScrollHints] = useState({ left: false, right: true });
   const navRef = useRef<HTMLDivElement>(null);
@@ -76,7 +103,6 @@ export function PublicHeader() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white shadow-sm">
-      {/* Branding + Location */}
       <div
         className={cn(
           "border-b border-gray-100 bg-white transition-[padding] duration-200",
@@ -99,7 +125,6 @@ export function PublicHeader() {
         </div>
       </div>
 
-      {/* Main navigation — horizontal scroll on all screen sizes */}
       <nav
         aria-label="Main navigation"
         className="relative border-t-4 border-gold bg-white"
@@ -122,12 +147,14 @@ export function PublicHeader() {
           className="mx-auto flex w-full max-w-7xl touch-pan-x flex-nowrap items-stretch overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] scroll-smooth scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {PUBLIC_NAV_ITEMS.map((item) => {
+            const section = navSectionFromHref(item.href);
+            const href = lguHref(section);
             const active = isNavActive(pathname, item.href);
             return (
               <Link
                 key={item.href}
                 ref={active ? activeLinkRef : undefined}
-                href={item.href}
+                href={href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   NAV_LINK_BASE,

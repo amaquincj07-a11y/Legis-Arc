@@ -24,8 +24,8 @@ import {
   CarouselNext,
 } from "@/components/ui/carousel";
 import { mockCategories } from "@/lib/mock-data";
-import { PUBLIC_SBCHART_PATH } from "@/lib/constants";
 import { usePlaceFilter } from "@/lib/place-filter-context";
+import { useLguHref } from "@/hooks/use-lgu-href";
 import { PublicContactInfo } from "@/components/public/public-contact-info";
 import { cn } from "@/lib/utils";
 
@@ -39,7 +39,7 @@ const BROWSE_CARDS = [
     title: "Ordinances",
     description:
       "Local legislation enacted by the Sangguniang Bayan governing municipal affairs, regulations, and policies.",
-    href: "/ordinances",
+    path: "/ordinances",
     icon: ScrollText,
     cta: "Click here to browse ordinances",
   },
@@ -47,7 +47,7 @@ const BROWSE_CARDS = [
     title: "Resolutions",
     description:
       "Formal expressions of the will of the legislative body on matters of public interest and governance.",
-    href: "/resolutions",
+    path: "/resolutions",
     icon: FileText,
     cta: "Click here to browse resolutions",
   },
@@ -55,7 +55,7 @@ const BROWSE_CARDS = [
     title: "Session Minutes",
     description:
       "Official records of Sangguniang Bayan sessions including deliberations, motions, and proceedings.",
-    href: "/minutes",
+    path: "/minutes",
     icon: BookOpen,
     cta: "Click here to view session minutes",
   },
@@ -63,7 +63,7 @@ const BROWSE_CARDS = [
     title: "CSO",
     description:
       "Accredited Civil Society Organizations registered with the Sangguniang Bayan.",
-    href: "/cso",
+    path: "/cso",
     icon: Users,
     cta: "Click here to explore CSO listings",
   },
@@ -71,7 +71,7 @@ const BROWSE_CARDS = [
     title: "SB Chart",
     description:
       "Organizational chart of the Sangguniang Bayan including members, committees, and assignments.",
-    href: PUBLIC_SBCHART_PATH,
+    path: "/sbchart",
     icon: Network,
     cta: "Click here to view the SB chart",
   },
@@ -82,6 +82,7 @@ const CAROUSEL_ARROW_CLASS =
 
 export default function HomePage() {
   const { municipalityName, provinceName } = usePlaceFilter();
+  const { href } = useLguHref();
 
   return (
     <>
@@ -201,12 +202,13 @@ export default function HomePage() {
             <CarouselContent className="-ml-3 sm:-ml-4">
               {BROWSE_CARDS.map((card) => {
                 const Icon = card.icon;
+                const cardHref = href(card.path);
                 return (
                   <CarouselItem
-                    key={card.href}
+                    key={card.path}
                     className="basis-[85%] pl-3 sm:basis-1/2 sm:pl-4 lg:basis-1/3"
                   >
-                    <Link href={card.href} className="group block h-full">
+                    <Link href={cardHref} className="group block h-full">
                       <Card className="flex h-full flex-col border-2 border-transparent transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-[#cbab53]/40 group-hover:shadow-lg group-hover:shadow-[#cbab53]/10">
                         <CardHeader className="pb-2 sm:pb-3">
                           <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-[#cbab53]/10 text-[#cbab53] transition-colors group-hover:bg-[#cbab53] group-hover:text-white sm:mb-3 sm:h-12 sm:w-12">

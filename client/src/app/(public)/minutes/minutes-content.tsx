@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PdfFileIcon } from "@/components/admin/pdf-file-icon";
+import { useLguHref } from "@/hooks/use-lgu-href";
 import { fetchPublicSessionMinutesAction } from "@/lib/public-minutes-actions";
 import { usePlaceFilter } from "@/lib/place-filter-context";
 import {
@@ -42,6 +43,7 @@ type GroupedMinutes = Record<number, Record<number, SessionMinutes[]>>;
 
 export function MinutesContent() {
   const router = useRouter();
+  const { href } = useLguHref();
   const { province, municipality, municipalityName, provinceName } = usePlaceFilter();
   const [openYears, setOpenYears] = useState<Set<number>>(new Set());
   const [openMonths, setOpenMonths] = useState<Set<string>>(new Set());
@@ -281,7 +283,7 @@ export function MinutesContent() {
                                     <div
                                       key={session.id}
                                       className="group flex cursor-pointer items-center gap-3 px-3 py-3 transition-colors hover:bg-[#3998eb]/5 sm:gap-4 sm:px-4 sm:py-3.5"
-                                      onClick={() => router.push(`/minutes/${session.id}`)}
+                                      onClick={() => router.push(href(`/minutes/${session.id}`))}
                                     >
                                       <div className="hidden h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg border border-border/60 bg-white text-center shadow-sm sm:flex">
                                         <span className="font-[family-name:var(--font-garamond)] text-sm font-bold leading-none text-[#3998eb]">
@@ -325,7 +327,7 @@ export function MinutesContent() {
                                           className="group relative flex size-11 items-center justify-center rounded-lg p-0 transition hover:bg-slate-100/80 sm:size-10"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            router.push(`/minutes/${session.id}`);
+                                            router.push(href(`/minutes/${session.id}`));
                                           }}
                                           title="View Document"
                                           aria-label="View Document"

@@ -1,8 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-
-import { PUBLIC_HOME_PATH } from "@/lib/constants";
+import { useLguHref } from "@/hooks/use-lgu-href";
 
 interface BrandLogoProps {
   compact?: boolean;
@@ -10,9 +11,11 @@ interface BrandLogoProps {
 }
 
 export function BrandLogo({ compact = false, className }: BrandLogoProps) {
+  const { href } = useLguHref();
+
   return (
     <Link
-      href={PUBLIC_HOME_PATH}
+      href={href("")}
       aria-label="LegisArc home"
       className={cn(
         "group flex min-w-0 items-center gap-2.5 rounded-lg outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:ring-offset-2 sm:gap-3",

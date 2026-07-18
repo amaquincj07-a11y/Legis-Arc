@@ -40,6 +40,24 @@ async function resolveLguId(
 }
 
 export const publicController = {
+  /** LGUs that have applied / been created — used for public sitemap & SEO paths. */
+  async listLgus(_req: Request, res: Response) {
+    const rows = await queryAll<Pick<LguRow, "province" | "municipality" | "status">>(
+      `SELECT province, municipality, status
+       FROM lgus
+       ORDER BY province ASC, municipality ASC`
+    );
+
+    return ok(
+      res,
+      rows.map((row) => ({
+        province: row.province,
+        municipality: row.municipality,
+        status: row.status,
+      }))
+    );
+  },
+
   async contact(req: Request, res: Response) {
     const { lgu } = await resolveLguId(
       req.params.province!,

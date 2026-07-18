@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { mockOrdinances, mockResolutions, mockCategories } from "@/lib/mock-data";
+import { useLguHref } from "@/hooks/use-lgu-href";
 import { formatOrdinanceNumber, formatResolutionNumber } from "@/lib/utils";
 import type { LegislativeDocument } from "@/lib/types";
 
@@ -36,6 +37,7 @@ const YEARS = [...new Set(ALL_PUBLIC_DOCS.map((d) => d.seriesYear))].sort(
 export function SearchContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { href } = useLguHref();
 
   const initialQ = searchParams.get("q") ?? "";
   const initialType = searchParams.get("type") ?? "all";
@@ -77,7 +79,9 @@ export function SearchContent() {
       if (searchQuery) params.set("q", searchQuery);
       if (yearFilter && yearFilter !== "all") params.set("year", yearFilter);
       if (categoryFilter && categoryFilter !== "all") params.set("category", categoryFilter);
-      router.push(`/ordinances${params.toString() ? `?${params.toString()}` : ""}`);
+      router.push(
+        `${href("/ordinances")}${params.toString() ? `?${params.toString()}` : ""}`
+      );
       return;
     }
     if (value === "resolution") {
@@ -86,7 +90,9 @@ export function SearchContent() {
       if (searchQuery) params.set("q", searchQuery);
       if (yearFilter && yearFilter !== "all") params.set("year", yearFilter);
       if (categoryFilter && categoryFilter !== "all") params.set("category", categoryFilter);
-      router.push(`/resolutions${params.toString() ? `?${params.toString()}` : ""}`);
+      router.push(
+        `${href("/resolutions")}${params.toString() ? `?${params.toString()}` : ""}`
+      );
       return;
     }
     updateUrl({ q: query.trim(), type: value, year: yearFilter, category: categoryFilter });
@@ -357,10 +363,11 @@ export function SearchContent() {
 }
 
 function ResultTableRow({ doc }: { doc: LegislativeDocument }) {
-  const href =
+  const { href: lguHref } = useLguHref();
+  const docHref =
     doc.documentType === "ordinance"
-      ? `/ordinances/${doc.id}`
-      : `/resolutions/${doc.id}`;
+      ? lguHref(`/ordinances/${doc.id}`)
+      : lguHref(`/resolutions/${doc.id}`);
   const typeLabel =
     doc.documentType === "ordinance" ? "Ordinance" : "Resolution";
   const formattedNumber =
@@ -371,7 +378,7 @@ function ResultTableRow({ doc }: { doc: LegislativeDocument }) {
   return (
     <tr className="hover:bg-gray-50 border-b border-gray-200">
       <td className="border border-gray-300 px-4 py-2 text-center">
-        <Link href={href} className="font-medium text-[#3998eb] hover:underline">
+        <Link href={docHref} className="font-medium text-[#3998eb] hover:underline">
           {formattedNumber}
         </Link>
         <Badge
@@ -386,7 +393,7 @@ function ResultTableRow({ doc }: { doc: LegislativeDocument }) {
         </Badge>
       </td>
       <td className="border border-gray-300 px-4 py-2">
-        <Link href={href} className="hover:text-[#3998eb]">
+        <Link href={docHref} className="hover:text-[#3998eb]">
           {doc.title}
         </Link>
       </td>

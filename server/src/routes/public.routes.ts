@@ -6,6 +6,8 @@ const router = Router();
 
 const place = "/:province/:municipality";
 
+router.get("/lgus", asyncHandler(publicController.listLgus));
+
 router.get(`${place}/contact`, asyncHandler(publicController.contact));
 router.get(`${place}/categories`, asyncHandler(publicController.listCategories));
 router.get(`${place}/cso`, asyncHandler(publicController.listCso));

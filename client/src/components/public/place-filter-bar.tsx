@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, MapPin } from "lucide-react";
 import {
   Select,
@@ -19,9 +20,11 @@ import {
 import { usePlaceFilter } from "@/lib/place-filter-context";
 import {
   formatPlaceName,
+  getDefaultMunicipalityForProvince,
   getMunicipalities,
   getProvinces,
 } from "@/lib/places";
+import { buildLguPath, parseLguPath } from "@/lib/lgu-path";
 import { cn } from "@/lib/utils";
 
 const provinces = getProvinces();
@@ -40,11 +43,34 @@ export function PlaceFilterSelects({
   theme = "navy",
   className,
 }: PlaceFilterSelectsProps) {
-  const { province, municipality, setProvince, setMunicipality } =
+  const router = useRouter();
+  const pathname = usePathname();
+  const { province, municipality, setProvince, setMunicipality, setPlace } =
     usePlaceFilter();
   const municipalities = getMunicipalities(province);
   const comfortable = variant === "comfortable";
   const headerTheme = theme === "header";
+  const lguPath = parseLguPath(pathname);
+
+  function navigateIfOnLguPath(nextProvince: string, nextMunicipality: string) {
+    if (!lguPath) return;
+    const next = buildLguPath(nextProvince, nextMunicipality, lguPath.rest);
+    if (next !== pathname) {
+      router.push(next);
+    }
+  }
+
+  function handleProvinceChange(nextProvince: string) {
+    const nextMunicipality = getDefaultMunicipalityForProvince(nextProvince);
+    setProvince(nextProvince);
+    navigateIfOnLguPath(nextProvince, nextMunicipality);
+  }
+
+  function handleMunicipalityChange(nextMunicipality: string) {
+    setMunicipality(nextMunicipality);
+    setPlace(province, nextMunicipality);
+    navigateIfOnLguPath(province, nextMunicipality);
+  }
 
   const selectTriggerClass = cn(
     "w-full font-medium",
@@ -85,7 +111,7 @@ export function PlaceFilterSelects({
           )}
         >
         </span>
-        <Select value={province} onValueChange={setProvince}>
+        <Select value={province} onValueChange={handleProvinceChange}>
           <SelectTrigger
             size={comfortable ? "default" : "sm"}
             className={selectTriggerClass}
@@ -130,7 +156,7 @@ export function PlaceFilterSelects({
         </span>
         <Select
           value={municipality}
-          onValueChange={setMunicipality}
+          onValueChange={handleMunicipalityChange}
           disabled={municipalities.length === 0}
         >
           <SelectTrigger

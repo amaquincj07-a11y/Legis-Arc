@@ -20,6 +20,7 @@ import {
   fetchPublicOrdinancesAction,
 } from "@/lib/public-ordinance-actions";
 import { usePlaceFilter } from "@/lib/place-filter-context";
+import { useLguHref } from "@/hooks/use-lgu-href";
 import { formatOrdinanceNumber } from "@/lib/utils";
 import type { Category, LegislativeDocument } from "@/lib/types";
 
@@ -30,6 +31,7 @@ function toTimestamp(value: Date | string): number {
 export function OrdinancesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { href } = useLguHref();
   const { province, municipality, municipalityName, provinceName } = usePlaceFilter();
 
   const initialQ = searchParams.get("q") ?? "";
@@ -393,7 +395,7 @@ export function OrdinancesContent() {
                               type="button"
                               className="group relative flex size-11 items-center justify-center rounded-lg p-0 transition hover:bg-slate-100/80 sm:size-10"
                               onClick={() => {
-                                router.push(`/ordinances/${doc.id}`);
+                                router.push(href(`/ordinances/${doc.id}`));
                               }}
                               title="View Document"
                               aria-label="View Document"

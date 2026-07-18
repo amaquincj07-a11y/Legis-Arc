@@ -23,7 +23,13 @@ const ebGaramond = EB_Garamond({
   display: "swap",
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+  process.env.FRONTEND_URL?.trim() ||
+  "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl.replace(/\/+$/, "")),
   title: {
     default: "LegisArc",
     template: "%s | LegisArc",

@@ -16,11 +16,13 @@ import {
 import { PdfViewerDynamic } from "@/components/public/pdf-viewer-dynamic";
 import { CertifiedCopyNotice } from "@/components/public/certified-copy-notice";
 import { fetchPublicSessionMinutesByIdAction } from "@/lib/public-minutes-actions";
+import { useLguHref } from "@/hooks/use-lgu-href";
 import { usePlaceFilter } from "@/lib/place-filter-context";
 import { formatSessionDateDisplay } from "@/lib/session-date";
 import type { SessionMinutes } from "@/lib/types";
 
 export function MinutesDetailContent({ id }: { id: string }) {
+  const { href } = useLguHref();
   const { province, municipality, municipalityName } = usePlaceFilter();
   const [session, setSession] = useState<SessionMinutes | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,8 +79,8 @@ export function MinutesDetailContent({ id }: { id: string }) {
           These session minutes are unavailable for the selected location or are not
           published.
         </p>
-        <Link href="/minutes" className="mt-6 inline-block">
-          <Button variant="outline">Back to Minutes</Button>
+        <Link href={href("/minutes")} className="mt-6 inline-block">
+          <Button variant="outline">Back to Sessions</Button>
         </Link>
       </div>
     );
@@ -94,13 +96,13 @@ export function MinutesDetailContent({ id }: { id: string }) {
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/home">Home</Link>
+                  <Link href={href("")}>Home</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/minutes">Minutes</Link>
+                  <Link href={href("/minutes")}>Sessions</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
@@ -114,10 +116,10 @@ export function MinutesDetailContent({ id }: { id: string }) {
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6 flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <Link href="/minutes" className="self-start">
+          <Link href={href("/minutes")} className="self-start">
             <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
               <ArrowLeft className="h-4 w-4" />
-              Back to Minutes
+              Back to Sessions
             </Button>
           </Link>
           <CertifiedCopyNotice />

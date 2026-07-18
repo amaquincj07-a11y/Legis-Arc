@@ -18,6 +18,7 @@ import { PdfFileIcon } from "@/components/admin/pdf-file-icon";
 import { fetchPublicOrdinanceCategoriesAction } from "@/lib/public-ordinance-actions";
 import { fetchPublicResolutionsAction } from "@/lib/public-resolution-actions";
 import { usePlaceFilter } from "@/lib/place-filter-context";
+import { useLguHref } from "@/hooks/use-lgu-href";
 import { formatResolutionNumber } from "@/lib/utils";
 import type { Category, LegislativeDocument } from "@/lib/types";
 
@@ -28,6 +29,7 @@ function toTimestamp(value: Date | string): number {
 export function ResolutionsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { href } = useLguHref();
   const { province, municipality, municipalityName, provinceName } = usePlaceFilter();
 
   const initialQ = searchParams.get("q") ?? "";
@@ -355,7 +357,7 @@ export function ResolutionsContent() {
                               type="button"
                               className="group relative flex size-11 items-center justify-center rounded-lg p-0 transition hover:bg-slate-100/80 sm:size-10"
                               onClick={() => {
-                                router.push(`/resolutions/${doc.id}`);
+                                router.push(href(`/resolutions/${doc.id}`));
                               }}
                               title="View Document"
                               aria-label="View Document"

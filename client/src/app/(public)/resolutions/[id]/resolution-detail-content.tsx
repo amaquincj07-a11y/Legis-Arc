@@ -16,11 +16,13 @@ import {
 import { PdfViewerDynamic } from "@/components/public/pdf-viewer-dynamic";
 import { CertifiedCopyNotice } from "@/components/public/certified-copy-notice";
 import { fetchPublicResolutionByIdAction } from "@/lib/public-resolution-actions";
+import { useLguHref } from "@/hooks/use-lgu-href";
 import { usePlaceFilter } from "@/lib/place-filter-context";
 import { formatResolutionNumber } from "@/lib/utils";
 import type { LegislativeDocument } from "@/lib/types";
 
 export function ResolutionDetailContent({ id }: { id: string }) {
+  const { href } = useLguHref();
   const { province, municipality, municipalityName } = usePlaceFilter();
   const [doc, setDoc] = useState<LegislativeDocument | null>(null);
   const [loading, setLoading] = useState(true);
@@ -76,7 +78,7 @@ export function ResolutionDetailContent({ id }: { id: string }) {
         <p className="mt-2 text-muted-foreground">
           This resolution is unavailable for the selected location or is not published.
         </p>
-        <Link href="/resolutions" className="mt-6 inline-block">
+        <Link href={href("/resolutions")} className="mt-6 inline-block">
           <Button variant="outline">Back to Resolutions</Button>
         </Link>
       </div>
@@ -93,13 +95,13 @@ export function ResolutionDetailContent({ id }: { id: string }) {
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/home">Home</Link>
+                  <Link href={href("")}>Home</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/resolutions">Resolutions</Link>
+                  <Link href={href("/resolutions")}>Resolutions</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
@@ -113,7 +115,7 @@ export function ResolutionDetailContent({ id }: { id: string }) {
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6 flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <Link href="/resolutions" className="self-start">
+          <Link href={href("/resolutions")} className="self-start">
             <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
               <ArrowLeft className="h-4 w-4" />
               Back to Resolutions
