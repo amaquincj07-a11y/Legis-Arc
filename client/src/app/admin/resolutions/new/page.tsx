@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -36,7 +36,8 @@ import {
 } from "@/lib/admin-query-cache";
 import { AdminPdfPreviewDynamic } from "@/components/admin/admin-pdf-preview-dynamic";
 import { AdminFormPageHeader } from "@/components/admin/admin-form-page-header";
-import { MAX_FILE_SIZE, getSeriesYearOptions } from "@/lib/constants";
+import { takePendingUpload, validatePdfFile } from "@/lib/pending-upload";
+import { getSeriesYearOptions } from "@/lib/constants";
 
 const currentYear = new Date().getFullYear();
 const yearOptions = getSeriesYearOptions(currentYear);
@@ -69,18 +70,20 @@ export default function NewResolutionPage() {
     },
   });
 
+  useEffect(() => {
+    const pending = takePendingUpload("resolution");
+    if (pending) setPdfFile(pending);
+  }, []);
+
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.type !== "application/pdf") {
-      toast.error("Only PDF files are accepted");
+    const result = validatePdfFile(file);
+    if (!result.ok) {
+      toast.error(result.error);
       return;
     }
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error("File size must be less than 25MB");
-      return;
-    }
-    setPdfFile(file);
+    setPdfFile(result.file);
   }
 
   async function onSubmit(values: FormValues) {
@@ -117,7 +120,7 @@ export default function NewResolutionPage() {
           <AdminFormPageHeader
             backHref="/admin/resolutions"
             title="Upload New Resolution"
-            description="Fill in the details and upload the PDF document"
+            description="Complete the document details — your PDF is ready below"
             actions={
               <>
                 <Button type="button" variant="outline" asChild>

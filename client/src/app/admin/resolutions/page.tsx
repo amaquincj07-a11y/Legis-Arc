@@ -164,7 +164,10 @@ export default function ResolutionsPage() {
         title="Resolutions"
         description="Manage and track all municipal resolutions"
       >
-        <AdminUploadTrigger uploadHref="/admin/resolutions/new" />
+        <AdminUploadTrigger
+          kind="resolution"
+          uploadHref="/admin/resolutions/new"
+        />
       </AdminPageHeader>
 
       <Card className="overflow-hidden border border-slate-200/90 shadow-sm shadow-slate-900/5">

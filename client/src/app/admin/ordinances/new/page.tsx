@@ -36,9 +36,9 @@ import {
 } from "@/lib/admin-query-cache";
 import {
   APPROPRIATION_ORDINANCE_CATEGORY,
-  MAX_FILE_SIZE,
   getSeriesYearOptions,
 } from "@/lib/constants";
+import { takePendingUpload, validatePdfFile } from "@/lib/pending-upload";
 import { OrdinanceKindField } from "@/components/admin/ordinance-kind-field";
 import { AdminPdfPreviewDynamic } from "@/components/admin/admin-pdf-preview-dynamic";
 import { AdminFormPageHeader } from "@/components/admin/admin-form-page-header";
@@ -79,6 +79,11 @@ export default function NewOrdinancePage() {
   const selectedCategory = form.watch("category");
 
   useEffect(() => {
+    const pending = takePendingUpload("ordinance");
+    if (pending) setPdfFile(pending);
+  }, []);
+
+  useEffect(() => {
     if (selectedCategory !== APPROPRIATION_ORDINANCE_CATEGORY) {
       form.setValue("isAppropriationOrdinance", false);
     }
@@ -87,15 +92,12 @@ export default function NewOrdinancePage() {
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.type !== "application/pdf") {
-      toast.error("Only PDF files are accepted");
+    const result = validatePdfFile(file);
+    if (!result.ok) {
+      toast.error(result.error);
       return;
     }
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error("File size must be less than 25MB");
-      return;
-    }
-    setPdfFile(file);
+    setPdfFile(result.file);
   }
 
   async function onSubmit(values: FormValues) {
@@ -136,7 +138,7 @@ export default function NewOrdinancePage() {
           <AdminFormPageHeader
             backHref="/admin/ordinances"
             title="Upload New Ordinance"
-            description="Fill in the details and upload the PDF document"
+            description="Complete the document details — your PDF is ready below"
             actions={
               <>
                 <Button type="button" variant="outline" asChild>

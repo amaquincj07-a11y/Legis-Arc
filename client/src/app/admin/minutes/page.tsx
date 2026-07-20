@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ChevronRight,
@@ -12,7 +11,6 @@ import {
   CalendarDays,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -208,6 +206,7 @@ export default function MinutesPage() {
         >
           <AdminUploadTrigger
             label="Upload Minutes"
+            kind="minutes"
             uploadHref="/admin/minutes/new"
           />
         </AdminPageHeader>
@@ -230,6 +229,7 @@ export default function MinutesPage() {
       >
         <AdminUploadTrigger
           label="Upload Minutes"
+          kind="minutes"
           uploadHref="/admin/minutes/new"
         />
       </AdminPageHeader>
@@ -352,9 +352,12 @@ export default function MinutesPage() {
               <p className="text-muted-foreground">
                 No session minutes found.
               </p>
-              <Button asChild variant="outline" className="mt-4">
-                <Link href="/admin/minutes/new">Upload Minutes</Link>
-              </Button>
+              <AdminUploadTrigger
+                label="Upload Minutes"
+                kind="minutes"
+                uploadHref="/admin/minutes/new"
+                variant="outline"
+              />
             </CardContent>
           </Card>
         )}

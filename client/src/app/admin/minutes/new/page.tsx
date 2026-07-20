@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -34,7 +34,7 @@ import {
 } from "@/lib/admin-query-cache";
 import { AdminPdfPreviewDynamic } from "@/components/admin/admin-pdf-preview-dynamic";
 import { AdminFormPageHeader } from "@/components/admin/admin-form-page-header";
-import { MAX_FILE_SIZE } from "@/lib/constants";
+import { takePendingUpload, validatePdfFile } from "@/lib/pending-upload";
 
 const formSchema = z.object({
   sessionDate: z.string().min(1, "Session date is required"),
@@ -57,18 +57,20 @@ export default function NewMinutesPage() {
     },
   });
 
+  useEffect(() => {
+    const pending = takePendingUpload("minutes");
+    if (pending) setPdfFile(pending);
+  }, []);
+
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.type !== "application/pdf") {
-      toast.error("Only PDF files are accepted");
+    const result = validatePdfFile(file);
+    if (!result.ok) {
+      toast.error(result.error);
       return;
     }
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error("File size must be less than 25MB");
-      return;
-    }
-    setPdfFile(file);
+    setPdfFile(result.file);
   }
 
   async function onSubmit(values: FormValues) {
@@ -102,7 +104,7 @@ export default function NewMinutesPage() {
           <AdminFormPageHeader
             backHref="/admin/minutes"
             title="Upload New Minutes"
-            description="Fill in the session details and upload the PDF document"
+            description="Complete the session details — your PDF is ready below"
             actions={
               <>
                 <Button type="button" variant="outline" asChild>
