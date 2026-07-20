@@ -30,7 +30,7 @@ export const resolutionsController = {
       `SELECT ${RESOLUTION_COLUMNS}
        FROM resolutions
        WHERE lgu_id = $1
-       ORDER BY series_year DESC, resolution_number ASC`,
+       ORDER BY created_at DESC`,
       [auth.profile.lgu_id]
     );
 

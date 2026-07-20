@@ -30,7 +30,7 @@ export const ordinancesController = {
       `SELECT ${ORDINANCE_COLUMNS}
        FROM ordinances
        WHERE lgu_id = $1
-       ORDER BY series_year DESC, ordinance_number ASC`,
+       ORDER BY created_at DESC`,
       [auth.profile.lgu_id]
     );
 

@@ -19,12 +19,13 @@ import { fetchPublicOrdinanceCategoriesAction } from "@/lib/public-ordinance-act
 import { fetchPublicResolutionsAction } from "@/lib/public-resolution-actions";
 import { usePlaceFilter } from "@/lib/place-filter-context";
 import { useLguHref } from "@/hooks/use-lgu-href";
+import {
+  ADMIN_DOCUMENT_SORT_OPTIONS,
+  sortAdminDocuments,
+  type AdminDocumentSort,
+} from "@/lib/admin-document-sort";
 import { formatResolutionNumber } from "@/lib/utils";
 import type { Category, LegislativeDocument } from "@/lib/types";
-
-function toTimestamp(value: Date | string): number {
-  return new Date(value).getTime();
-}
 
 export function ResolutionsContent() {
   const searchParams = useSearchParams();
@@ -39,6 +40,7 @@ export function ResolutionsContent() {
   const [search, setSearch] = useState(initialQ);
   const [yearFilter, setYearFilter] = useState(initialYear);
   const [categoryFilter, setCategoryFilter] = useState(initialCategory);
+  const [sortBy, setSortBy] = useState<AdminDocumentSort>("recently_added");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [resolutions, setResolutions] = useState<LegislativeDocument[]>([]);
@@ -106,14 +108,12 @@ export function ResolutionsContent() {
     if (categoryFilter !== "all") {
       docs = docs.filter((d) => d.category === categoryFilter);
     }
-    return docs.sort(
-      (a, b) => toTimestamp(b.dateApproved) - toTimestamp(a.dateApproved)
-    );
-  }, [resolutions, search, yearFilter, categoryFilter]);
+    return sortAdminDocuments(docs, sortBy);
+  }, [resolutions, search, yearFilter, categoryFilter, sortBy]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, yearFilter, categoryFilter, province, municipality]);
+  }, [search, yearFilter, categoryFilter, sortBy, province, municipality]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginated = filtered.slice(
@@ -217,6 +217,24 @@ export function ResolutionsContent() {
                 ))}
               </SelectContent>
             </Select>
+            <span className="font-[family-name:var(--font-garamond)] text-sm font-medium text-muted-foreground">
+              Sort
+            </span>
+            <Select
+              value={sortBy}
+              onValueChange={(v) => setSortBy(v as AdminDocumentSort)}
+            >
+              <SelectTrigger className="font-[family-name:var(--font-garamond)] h-8 w-[200px] text-sm sm:w-[220px]">
+                <SelectValue placeholder="Sort" />
+              </SelectTrigger>
+              <SelectContent>
+                {ADMIN_DOCUMENT_SORT_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Separator orientation="vertical" className="h-5" />
             <span className="font-[family-name:var(--font-garamond)] text-sm text-muted-foreground">
               {filtered.length} document{filtered.length !== 1 ? "s" : ""}
@@ -251,6 +269,21 @@ export function ResolutionsContent() {
                   ))}
                 </SelectContent>
               </Select>
+              <Select
+                value={sortBy}
+                onValueChange={(v) => setSortBy(v as AdminDocumentSort)}
+              >
+                <SelectTrigger className="font-[family-name:var(--font-garamond)] h-9 text-sm">
+                  <SelectValue placeholder="Sort" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ADMIN_DOCUMENT_SORT_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <div className="flex items-center justify-between">
                 <span className="font-[family-name:var(--font-garamond)] text-sm text-muted-foreground">
                   {filtered.length} result{filtered.length !== 1 ? "s" : ""}
@@ -263,6 +296,7 @@ export function ResolutionsContent() {
                     onClick={() => {
                       setYearFilter("all");
                       setCategoryFilter("all");
+                      setSortBy("recently_added");
                     }}
                   >
                     <X className="h-3 w-3" /> Clear

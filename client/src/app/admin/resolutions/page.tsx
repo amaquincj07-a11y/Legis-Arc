@@ -36,6 +36,11 @@ import {
   invalidateAdminCache,
 } from "@/lib/admin-query-cache";
 import { openResolutionPdf } from "@/lib/admin-document-pdf";
+import {
+  ADMIN_DOCUMENT_SORT_OPTIONS,
+  sortAdminDocuments,
+  type AdminDocumentSort,
+} from "@/lib/admin-document-sort";
 import { formatResolutionNumber } from "@/lib/utils";
 import type { LegislativeDocument } from "@/lib/types";
 
@@ -43,6 +48,9 @@ const ITEMS_PER_PAGE = 10;
 
 const filterSelectClass =
   "h-9 w-[150px] rounded-full border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-sm focus:ring-[#3998eb] sm:w-[170px]";
+
+const sortSelectClass =
+  "h-9 w-[200px] rounded-full border-slate-200 bg-white text-xs font-medium text-slate-700 shadow-sm focus:ring-[#3998eb] sm:w-[220px]";
 
 export default function ResolutionsPage() {
   const router = useRouter();
@@ -56,6 +64,7 @@ export default function ResolutionsPage() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<AdminDocumentSort>("recently_added");
   const [currentPage, setCurrentPage] = useState(1);
   const [deleteTarget, setDeleteTarget] = useState<LegislativeDocument | null>(
     null
@@ -69,7 +78,7 @@ export default function ResolutionsPage() {
   }, [documents]);
 
   const filtered = useMemo(() => {
-    return documents.filter((doc) => {
+    const matched = documents.filter((doc) => {
       const matchesSearch =
         !search || doc.title.toLowerCase().includes(search.toLowerCase());
       const matchesCategory =
@@ -78,7 +87,8 @@ export default function ResolutionsPage() {
         yearFilter === "all" || doc.seriesYear.toString() === yearFilter;
       return matchesSearch && matchesCategory && matchesYear;
     });
-  }, [documents, search, categoryFilter, yearFilter]);
+    return sortAdminDocuments(matched, sortBy);
+  }, [documents, search, categoryFilter, yearFilter, sortBy]);
 
   const getRowActions = useCallback(
     (doc: LegislativeDocument): AdminActionItem[] => [
@@ -217,6 +227,28 @@ export default function ResolutionsPage() {
                 {years.map((year) => (
                   <SelectItem key={year} value={year.toString()}>
                     {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <span className="text-xs font-medium text-slate-500 sm:text-sm">
+              Sort
+            </span>
+            <Select
+              value={sortBy}
+              onValueChange={(v) => {
+                setSortBy(v as AdminDocumentSort);
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className={sortSelectClass}>
+                <SelectValue placeholder="Sort" />
+              </SelectTrigger>
+              <SelectContent>
+                {ADMIN_DOCUMENT_SORT_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>

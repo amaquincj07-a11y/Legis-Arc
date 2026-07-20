@@ -87,7 +87,7 @@ export const publicController = {
               created_by, created_at, updated_at
        FROM ordinances
        WHERE lgu_id = $1 AND is_public = true AND status = 'published'
-       ORDER BY series_year DESC, ordinance_number ASC`,
+       ORDER BY created_at DESC`,
       [lguId]
     );
 
@@ -136,7 +136,7 @@ export const publicController = {
               created_by, created_at, updated_at
        FROM resolutions
        WHERE lgu_id = $1 AND is_public = true AND status = 'published'
-       ORDER BY series_year DESC, resolution_number ASC`,
+       ORDER BY created_at DESC`,
       [lguId]
     );
 
