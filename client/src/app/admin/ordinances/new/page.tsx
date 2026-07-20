@@ -38,6 +38,11 @@ import {
   APPROPRIATION_ORDINANCE_CATEGORY,
   getSeriesYearOptions,
 } from "@/lib/constants";
+import {
+  adminDocInputClassName,
+  adminDocSelectTriggerClassName,
+  adminDocTextareaClassName,
+} from "@/lib/admin-form-field-styles";
 import { takePendingUpload, validatePdfFile } from "@/lib/pending-upload";
 import { OrdinanceKindField } from "@/components/admin/ordinance-kind-field";
 import { AdminPdfPreviewDynamic } from "@/components/admin/admin-pdf-preview-dynamic";
@@ -166,7 +171,11 @@ export default function NewOrdinancePage() {
                         No. <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. 01, 02, 03" {...field} />
+                        <Input
+                          placeholder="Type number…"
+                          className={adminDocInputClassName}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -186,8 +195,8 @@ export default function NewOrdinancePage() {
                         value={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
+                          <SelectTrigger className={adminDocSelectTriggerClassName}>
+                            <SelectValue placeholder="Choose year" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -214,8 +223,8 @@ export default function NewOrdinancePage() {
                     </FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Enter the full title of the ordinance"
-                        className="min-h-[80px] resize-none"
+                        placeholder="Type the full title…"
+                        className={adminDocTextareaClassName}
                         {...field}
                       />
                     </FormControl>
@@ -232,7 +241,11 @@ export default function NewOrdinancePage() {
                     <FormItem>
                       <FormLabel>Author / Sponsor</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Hon. Ricardo Mendoza" {...field} />
+                        <Input
+                          placeholder="Type author or sponsor…"
+                          className={adminDocInputClassName}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -252,8 +265,8 @@ export default function NewOrdinancePage() {
                         value={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
+                          <SelectTrigger className={adminDocSelectTriggerClassName}>
+                            <SelectValue placeholder="Choose category" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>

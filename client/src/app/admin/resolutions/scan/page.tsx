@@ -30,6 +30,11 @@ import {
 } from "@/components/ui/select";
 import { useActiveCategories } from "@/hooks/use-active-categories";
 import { getSeriesYearOptions } from "@/lib/constants";
+import {
+  adminDocInputClassName,
+  adminDocSelectTriggerClassName,
+  adminDocTextareaClassName,
+} from "@/lib/admin-form-field-styles";
 import { createResolutionAction } from "@/lib/resolution-actions";
 import {
   ADMIN_CACHE_KEYS,
@@ -116,7 +121,11 @@ export default function ResolutionScanPage() {
                     <FormItem>
                       <FormLabel>No.</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. 01" {...field} />
+                        <Input
+                          placeholder="Type number…"
+                          className={adminDocInputClassName}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -132,8 +141,8 @@ export default function ResolutionScanPage() {
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
+                          <SelectTrigger className={adminDocSelectTriggerClassName}>
+                            <SelectValue placeholder="Choose year" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -160,8 +169,8 @@ export default function ResolutionScanPage() {
                     </FormLabel>
                     <FormControl>
                       <Textarea
-                        className="min-h-[80px] resize-none"
-                        placeholder="Enter the full title of the resolution"
+                        className={adminDocTextareaClassName}
+                        placeholder="Type the full title…"
                         {...field}
                       />
                     </FormControl>
@@ -178,7 +187,11 @@ export default function ResolutionScanPage() {
                     <FormItem>
                       <FormLabel>Author / Sponsor</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Hon. Elena Villareal" {...field} />
+                        <Input
+                          placeholder="Type author or sponsor…"
+                          className={adminDocInputClassName}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -194,8 +207,8 @@ export default function ResolutionScanPage() {
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
+                          <SelectTrigger className={adminDocSelectTriggerClassName}>
+                            <SelectValue placeholder="Choose category" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>

@@ -36,6 +36,11 @@ import {
   invalidateAdminDocumentCaches,
 } from "@/lib/admin-query-cache";
 import { getSeriesYearOptions } from "@/lib/constants";
+import {
+  adminDocInputClassName,
+  adminDocSelectTriggerClassName,
+  adminDocTextareaClassName,
+} from "@/lib/admin-form-field-styles";
 import { formatResolutionNumber } from "@/lib/utils";
 import { EditPdfDocumentField } from "@/components/admin/edit-pdf-document-field";
 import { AdminFormPageHeader } from "@/components/admin/admin-form-page-header";
@@ -182,7 +187,11 @@ export default function EditResolutionPage({
                     <FormItem>
                       <FormLabel>No.</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. 01, 02, 03, 04" {...field} />
+                        <Input
+                          placeholder="Type number…"
+                          className={adminDocInputClassName}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -199,8 +208,8 @@ export default function EditResolutionPage({
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
+                          <SelectTrigger className={adminDocSelectTriggerClassName}>
+                            <SelectValue placeholder="Choose year" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -227,8 +236,8 @@ export default function EditResolutionPage({
                     </FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Enter the full title of the resolution"
-                        className="min-h-[80px] resize-none"
+                        placeholder="Type the full title…"
+                        className={adminDocTextareaClassName}
                         {...field}
                       />
                     </FormControl>
@@ -245,7 +254,11 @@ export default function EditResolutionPage({
                     <FormItem>
                       <FormLabel>Author / Sponsor</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Hon. Elena Villareal" {...field} />
+                        <Input
+                          placeholder="Type author or sponsor…"
+                          className={adminDocInputClassName}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -262,8 +275,8 @@ export default function EditResolutionPage({
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
+                          <SelectTrigger className={adminDocSelectTriggerClassName}>
+                            <SelectValue placeholder="Choose category" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
