@@ -192,6 +192,13 @@ export interface Committee {
   members: string[];
 }
 
+export interface DistrictAssignment {
+  id: string;
+  barangayName: string;
+  sbMemberId: string;
+  sbMemberName: string;
+}
+
 export interface CSOOrganization {
   id: string;
   name: string;

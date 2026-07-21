@@ -9,6 +9,8 @@ import type { CategoryRow } from "../models/category.js";
 import type { CsoRow } from "../models/cso.js";
 import type { SbMemberRow } from "../models/sb-member.js";
 import type { CommitteeRow } from "../models/committee.js";
+import type { DistrictAssignmentRow } from "../models/district-assignment.js";
+import { DISTRICT_ASSIGNMENT_SELECT } from "../models/district-assignment.js";
 import { ok } from "../utils/api-response.js";
 import { AppError, NotFoundError } from "../utils/errors.js";
 import { decodePlaceParam } from "../utils/place.js";
@@ -263,7 +265,7 @@ export const publicController = {
       req.params.municipality!
     );
 
-    const [members, committees] = await Promise.all([
+    const [members, committees, districtAssignments] = await Promise.all([
       queryAll<SbMemberRow>(
         `SELECT id, lgu_id, name, position_slot, position, image_storage_path,
                 committees, created_by, created_at, updated_at
@@ -276,6 +278,13 @@ export const publicController = {
          FROM committees WHERE lgu_id = $1 ORDER BY name ASC`,
         [lguId]
       ),
+      queryAll<DistrictAssignmentRow>(
+        `SELECT ${DISTRICT_ASSIGNMENT_SELECT}
+         FROM district_assignments
+         WHERE lgu_id = $1
+         ORDER BY barangay_name ASC`,
+        [lguId]
+      ),
     ]);
 
     return ok(res, {
@@ -284,6 +293,7 @@ export const publicController = {
         imageUrl: toPublicFileUrl(m.image_storage_path),
       })),
       committees,
+      districtAssignments,
     });
   },
 

@@ -3,6 +3,7 @@ import { query, queryAll, queryOne } from "../lib/db.js";
 import type { ActivityLogRow, DownloadLogRow } from "../models/activity.js";
 import type { SbMemberRow } from "../models/sb-member.js";
 import type { CommitteeRow } from "../models/committee.js";
+import type { DistrictAssignmentRow } from "../models/district-assignment.js";
 import type { CsoRow } from "../models/cso.js";
 import { ok } from "../utils/api-response.js";
 import {
@@ -18,6 +19,8 @@ import {
 } from "../lib/upload.js";
 import { toPublicFileUrl, hashPassword } from "../lib/auth-tokens.js";
 import { recordActivity } from "../lib/activity.js";
+import { getBarangaysForPlace } from "../lib/barangays.js";
+import { DISTRICT_ASSIGNMENT_SELECT } from "../models/district-assignment.js";
 
 function requireLgu(req: Request): AuthContext {
   const auth = req.auth;
@@ -515,6 +518,230 @@ export const committeesController = {
       entityId: existing.id,
       entityTitle: existing.name,
       details: `Deleted committee: ${existing.name}`,
+    });
+
+    return ok(res, { success: true });
+  },
+};
+
+export const districtAssignmentsController = {
+  async list(req: Request, res: Response) {
+    const auth = requireLgu(req);
+
+    const [rows, lgu] = await Promise.all([
+      queryAll<DistrictAssignmentRow>(
+        `SELECT ${DISTRICT_ASSIGNMENT_SELECT}
+         FROM district_assignments
+         WHERE lgu_id = $1
+         ORDER BY barangay_name ASC`,
+        [auth.profile.lgu_id]
+      ),
+      queryOne<{ province: string; municipality: string }>(
+        `SELECT province, municipality FROM lgus WHERE id = $1`,
+        [auth.profile.lgu_id]
+      ),
+    ]);
+
+    const barangays = lgu
+      ? getBarangaysForPlace(lgu.province, lgu.municipality)
+      : [];
+
+    return ok(res, { assignments: rows, barangays });
+  },
+
+  async create(req: Request, res: Response) {
+    const auth = requireLgu(req);
+    const barangayName = String(req.body.barangayName ?? "").trim();
+    const sbMemberId = String(req.body.sbMemberId ?? "").trim();
+
+    if (!barangayName) {
+      throw new AppError("Barangay is required", 400);
+    }
+    if (!sbMemberId) {
+      throw new AppError("SB member is required", 400);
+    }
+
+    const member = await queryOne<{ id: string; name: string }>(
+      `SELECT id, name FROM sb_members WHERE id = $1 AND lgu_id = $2`,
+      [sbMemberId, auth.profile.lgu_id]
+    );
+    if (!member) {
+      throw new AppError("Selected SB member was not found", 400);
+    }
+
+    const lgu = await queryOne<{ province: string; municipality: string }>(
+      `SELECT province, municipality FROM lgus WHERE id = $1`,
+      [auth.profile.lgu_id]
+    );
+    const allowed = lgu
+      ? getBarangaysForPlace(lgu.province, lgu.municipality)
+      : [];
+    const barangayKey = barangayName.toUpperCase();
+    const canonical =
+      allowed.find((name) => name.toUpperCase() === barangayKey) ?? null;
+    if (!canonical) {
+      throw new AppError("Barangay is not valid for this LGU", 400);
+    }
+
+    try {
+      const row = await queryOne<DistrictAssignmentRow>(
+        `INSERT INTO district_assignments (
+          lgu_id, barangay_name, sb_member_id, created_by
+        ) VALUES ($1, $2, $3, $4)
+        RETURNING ${DISTRICT_ASSIGNMENT_SELECT}`,
+        [auth.profile.lgu_id, canonical, sbMemberId, auth.profile.id]
+      );
+
+      await recordActivity({
+        lguId: auth.profile.lgu_id!,
+        userId: auth.profile.id,
+        userName: auth.profile.full_name,
+        action: "upload",
+        module: "district-assignments",
+        entityId: row!.id,
+        entityTitle: canonical,
+        details: `Assigned ${member.name} to ${canonical}`,
+      });
+
+      return ok(res, row);
+    } catch (error) {
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        error.code === "23505"
+      ) {
+        throw new ConflictError(
+          "This barangay already has a district assignment."
+        );
+      }
+      throw error;
+    }
+  },
+
+  async update(req: Request, res: Response) {
+    const auth = requireLgu(req);
+    const { id } = req.params;
+    const barangayName =
+      req.body.barangayName !== undefined
+        ? String(req.body.barangayName).trim()
+        : undefined;
+    const sbMemberId =
+      req.body.sbMemberId !== undefined
+        ? String(req.body.sbMemberId).trim()
+        : undefined;
+
+    const existing = await queryOne<DistrictAssignmentRow>(
+      `SELECT ${DISTRICT_ASSIGNMENT_SELECT}
+       FROM district_assignments
+       WHERE id = $1 AND lgu_id = $2`,
+      [id, auth.profile.lgu_id]
+    );
+    if (!existing) {
+      throw new NotFoundError("District assignment not found");
+    }
+
+    let nextBarangay = existing.barangay_name;
+    let nextMemberId = existing.sb_member_id;
+
+    if (barangayName !== undefined) {
+      if (!barangayName) {
+        throw new AppError("Barangay is required", 400);
+      }
+      const lgu = await queryOne<{ province: string; municipality: string }>(
+        `SELECT province, municipality FROM lgus WHERE id = $1`,
+        [auth.profile.lgu_id]
+      );
+      const allowed = lgu
+        ? getBarangaysForPlace(lgu.province, lgu.municipality)
+        : [];
+      const barangayKey = barangayName.toUpperCase();
+      const canonical =
+        allowed.find((name) => name.toUpperCase() === barangayKey) ?? null;
+      if (!canonical) {
+        throw new AppError("Barangay is not valid for this LGU", 400);
+      }
+      nextBarangay = canonical;
+    }
+
+    if (sbMemberId !== undefined) {
+      if (!sbMemberId) {
+        throw new AppError("SB member is required", 400);
+      }
+      const member = await queryOne<{ id: string }>(
+        `SELECT id FROM sb_members WHERE id = $1 AND lgu_id = $2`,
+        [sbMemberId, auth.profile.lgu_id]
+      );
+      if (!member) {
+        throw new AppError("Selected SB member was not found", 400);
+      }
+      nextMemberId = sbMemberId;
+    }
+
+    try {
+      const row = await queryOne<DistrictAssignmentRow>(
+        `UPDATE district_assignments
+         SET barangay_name = $1, sb_member_id = $2, updated_at = now()
+         WHERE id = $3 AND lgu_id = $4
+         RETURNING ${DISTRICT_ASSIGNMENT_SELECT}`,
+        [nextBarangay, nextMemberId, id, auth.profile.lgu_id]
+      );
+
+      await recordActivity({
+        lguId: auth.profile.lgu_id!,
+        userId: auth.profile.id,
+        userName: auth.profile.full_name,
+        action: "edit",
+        module: "district-assignments",
+        entityId: row!.id,
+        entityTitle: row!.barangay_name,
+        details: `Updated district assignment for ${row!.barangay_name}`,
+      });
+
+      return ok(res, row);
+    } catch (error) {
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        error.code === "23505"
+      ) {
+        throw new ConflictError(
+          "This barangay already has a district assignment."
+        );
+      }
+      throw error;
+    }
+  },
+
+  async remove(req: Request, res: Response) {
+    const auth = requireLgu(req);
+    const { id } = req.params;
+
+    const existing = await queryOne<DistrictAssignmentRow>(
+      `SELECT ${DISTRICT_ASSIGNMENT_SELECT}
+       FROM district_assignments
+       WHERE id = $1 AND lgu_id = $2`,
+      [id, auth.profile.lgu_id]
+    );
+    if (!existing) {
+      throw new NotFoundError("District assignment not found");
+    }
+
+    await query(
+      `DELETE FROM district_assignments WHERE id = $1 AND lgu_id = $2`,
+      [id, auth.profile.lgu_id]
+    );
+
+    await recordActivity({
+      lguId: auth.profile.lgu_id!,
+      userId: auth.profile.id,
+      userName: auth.profile.full_name,
+      action: "delete",
+      module: "district-assignments",
+      entityId: existing.id,
+      entityTitle: existing.barangay_name,
+      details: `Deleted district assignment for ${existing.barangay_name}`,
     });
 
     return ok(res, { success: true });

@@ -6,11 +6,20 @@ import { UserCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SBMembersTab } from "@/components/admin/sb-members-tab";
 import { CommitteesTab } from "@/components/admin/committees-tab";
+import { DistrictAssignmentsTab } from "@/components/admin/district-assignments-tab";
 
-type SBMembersTabValue = "members" | "committees";
+type SBMembersTabValue = "members" | "committees" | "districts";
 
 function getTabValue(tab: string | null): SBMembersTabValue {
-  return tab === "committees" ? "committees" : "members";
+  if (tab === "committees") return "committees";
+  if (tab === "districts") return "districts";
+  return "members";
+}
+
+function tabHref(tab: SBMembersTabValue): string {
+  if (tab === "committees") return "/admin/sb-members?tab=committees";
+  if (tab === "districts") return "/admin/sb-members?tab=districts";
+  return "/admin/sb-members";
 }
 
 export default function SBMembersPage() {
@@ -20,12 +29,7 @@ export default function SBMembersPage() {
 
   const handleTabChange = useCallback(
     (value: string) => {
-      const nextTab = getTabValue(value);
-      router.replace(
-        nextTab === "committees"
-          ? "/admin/sb-members?tab=committees"
-          : "/admin/sb-members"
-      );
+      router.replace(tabHref(getTabValue(value)));
     },
     [router]
   );
@@ -41,8 +45,8 @@ export default function SBMembersPage() {
             SB Members
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Manage the Sangguniang Bayan roster and standing committees in one
-            place.
+            Manage the Sangguniang Bayan roster, standing committees, and
+            barangay district assignments in one place.
           </p>
         </div>
       </div>
@@ -61,6 +65,12 @@ export default function SBMembersPage() {
           >
             Committees
           </TabsTrigger>
+          <TabsTrigger
+            value="districts"
+            className="rounded-full px-4 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            District Assignment
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="members" className="mt-6">
@@ -68,6 +78,9 @@ export default function SBMembersPage() {
         </TabsContent>
         <TabsContent value="committees" className="mt-6">
           <CommitteesTab />
+        </TabsContent>
+        <TabsContent value="districts" className="mt-6">
+          <DistrictAssignmentsTab />
         </TabsContent>
       </Tabs>
     </div>

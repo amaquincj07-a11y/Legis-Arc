@@ -17,5 +17,6 @@ export {
 export { CATEGORY_SELECT } from "./category.js";
 export { SB_MEMBER_SELECT, SB_MEMBER_PHOTO_BUCKET } from "./sb-member.js";
 export { COMMITTEE_SELECT } from "./committee.js";
+export { DISTRICT_ASSIGNMENT_SELECT } from "./district-assignment.js";
 export { CSO_SELECT } from "./cso.js";
 export { ACTIVITY_LOG_SELECT, DOWNLOAD_LOG_SELECT } from "./activity.js";

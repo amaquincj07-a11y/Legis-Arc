@@ -6,10 +6,14 @@ import {
   type CommitteeRow,
 } from "@/lib/mappers/committee-mapper";
 import {
+  mapDistrictAssignmentRow,
+  type DistrictAssignmentRow,
+} from "@/lib/mappers/district-assignment-mapper";
+import {
   mapSBMemberRowToMember,
   type SBMemberRow,
 } from "@/lib/mappers/sb-member-mapper";
-import type { Committee, SBMember } from "@/lib/types";
+import type { Committee, DistrictAssignment, SBMember } from "@/lib/types";
 
 export type ActionResult<T> =
   | { success: true; data: T }
@@ -18,6 +22,7 @@ export type ActionResult<T> =
 export type SBChartData = {
   sbMembers: SBMember[];
   committees: Committee[];
+  districtAssignments: DistrictAssignment[];
 };
 
 export async function fetchPublicSBChartAction(
@@ -29,6 +34,7 @@ export async function fetchPublicSBChartAction(
     const data = await apiGetPublic<{
       members: Array<SBMemberRow & { imageUrl?: string }>;
       committees: CommitteeRow[];
+      districtAssignments?: DistrictAssignmentRow[];
     }>(path);
 
     const members = data.members.map((row) =>
@@ -42,6 +48,9 @@ export async function fetchPublicSBChartAction(
         sbMembers: members,
         committees: data.committees.map((row) =>
           mapCommitteeRowToCommittee(row, memberById)
+        ),
+        districtAssignments: (data.districtAssignments ?? []).map((row) =>
+          mapDistrictAssignmentRow(row, memberById)
         ),
       },
     };

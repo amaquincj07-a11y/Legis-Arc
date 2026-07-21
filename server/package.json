@@ -5,10 +5,11 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc && node ./scripts/copy-data.mjs",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "db:seed": "node db/seed.mjs"
+    "db:seed": "node db/seed.mjs",
+    "db:migrate:districts": "node ./scripts/migrate-district-assignments.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1089.0",

@@ -14,6 +14,7 @@ export const ADMIN_CACHE_KEYS = {
   categoriesAll: "admin:categories:all",
   users: "admin:users",
   committees: "admin:committees",
+  districtAssignments: "admin:district-assignments",
   sbMembers: "admin:sb-members",
   cso: "admin:cso",
   activity: "admin:activity",

@@ -1,7 +1,14 @@
 import pg from "pg";
 import { env } from "../config/env.js";
 
-const { Pool } = pg;
+const { Pool, types } = pg;
+
+/**
+ * Keep Postgres DATE as YYYY-MM-DD strings.
+ * Default Date parsing uses local midnight; getUTC* then shifts the day
+ * (e.g. Dec 1 in Asia/Manila → Nov 30) — breaks localhost offline demos.
+ */
+types.setTypeParser(types.builtins.DATE, (value) => value);
 
 export const pool = new Pool({
   connectionString: env.databaseUrl,

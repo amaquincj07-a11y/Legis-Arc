@@ -9,6 +9,7 @@ import {
   committeesController,
   csoController,
   dashboardController,
+  districtAssignmentsController,
   downloadLogsController,
   sbMembersController,
   usersController,
@@ -109,6 +110,23 @@ router.get("/committees", asyncHandler(committeesController.list));
 router.post("/committees", asyncHandler(committeesController.create));
 router.patch("/committees/:id", asyncHandler(committeesController.update));
 router.delete("/committees/:id", asyncHandler(committeesController.remove));
+
+router.get(
+  "/district-assignments",
+  asyncHandler(districtAssignmentsController.list)
+);
+router.post(
+  "/district-assignments",
+  asyncHandler(districtAssignmentsController.create)
+);
+router.patch(
+  "/district-assignments/:id",
+  asyncHandler(districtAssignmentsController.update)
+);
+router.delete(
+  "/district-assignments/:id",
+  asyncHandler(districtAssignmentsController.remove)
+);
 
 router.get("/cso", asyncHandler(csoController.list));
 router.post("/cso", asyncHandler(csoController.create));

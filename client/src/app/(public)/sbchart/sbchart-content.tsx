@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2, User, UserCircle } from "lucide-react";
+import { Loader2, MapPinned, User, UserCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -10,8 +10,14 @@ import {
 } from "@/lib/constants";
 import { fetchPublicSBChartAction } from "@/lib/public-sb-chart-actions";
 import { usePlaceFilter } from "@/lib/place-filter-context";
-import type { Committee, SBMember, SBMemberPositionSlot } from "@/lib/types";
+import type {
+  Committee,
+  DistrictAssignment,
+  SBMember,
+  SBMemberPositionSlot,
+} from "@/lib/types";
 import { SBMemberCard } from "@/components/public/sb-member-card";
+import { formatBarangayLabel } from "@/lib/mappers/district-assignment-mapper";
 
 const TERMS = COMMITTEE_YEAR_TERMS;
 type Term = (typeof TERMS)[number];
@@ -79,6 +85,9 @@ export function SBChartContent() {
   const [selectedTerm, setSelectedTerm] = useState<Term>(CURRENT_TERM);
   const [sbMembers, setSbMembers] = useState<SBMember[]>([]);
   const [committees, setCommittees] = useState<Committee[]>([]);
+  const [districtAssignments, setDistrictAssignments] = useState<
+    DistrictAssignment[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -93,9 +102,11 @@ export function SBChartContent() {
     if (result.success) {
       setSbMembers(result.data.sbMembers);
       setCommittees(result.data.committees);
+      setDistrictAssignments(result.data.districtAssignments);
     } else {
       setSbMembers([]);
       setCommittees([]);
+      setDistrictAssignments([]);
       setLoadError(result.error);
     }
 
@@ -119,6 +130,21 @@ export function SBChartContent() {
     }
     return map;
   }, [sbMembers]);
+
+  const districtByMemberId = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const assignment of districtAssignments) {
+      const list = map.get(assignment.sbMemberId) ?? [];
+      list.push(formatBarangayLabel(assignment.barangayName));
+      map.set(assignment.sbMemberId, list);
+    }
+    return map;
+  }, [districtAssignments]);
+
+  function districtLabelForMember(memberId: string): string | undefined {
+    const labels = districtByMemberId.get(memberId);
+    return labels && labels.length > 0 ? labels.join(", ") : undefined;
+  }
 
   const viceMayorSlot = SB_MEMBER_POSITION_SLOTS.find(
     (slot) => slot.slot === "vice_mayor"
@@ -184,6 +210,9 @@ export function SBChartContent() {
                   <SBMemberCard
                     member={memberBySlot.get("vice_mayor")!}
                     committees={committees}
+                    districtAssignment={districtLabelForMember(
+                      memberBySlot.get("vice_mayor")!.id
+                    )}
                     className="w-[calc(50%-6px)] sm:w-[calc(33.333%-11px)]"
                   />
                 ) : (
@@ -202,6 +231,7 @@ export function SBChartContent() {
                       key={slot.slot}
                       member={member}
                       committees={committees}
+                      districtAssignment={districtLabelForMember(member.id)}
                     />
                   ) : (
                     <PlaceholderMemberCard
@@ -328,6 +358,72 @@ export function SBChartContent() {
                     <PlaceholderCommitteeCard name="Committee" />
                   )}
             </div>
+          )}
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <Separator />
+      </div>
+
+      <section className="bg-background py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-8">
+            <div className="flex items-center gap-3">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#3998eb]/10 text-[#3998eb]">
+                <MapPinned className="size-4" />
+              </div>
+              <div>
+                <h2 className="font-[family-name:var(--font-garamond)] text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                  District Assignments
+                </h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Barangay assignments of SB Members
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-12 text-muted-foreground">
+              <Loader2 className="h-7 w-7 animate-spin text-[#3998eb]" />
+              <p className="font-[family-name:var(--font-garamond)] text-sm">
+                Loading district assignments…
+              </p>
+            </div>
+          ) : loadError ? (
+            <p className="text-center font-[family-name:var(--font-garamond)] text-muted-foreground">
+              {loadError}
+            </p>
+          ) : isCurrentTerm ? (
+            districtAssignments.length > 0 ? (
+              <div className="rounded-2xl border bg-white p-4 sm:p-6">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {districtAssignments.map((assignment) => (
+                    <div
+                      key={assignment.id}
+                      className="flex items-center justify-between gap-3 rounded-xl border px-4 py-3"
+                    >
+                      <span className="text-sm font-semibold text-slate-900">
+                        {formatBarangayLabel(assignment.barangayName)}
+                      </span>
+                      <span className="text-right text-sm text-muted-foreground">
+                        {assignment.sbMemberName}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-center font-[family-name:var(--font-garamond)] text-muted-foreground">
+                No district assignments have been published for{" "}
+                {municipalityName}, {provinceName} yet.
+              </p>
+            )
+          ) : (
+            <p className="text-center font-[family-name:var(--font-garamond)] text-muted-foreground">
+              District assignments for prior terms are not available.
+            </p>
           )}
         </div>
       </section>

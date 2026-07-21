@@ -3,19 +3,31 @@ import { format } from "date-fns";
 /**
  * Calendar-date helpers for session minutes.
  * Always treat session dates as YYYY-MM-DD (no timezone).
- * Never pass Postgres DATE / ISO midnight through Date.UTC formatting alone.
+ *
+ * In Asia/Manila, node-pg DATE at local midnight Dec 1 serializes as
+ * 2025-11-30T16:00:00.000Z — never use getUTC* alone for that value.
  */
 
 /** Normalize any API/Date value to a plain YYYY-MM-DD calendar day. */
 export function toCalendarDateString(value: string | Date): string {
   if (typeof value === "string") {
     const trimmed = value.trim();
-    // Prefer the leading calendar day from ISO / date-only strings.
-    // "2025-12-01T00:00:00.000Z" → "2025-12-01" (not local conversion).
-    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(trimmed);
-    if (match) {
-      return `${match[1]}-${match[2]}-${match[3]}`;
+
+    const exact = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+    if (exact) {
+      return `${exact[1]}-${exact[2]}-${exact[3]}`;
     }
+
+    // Explicit UTC midnight ISO → trust the stated calendar day
+    const utcMidnight =
+      /^(\d{4})-(\d{2})-(\d{2})T00:00:00(?:\.\d+)?(?:Z|[+-]00:00)?$/i.exec(
+        trimmed
+      );
+    if (utcMidnight) {
+      return `${utcMidnight[1]}-${utcMidnight[2]}-${utcMidnight[3]}`;
+    }
+
+    // Shifted local-midnight ISO — recover the local calendar day
     const parsed = new Date(trimmed);
     if (!Number.isNaN(parsed.getTime())) {
       return toCalendarDateString(parsed);
@@ -27,10 +39,9 @@ export function toCalendarDateString(value: string | Date): string {
     throw new Error("Invalid session date");
   }
 
-  // node-pg DATE values are UTC midnight for that calendar day.
-  const y = value.getUTCFullYear();
-  const m = String(value.getUTCMonth() + 1).padStart(2, "0");
-  const d = String(value.getUTCDate()).padStart(2, "0");
+  const y = value.getFullYear();
+  const m = String(value.getMonth() + 1).padStart(2, "0");
+  const d = String(value.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
 
