@@ -171,7 +171,7 @@ export const companyController = {
           document_count, admin_full_name, admin_position,
           admin_office_email, admin_mobile_number
         ) VALUES (
-          $1, $2, 'pending', 100000,
+          $1, $2, 'pending', 60000,
           now() + interval '14 days', 'annual',
           0, $3, $4, $5, $6
         )

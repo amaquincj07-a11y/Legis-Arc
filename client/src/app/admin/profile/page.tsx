@@ -176,6 +176,11 @@ export default function ProfilePage() {
   }
 
   const { profile, lgu } = accountProfile;
+  const effectiveLguStatus = getEffectiveLGUStatus({
+    status: lgu.status,
+    subscriptionStartDate: lgu.subscriptionStartDate,
+    subscriptionEndDate: lgu.subscriptionEndDate,
+  });
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -254,13 +259,7 @@ export default function ProfilePage() {
                 Information registered by the Company Admin
               </CardDescription>
             </div>
-            <LGUStatusBadge
-              status={getEffectiveLGUStatus({
-                status: lgu.status,
-                subscriptionStartDate: lgu.subscriptionStartDate,
-                subscriptionEndDate: lgu.subscriptionEndDate,
-              })}
-            />
+            <LGUStatusBadge status={effectiveLguStatus} />
           </div>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2">
@@ -295,16 +294,20 @@ export default function ProfilePage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2">
-          <ProfileField
-            icon={<BadgeCheck className="size-4" />}
-            label="Subscription Plan"
-            value={SUBSCRIPTION_PLAN_LABEL}
-          />
-          <ProfileField
-            icon={<BadgeCheck className="size-4" />}
-            label="Subscription Amount"
-            value={formatPeso(lgu.subscriptionAmount)}
-          />
+          {effectiveLguStatus !== "trial" ? (
+            <>
+              <ProfileField
+                icon={<BadgeCheck className="size-4" />}
+                label="Subscription Plan"
+                value={SUBSCRIPTION_PLAN_LABEL}
+              />
+              <ProfileField
+                icon={<BadgeCheck className="size-4" />}
+                label="Subscription Amount"
+                value={formatPeso(lgu.subscriptionAmount)}
+              />
+            </>
+          ) : null}
           <ProfileField
             icon={<CalendarDays className="size-4" />}
             label="Date Started"

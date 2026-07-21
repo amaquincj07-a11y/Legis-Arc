@@ -105,17 +105,19 @@ export function BillingOverview() {
             <LGUStatusBadge status={overview.accountStatus} />
           </div>
 
-          <div className="rounded-lg border bg-muted/30 p-4">
-            <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Subscription Plan
+          {overview.accountStatus !== "trial" ? (
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Subscription Plan
+              </div>
+              <p className="text-sm font-semibold text-slate-900">
+                {overview.subscriptionPlan}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {formatPeso(overview.subscriptionAmount)} per year
+              </p>
             </div>
-            <p className="text-sm font-semibold text-slate-900">
-              {overview.subscriptionPlan}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {formatPeso(overview.subscriptionAmount)} per year
-            </p>
-          </div>
+          ) : null}
 
           <div className="rounded-lg border bg-muted/30 p-4">
             <div className="mb-2 flex items-center gap-2 text-muted-foreground">

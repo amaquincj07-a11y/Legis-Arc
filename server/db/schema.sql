@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS lgus (
   province text NOT NULL,
   municipality text NOT NULL,
   status lgu_status NOT NULL DEFAULT 'pending',
-  subscription_amount numeric(12, 2) NOT NULL DEFAULT 100000,
+  subscription_amount numeric(12, 2) NOT NULL DEFAULT 60000,
   subscription_start_date timestamptz NOT NULL DEFAULT now(),
   subscription_end_date timestamptz NOT NULL,
   street_address text,
