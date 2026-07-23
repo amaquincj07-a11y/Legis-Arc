@@ -1,9 +1,12 @@
 "use server";
 
-import { differenceInCalendarDays, format } from "date-fns";
+import { addDays, differenceInCalendarDays, format, startOfDay } from "date-fns";
 import { apiGetAuth } from "@/lib/api/client";
 import { getServerAccessToken } from "@/lib/api/server-token";
-import { SUBSCRIPTION_PLAN_LABEL } from "@/lib/lgu-subscription";
+import {
+  SUBSCRIPTION_PLAN_LABEL,
+  TRIAL_DURATION_DAYS,
+} from "@/lib/lgu-subscription";
 import type {
   BillingHistoryEntry,
   BillingOverview,
@@ -22,6 +25,7 @@ type BillingOverviewRow = {
   status: LGUClientStatus | "pending" | "paid";
   support_plan: string | null;
   document_count: number;
+  created_at?: string | null;
 };
 
 type BillingHistoryRow = {
@@ -51,6 +55,13 @@ function mapPaymentStatus(
   return start && end ? "paid" : "unpaid";
 }
 
+/** Trial always ends 30 days after account/trial start. */
+function resolveTrialExpiresOn(row: BillingOverviewRow): Date {
+  const trialStartRaw =
+    row.subscription_start_date ?? row.created_at ?? new Date().toISOString();
+  return addDays(startOfDay(new Date(trialStartRaw)), TRIAL_DURATION_DAYS);
+}
+
 export async function fetchLGUBillingOverviewAction(): Promise<
   ActionResult<BillingOverview>
 > {
@@ -65,12 +76,17 @@ export async function fetchLGUBillingOverviewAction(): Promise<
       token
     );
     const accountStatus = mapAccountStatus(row.status);
-    const endDate = row.subscription_end_date
-      ? new Date(row.subscription_end_date)
-      : null;
+
+    const endDate =
+      accountStatus === "trial"
+        ? resolveTrialExpiresOn(row)
+        : row.subscription_end_date
+          ? new Date(row.subscription_end_date)
+          : null;
+
     const daysRemaining =
       endDate != null
-        ? Math.max(0, differenceInCalendarDays(endDate, new Date()))
+        ? Math.max(0, differenceInCalendarDays(endDate, startOfDay(new Date())))
         : null;
 
     return {

@@ -172,7 +172,7 @@ export const companyController = {
           admin_office_email, admin_mobile_number
         ) VALUES (
           $1, $2, 'pending', 60000,
-          now() + interval '14 days', 'annual',
+          now() + interval '30 days', 'annual',
           0, $3, $4, $5, $6
         )
         RETURNING ${LGU_COLUMNS}`,

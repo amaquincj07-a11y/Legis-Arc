@@ -1248,11 +1248,12 @@ export const accountController = {
       status: string;
       support_plan: string | null;
       document_count: number;
+      created_at: string;
     }
 
     const overview = await queryOne<BillingOverview>(
       `SELECT subscription_amount, subscription_start_date, subscription_end_date,
-              status, support_plan, document_count
+              status, support_plan, document_count, created_at
        FROM lgus
        WHERE id = $1`,
       [auth.profile.lgu_id]

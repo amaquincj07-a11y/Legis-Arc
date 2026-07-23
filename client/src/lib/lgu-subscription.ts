@@ -3,6 +3,9 @@ import type { LGUClient, LGUClientStatus, LGUPaymentStatus } from "./types";
 
 export const SUBSCRIPTION_PLAN_LABEL = "Annual";
 
+/** Free trial length for new LGU accounts (Billing “Expires On”). */
+export const TRIAL_DURATION_DAYS = 30;
+
 /** Allowed annual subscription amounts (company-set). */
 export const ANNUAL_SUBSCRIPTION_AMOUNTS = [60_000, 5_000] as const;
 export const DEFAULT_SUBSCRIPTION_AMOUNT = ANNUAL_SUBSCRIPTION_AMOUNTS[0];

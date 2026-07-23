@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { fetchLGUBillingOverviewAction } from "@/lib/lgu-billing-actions";
 import { LGUStatusBadge } from "@/components/super-admin/lgu-status-badge";
 import { formatPeso } from "@/lib/utils";
+import { TRIAL_DURATION_DAYS } from "@/lib/lgu-subscription";
 import type { BillingOverview } from "@/lib/types";
 import {
   Card,
@@ -133,7 +134,9 @@ export function BillingOverview() {
             </p>
             {overview.daysRemaining != null ? (
               <p className="mt-1 text-xs text-muted-foreground">
-                {overview.daysRemaining} days remaining
+                {overview.accountStatus === "trial"
+                  ? `${overview.daysRemaining} of ${TRIAL_DURATION_DAYS} trial days remaining`
+                  : `${overview.daysRemaining} days remaining`}
               </p>
             ) : null}
           </div>
